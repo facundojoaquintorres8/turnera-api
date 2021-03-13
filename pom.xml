@@ -91,11 +91,11 @@
 			<version>0.9.1</version>
 		</dependency>
 
-		<!-- <dependency>
-			<groupId>com.f8.turnera</groupId>
+		<dependency>
+			<groupId>com.apple</groupId>
 			<artifactId>AppleJavaExtensions</artifactId>
 			<version>1.4</version>
-		</dependency> -->
+		</dependency>
 
  	</dependencies>
 
