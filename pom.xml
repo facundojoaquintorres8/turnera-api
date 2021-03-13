@@ -101,31 +101,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
-	<!-- <packaging>${packaging.type}</packaging> -->
-
-	<profiles>
-		<profile>
-			<id>jar</id>
-			<properties>
-				<packaging.type>jar</packaging.type>
-				<spring.profiles.active>dev</spring.profiles.active>
-			</properties>
-		</profile>
-		<profile>
-			<id>war</id>
-			<properties>
-					<packaging.type>war</packaging.type>
-					<spring.profiles.active>ds</spring.profiles.active>
-			</properties>
-			<dependencies>
-					<dependency>
-						<groupId>org.springframework.boot</groupId>
-						<artifactId>spring-boot-starter-tomcat</artifactId>
-						<scope>provided</scope>
-					</dependency>
-			</dependencies>
-		</profile>
-	</profiles>
-
 </project>
