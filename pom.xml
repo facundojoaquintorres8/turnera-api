@@ -91,6 +91,12 @@
 			<version>0.9.1</version>
 		</dependency>
 
+		<!-- <dependency>
+			<groupId>com.f8.turnera</groupId>
+			<artifactId>AppleJavaExtensions</artifactId>
+			<version>1.4</version>
+		</dependency> -->
+
  	</dependencies>
 
 	<build>
@@ -98,6 +104,10 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<source>11</source>
+					<target>11</target>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
