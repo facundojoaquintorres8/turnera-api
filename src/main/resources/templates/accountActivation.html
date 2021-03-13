@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Activación de Cuenta</title>
+</head>
+
+<body>
+    <h2>
+        Hola <span th:text="${firstName}">First Name</span>,
+    </h2>
+    <p style="padding-left: 40px;">
+        Te han registrado como Usuario dentro de la Organización: <strong th:text="${organization}">Organization</strong>
+        <br />
+        Te damos la bienvenida a nuestro Sistema de Turnos.
+        <br />
+        Para finalizar la activaci&oacute;n de tu Cuenta, por favor haz click en el siguiente enlace:
+    </p>
+    <h3 style="padding-left: 40px;">
+        <a href="#" th:href="${link}">
+            Activar Cuenta
+        </a>
+    </h3>
+    <p>
+        <small style="color: #dc3545;">
+            NOTA: Si usted no ha solicitado esto, por favor ignore este correo.
+        </small>
+    </p>
+    <h4>
+        Saludos cordiales, 
+        <br />
+        Equipo Turnera.
+    </h4>
+</body>
+
+</html>

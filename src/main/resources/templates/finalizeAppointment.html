@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Turno Finalizado</title>
+</head>
+
+<body>
+    <h2>
+        Hola <span th:text="${businessName}">Business Name</span>,
+    </h2>
+    <p style="padding-left: 40px;">
+        Su turno ha Finalizado.
+        <br />
+        <strong>Recurso: </strong><span th:text="${resource}">Resource</span>.
+        <br />
+        <strong>Desde: </strong><span th:text="${fromDate}">From Date</span>.
+        <br />
+        <strong>Hasta: </strong><span th:text="${toDate}">To Date</span>.
+        <br />
+        Por cualquier consulta, comun&iacute;quese con su proveedor.
+    </p>
+    <p>
+        <small style="color: #dc3545;">
+            NOTA: Si usted no ha solicitado esto, por favor ignore este correo.
+        </small>
+    </p>
+    <h4>
+        Saludos cordiales,
+        <br />
+        Equipo Turnera.
+    </h4>
+</body>
+
+</html>

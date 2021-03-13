@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+	<changeSet id="202103022200-1" author="FacuTorres">
+        <!-- add Appointments -->
+        <createTable tableName="appointments">
+			<column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+			</column>
+            <column name="created_date" type="timestamp">
+                <constraints nullable="false" />
+            </column>
+            <column name="organization_id" type="bigint">
+                <constraints nullable="false" />
+            </column>
+            <column name="agenda_id" type="bigint">
+                <constraints nullable="false" />
+            </column>
+            <column name="customer_id" type="bigint">
+                <constraints nullable="false" />
+            </column>                                 
+		</createTable>
+
+        <!-- add Appointments Status -->
+        <createTable tableName="appointments_status">
+			<column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+			</column>
+            <column name="created_date" type="timestamp">
+                <constraints nullable="false" />
+            </column>
+            <column name="appointment_id" type="bigint">
+                <constraints nullable="false" />
+            </column>
+            <column name="status" type="bigint">
+                <constraints nullable="false" />
+            </column>                             
+		</createTable>
+
+
+        <!-- add FKs -->
+        <addForeignKeyConstraint
+            baseColumnNames="organization_id"
+            baseTableName="appointments"
+            constraintName="fk_appointments_organizations"
+            referencedColumnNames="id"
+            referencedTableName="organizations"/>
+        <addForeignKeyConstraint
+            baseColumnNames="agenda_id"
+            baseTableName="appointments"
+            constraintName="fk_appointments_agendas"
+            referencedColumnNames="id"
+            referencedTableName="agendas"/>  
+        <addForeignKeyConstraint
+            baseColumnNames="customer_id"
+            baseTableName="appointments"
+            constraintName="fk_appointments_customers"
+            referencedColumnNames="id"
+            referencedTableName="customers"/>
+        <addForeignKeyConstraint
+            baseColumnNames="appointment_id"
+            baseTableName="appointments_status"
+            constraintName="fk_appointments_status_appointments"
+            referencedColumnNames="id"
+            referencedTableName="appointments"/>               
+
+        <!-- add new permissions -->
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="20"/>            
+            <column name="description" value="Reservar Turno"/>
+            <column name="code" value="appointments.book"/>
+        </insert>
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="21"/>            
+            <column name="description" value="Ausentar Turno"/>
+            <column name="code" value="appointments.absent"/>
+        </insert>
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="22"/>            
+            <column name="description" value="Cancelar Turno"/>
+            <column name="code" value="appointments.cancel"/>
+        </insert>
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="23"/>            
+            <column name="description" value="Atender Turno"/>
+            <column name="code" value="appointments.attend"/>
+        </insert>
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="24"/>            
+            <column name="description" value="Finalizar Turno"/>
+            <column name="code" value="appointments.finalize"/>
+        </insert>
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="25"/>            
+            <column name="description" value="Ver Agendas"/>
+            <column name="code" value="agendas.read"/>
+        </insert>
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="26"/>            
+            <column name="description" value="Eliminar Agenda"/>
+            <column name="code" value="agendas.delete"/>
+        </insert>        
+	</changeSet>
+</databaseChangeLog>

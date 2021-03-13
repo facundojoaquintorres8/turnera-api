@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+	<changeSet id="202103051900-1" author="FacuTorres">
+        <addColumn
+            schemaName="public"
+            tableName="agendas">
+            <column name="last_appointment_id" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <addForeignKeyConstraint
+            baseColumnNames="last_appointment_id"
+            baseTableName="agendas"
+            constraintName="fk_agendas_last_appointment"
+            referencedColumnNames="id"
+            referencedTableName="appointments"/>          
+	</changeSet>
+</databaseChangeLog>

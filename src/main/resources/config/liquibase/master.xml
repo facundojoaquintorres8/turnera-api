@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+    <include file="config/liquibase/changelog/000000000000_initial_schema.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/202102151530_add_entity_customers.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/202102151730_add_entity_resources_types.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/202102151930_add_entity_resources.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/202102161700_add_entity_agendas.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/202102271100_insert_permissions_customers_resources_resources_types_agendas.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/202103022200_added_entity_appointments_with_permissions.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/202103051900_add_last_appointment_to_agenda.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/202103062200_add_current_status_to_appointment.xml" relativeToChangelogFile="false"/>
+</databaseChangeLog>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+	<changeSet id="202102161700-1" author="FacuTorres">
+		<createTable tableName="agendas">
+			<column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+			</column>
+            <column name="active" type="boolean">
+                <constraints nullable="false" />
+            </column>
+            <column name="created_date" type="timestamp">
+                <constraints nullable="false" />
+            </column>
+            <column name="organization_id" type="bigint">
+                <constraints nullable="false" />
+            </column>
+            <column name="start_date" type="timestamp">
+                <constraints nullable="false" />
+            </column>
+            <column name="end_date" type="timestamp">
+                <constraints nullable="true" />
+            </column>
+            <column name="resource_id" type="bigint">
+                <constraints nullable="false" />
+            </column>                        
+		</createTable>
+
+        <!-- add FKs -->
+        <addForeignKeyConstraint
+            baseColumnNames="organization_id"
+            baseTableName="agendas"
+            constraintName="fk_agendas_organizations"
+            referencedColumnNames="id"
+            referencedTableName="organizations"/>
+        <addForeignKeyConstraint
+            baseColumnNames="resource_id"
+            baseTableName="agendas"
+            constraintName="fk_agendas_resources"
+            referencedColumnNames="id"
+            referencedTableName="resources"/>        
+	</changeSet>
+</databaseChangeLog>

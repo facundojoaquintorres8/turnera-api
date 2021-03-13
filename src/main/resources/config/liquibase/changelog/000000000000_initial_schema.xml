@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+	<changeSet id="202101251730-1" author="FacuTorres">
+    <!-- add default sequence -->
+        <createSequence sequenceName="sequence_generator" startValue="1000" incrementBy="50"/>
+
+        <!-- add organizations -->
+		<createTable tableName="organizations">
+			<column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+			</column>
+            <column name="active" type="boolean">
+                <constraints nullable="false" />
+            </column>
+            <column name="created_date" type="timestamp">
+                <constraints nullable="false" />
+            </column>
+            <column name="business_name" type="varchar(100)">
+                <constraints nullable="false" />
+            </column>
+            <column name="brand_name" type="varchar(100)">
+                <constraints nullable="true" />
+            </column>
+            <column name="cuit" type="varchar(11)">
+                <constraints nullable="true" />
+            </column>
+            <column name="address" type="varchar(255)">
+                <constraints nullable="true" />
+            </column>   
+            <column name="phone1" type="varchar(50)">
+                <constraints nullable="true" />
+            </column>
+            <column name="phone2" type="varchar(50)">
+                <constraints nullable="true" />
+            </column>
+            <column name="default_email" type="varchar(100)">
+                <constraints nullable="false" />
+            </column>            
+		</createTable>
+
+        <!-- add users -->
+		<createTable tableName="users">
+			<column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+			</column>
+            <column name="active" type="boolean">
+                <constraints nullable="false" />
+            </column>
+            <column name="created_date" type="timestamp">
+                <constraints nullable="false" />
+            </column>
+            <column name="organization_id" type="bigint">
+                <constraints nullable="false" />
+            </column>
+              <column name="last_name" type="varchar(100)">
+                <constraints nullable="false" />
+            </column>
+            <column name="first_name" type="varchar(100)">
+                <constraints nullable="false" />
+            </column>
+            <column name="username" type="varchar(100)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="ux_users_username" />
+            </column>
+            <column name="password" type="varchar(100)">
+                <constraints nullable="false" />
+            </column>
+            <column name="activation_key" type="varchar(100)">
+                <constraints nullable="true" />
+            </column>
+            <column name="reset_key" type="varchar(100)">
+                <constraints nullable="true" />
+            </column>
+            <column name="reset_date" type="timestamp">
+                <constraints nullable="true" />
+            </column>
+            <column name="is_admin" type="boolean">
+                <constraints nullable="false" />
+            </column>
+		</createTable>
+        
+        <!-- add profiles -->
+		<createTable tableName="profiles">
+			<column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+			</column>
+            <column name="active" type="boolean">
+                <constraints nullable="false" />
+            </column>
+            <column name="created_date" type="timestamp">
+                <constraints nullable="false" />
+            </column>
+            <column name="organization_id" type="bigint">
+                <constraints nullable="false" />
+            </column>            
+            <column name="description" type="varchar(100)">
+                <constraints nullable="false" />
+            </column>
+		</createTable>
+        
+        <!-- add permissions -->
+		<createTable tableName="permissions">
+			<column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+			</column>
+            <column name="description" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="code" type="varchar(100)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="ux_permissions_code" />
+            </column>
+		</createTable>
+
+        <!-- add relationship table: profiles / permissions -->
+        <createTable tableName="profiles_permissions">
+			<column name="profile_id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+			</column>
+            <column name="permission_id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+			</column>
+		</createTable>
+
+        <!-- add relationship table: users / profiles -->
+        <createTable tableName="users_profiles">
+			<column name="user_id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+			</column>
+            <column name="profile_id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+			</column>
+		</createTable>
+        
+        <!-- add FKs -->
+        <addForeignKeyConstraint
+            baseColumnNames="organization_id"
+            baseTableName="users"
+            constraintName="fk_users_organizations"
+            referencedColumnNames="id"
+            referencedTableName="organizations"/>
+        <addForeignKeyConstraint
+            baseColumnNames="organization_id"
+            baseTableName="profiles"
+            constraintName="fk_profiles_organizations"
+            referencedColumnNames="id"
+            referencedTableName="organizations"/>
+        <addForeignKeyConstraint
+            baseColumnNames="profile_id"
+            baseTableName="profiles_permissions"
+            constraintName="fk_profiles_permissions_profiles"
+            referencedColumnNames="id"
+            referencedTableName="profiles"/>
+        <addForeignKeyConstraint
+            baseColumnNames="permission_id"
+            baseTableName="profiles_permissions"
+            constraintName="fk_profiles_permissions_permissions"
+            referencedColumnNames="id"
+            referencedTableName="permissions"/>
+        <addForeignKeyConstraint
+            baseColumnNames="user_id"
+            baseTableName="users_profiles"
+            constraintName="fk_users_profiles_users"
+            referencedColumnNames="id"
+            referencedTableName="users"/>
+        <addForeignKeyConstraint
+            baseColumnNames="profile_id"
+            baseTableName="users_profiles"
+            constraintName="fk_users_profiles_profiles"
+            referencedColumnNames="id"
+            referencedTableName="profiles"/>            
+
+        <!-- add default permissions -->
+        <insert
+            schemaName="public"
+            tableName="permissions">
+            <column name="id" value="1"/>
+            <column name="description" value="Home"/>
+            <column name="code" value="home.index"/>
+        </insert>
+        <insert
+            schemaName="public"
+            tableName="permissions">
+            <column name="id" value="2"/>            
+            <column name="description" value="Ver Usuarios"/>
+            <column name="code" value="users.read"/>
+        </insert>
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="3"/>            
+            <column name="description" value="Actualizar Usuario"/>
+            <column name="code" value="users.write"/>
+        </insert>
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="4"/>            
+            <column name="description" value="Eliminar Usuario"/>
+            <column name="code" value="users.delete"/>
+        </insert>
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="5"/>            
+            <column name="description" value="Ver Perfiles"/>
+            <column name="code" value="profiles.read"/>
+        </insert>
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="6"/>            
+            <column name="description" value="Actualizar Perfil"/>
+            <column name="code" value="profiles.write"/>
+        </insert>
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="7"/>            
+            <column name="description" value="Eliminar Perfil"/>
+            <column name="code" value="profiles.delete"/>
+        </insert>
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="8"/>            
+            <column name="description" value="Ver Organización"/>
+            <column name="code" value="organizations.read"/>
+        </insert>
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="9"/>            
+            <column name="description" value="Actualizar Organización"/>
+            <column name="code" value="organizations.write"/>
+        </insert>
+
+	</changeSet>
+</databaseChangeLog>

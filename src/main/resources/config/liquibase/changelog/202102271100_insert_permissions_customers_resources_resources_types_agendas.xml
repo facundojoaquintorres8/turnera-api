@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+	<changeSet id="202102271100-1" author="FacuTorres">
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="10"/>            
+            <column name="description" value="Ver Clientes"/>
+            <column name="code" value="customers.read"/>
+        </insert>
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="11"/>            
+            <column name="description" value="Actualizar Cliente"/>
+            <column name="code" value="customers.write"/>
+        </insert>
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="12"/>            
+            <column name="description" value="Eliminar Cliente"/>
+            <column name="code" value="customers.delete"/>
+        </insert>
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="13"/>            
+            <column name="description" value="Ver Recursos"/>
+            <column name="code" value="resources.read"/>
+        </insert>
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="14"/>            
+            <column name="description" value="Actualizar Recurso"/>
+            <column name="code" value="resources.write"/>
+        </insert>
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="15"/>            
+            <column name="description" value="Eliminar Recurso"/>
+            <column name="code" value="resources.delete"/>
+        </insert>
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="16"/>            
+            <column name="description" value="Ver Tipos de Recursos"/>
+            <column name="code" value="resourcesTypes.read"/>
+        </insert>
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="17"/>            
+            <column name="description" value="Actualizar Tipo de Recurso"/>
+            <column name="code" value="resourcesTypes.write"/>
+        </insert>
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="18"/>            
+            <column name="description" value="Eliminar Tipo de Recurso"/>
+            <column name="code" value="resourcesTypes.delete"/>
+        </insert>                
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="19"/>            
+            <column name="description" value="Crear Agenda"/>
+            <column name="code" value="agendas.write"/>
+        </insert>         
+	</changeSet>
+</databaseChangeLog>
