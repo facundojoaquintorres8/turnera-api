@@ -32,7 +32,7 @@ public class EmailService implements IEmailService {
 		MimeMessage message = sender.createMimeMessage();
 		MimeMessageHelper helper = new MimeMessageHelper(message);
 		try {
-			helper.setFrom(organization.getBrandName() + " <" + organization.getDefaultEmail() +  ">");
+			helper.setFrom("Turnera <" + organization.getDefaultEmail() +  ">");
 			helper.setTo(to);
 			helper.setText(emailContent, true);
 			helper.setSubject(subject);
