@@ -188,7 +188,7 @@ public class AccountService implements IAccountService {
         }
 
         if (!bCryptPasswordEncoder.matches(passwordChangeDTO.getCurrentPassword(), user.get().getPassword())) {
-            throw new RuntimeException("Sus Contraseña actual es inválida.");
+            throw new RuntimeException("Su Contraseña actual es inválida.");
         }
 
         user.get().setPassword(bCryptPasswordEncoder.encode(passwordChangeDTO.getPassword()));
