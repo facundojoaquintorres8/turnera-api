@@ -67,7 +67,7 @@ public class EmailService implements IEmailService {
 		context.setVariable("firstName", user.getFirstName());
 		context.setVariable("link", baseUrl + "account/" + user.getResetKey() + "/password-reset");
 		String emailContent = templateEngine.process("passwordResetRequest", context);
-		sendEmail(emailContent, "Turnera - Reestrablecer Contraseña", user.getOrganization(), user.getUsername());
+		sendEmail(emailContent, "Turnera - Restrablecer Contraseña", user.getOrganization(), user.getUsername());
 	}
 
 	@Override
