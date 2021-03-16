@@ -105,6 +105,7 @@ public class CustomerService implements ICustomerService {
         return modelMapper.map(customer, CustomerDTO.class);
     }
 
+    @Override
     public CustomerDTO createQuick(CustomerDTO customerDTO, Organization organization) {
         ModelMapper modelMapper = new ModelMapper();
 
