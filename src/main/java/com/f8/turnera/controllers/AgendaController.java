@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -45,6 +46,10 @@ public class AgendaController {
 
         List<AgendaDTO> result = agendaService.create(agendaDTO);
 
+        if (result.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+
         return ResponseEntity.ok().body(result);
     }
 
@@ -56,6 +61,16 @@ public class AgendaController {
         agendaService.deleteById(id);
 
         return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("agendas/{id}/desactivate")
+    @PreAuthorize("hasAuthority('agendas.read')")
+    public ResponseEntity<AgendaDTO> desactivateAgenda(@PathVariable Long id) {
+        log.info("REST request to desactivate Agenda {}", id);
+
+        AgendaDTO result = agendaService.desactivate(id);
+
+        return ResponseEntity.ok().body(result);
     }
 
 }
