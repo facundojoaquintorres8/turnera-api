@@ -53,7 +53,7 @@ public class AccountService implements IAccountService {
     public UserDTO register(RegisterDTO registerDTO) {
         Optional<User> existingUser = userRepository.findByUsername(registerDTO.getUsername());
         if (existingUser.isPresent()) {
-            throw new RuntimeException("El Email ingresado ya está registrado. Por favor ingrese otro.");
+            throw new RuntimeException("El Correo Electrónico ingresado ya está registrado. Por favor ingrese otro.");
         }
 
         // create organization

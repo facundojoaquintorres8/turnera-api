@@ -105,7 +105,7 @@ public class UserService implements IUserService {
 
         Optional<User> existingUser = userRepository.findByUsername(userDTO.getUsername());
         if (existingUser.isPresent()) {
-            throw new RuntimeException("El Email ingresado ya está registrado. Por favor ingrese otro.");
+            throw new RuntimeException("El Correo Electrónico ingresado ya está registrado. Por favor ingrese otro.");
         }
 
         User user = modelMapper.map(userDTO, User.class);
@@ -136,7 +136,7 @@ public class UserService implements IUserService {
 
         Optional<User> existingUser = userRepository.findByUsername(userDTO.getUsername());
         if (existingUser.isPresent() && !existingUser.get().getId().equals(userDTO.getId())) {
-            throw new RuntimeException("El Email ingresado ya está registrado. Por favor ingrese otro.");
+            throw new RuntimeException("El Correo Electrónico ingresado ya está registrado. Por favor ingrese otro.");
         }
 
         ModelMapper modelMapper = new ModelMapper();
