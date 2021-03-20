@@ -100,7 +100,7 @@ public class AgendaService implements IAgendaService {
         }
         if (filter.getTo() != null) {
             LocalDateTime endDate = LocalDateTime.of(filter.getTo().plusDays(1), LocalTime.MIN);
-            Predicate predicate = cb.lessThan(root.get("endDate"), endDate);
+            Predicate predicate = cb.lessThanOrEqualTo(root.get("endDate"), endDate);
             predicates.add(predicate);
         }
         if (filter.getActive() != null) {
@@ -139,14 +139,22 @@ public class AgendaService implements IAgendaService {
         if (!resource.isPresent()) {
             throw new RuntimeException("Recurso no encontrado - " + agendaSaveDTO.getResource().getId());
         }
-        if (agendaSaveDTO.getStartHour().isAfter(agendaSaveDTO.getEndHour())) {
+        if (!agendaSaveDTO.getStartHour().isBefore(agendaSaveDTO.getEndHour())
+            && !agendaSaveDTO.getEndHour().equals(LocalTime.MIDNIGHT)) {
                 throw new RuntimeException("La hora de inicio deber ser menor a la de fin.");
         }
         if (agendaSaveDTO.getStartDate().isAfter(agendaSaveDTO.getEndDate())) {
             throw new RuntimeException("La fecha de inicio deber ser menor o igual a la de fin.");
         }
-        if (agendaSaveDTO.getDuration() == 0) {
-            throw new RuntimeException("La duración debe ser mayor.");
+        if (agendaSaveDTO.getDuration() == 0 || agendaSaveDTO.getDuration() > 1440) {
+            throw new RuntimeException("La duración debe ser mayor 0 y menor a 1440.");
+        }
+        if (agendaSaveDTO.getEndHour().equals(LocalTime.MIDNIGHT)) {
+            agendaSaveDTO.setEndHour(LocalTime.MAX);
+        }
+        if (LocalDateTime.of(LocalDate.now(), agendaSaveDTO.getStartHour()).plusMinutes(agendaSaveDTO.getDuration())
+                .isAfter(LocalDateTime.of(LocalDate.now(), agendaSaveDTO.getEndHour()))) {
+            throw new RuntimeException("La duración supera el intervalo de horarios.");
         }
         // to validate after generating agendas
         AppointmentFilterDTO filter = new AppointmentFilterDTO();
@@ -162,7 +170,7 @@ public class AgendaService implements IAgendaService {
         while (agendaSaveDTO.getStartHour().isBefore(agendaSaveDTO.getEndHour())) {
             hours.add(agendaSaveDTO.getStartHour());
             LocalTime newTime = agendaSaveDTO.getStartHour().plusMinutes(agendaSaveDTO.getDuration());
-            if (newTime.equals(LocalTime.MIDNIGHT)) {
+            if (newTime.isBefore(agendaSaveDTO.getStartHour()) || newTime.equals(LocalTime.MIDNIGHT)) {
                 newTime = LocalTime.MAX;
             }
             agendaSaveDTO.setStartHour(newTime);
