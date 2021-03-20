@@ -47,7 +47,7 @@ public class AppointmentService implements IAppointmentService {
 
         Optional<Agenda> agenda = agendaRepository.findById(appointmentSaveDTO.getAgenda().getId());
         if (!agenda.isPresent()) {
-            throw new RuntimeException("El Turno no tiene una Agenda válida.");
+            throw new RuntimeException("El Turno no tiene una Disponibilidad válida.");
         }
 
         ModelMapper modelMapper = new ModelMapper();

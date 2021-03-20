@@ -118,7 +118,7 @@ public class AgendaService implements IAgendaService {
     public AgendaDTO findById(Long id) {
         Optional<Agenda> agenda = agendaRepository.findById(id);
         if (!agenda.isPresent()) {
-            throw new RuntimeException("Agenda no encontrada - " + id);
+            throw new RuntimeException("Disponibilidad no encontrada - " + id);
         }
 
         ModelMapper modelMapper = new ModelMapper();
@@ -133,7 +133,7 @@ public class AgendaService implements IAgendaService {
         // validations
         Optional<Organization> organization = organizationRepository.findById(agendaSaveDTO.getOrganizationId());
         if (!organization.isPresent()) {
-            throw new RuntimeException("La Agenda no tiene una Organización asociada válida.");
+            throw new RuntimeException("La Disponibilidad no tiene una Organización asociada válida.");
         }
         Optional<Resource> resource = resourceRepository.findById(agendaSaveDTO.getResource().getId());
         if (!resource.isPresent()) {
@@ -244,7 +244,7 @@ public class AgendaService implements IAgendaService {
             }
 
             if (flag) {
-                throw new RuntimeException("Hay Agendas existentes para el Recurso en el período dado.");
+                throw new RuntimeException("Hay Disponibilidades existentes para el Recurso en el período dado.");
             }
         }
 
@@ -272,7 +272,7 @@ public class AgendaService implements IAgendaService {
     public void deleteById(Long id) {
         Optional<Agenda> agenda = agendaRepository.findById(id);
         if (!agenda.isPresent()) {
-            throw new RuntimeException("Agenda no encontrada - " + id);
+            throw new RuntimeException("Disponibilidad no encontrada - " + id);
         }
 
         try {
@@ -286,7 +286,7 @@ public class AgendaService implements IAgendaService {
     public AgendaDTO desactivate(Long id) {
         Optional<Agenda> agenda = agendaRepository.findById(id);
         if (!agenda.isPresent()) {
-            throw new RuntimeException("Agenda no encontrada - " + id);
+            throw new RuntimeException("Disponibilidad no encontrada - " + id);
         }
 
         ModelMapper modelMapper = new ModelMapper();
