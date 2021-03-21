@@ -18,11 +18,13 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import com.f8.turnera.entities.Organization;
+import com.f8.turnera.repositories.IOrganizationRepository;
 import com.f8.turnera.security.entities.Permission;
 import com.f8.turnera.security.entities.Profile;
 import com.f8.turnera.security.models.PermissionDTO;
 import com.f8.turnera.security.models.ProfileDTO;
 import com.f8.turnera.security.models.ProfileFilterDTO;
+import com.f8.turnera.security.repositories.IPermissionRepository;
 import com.f8.turnera.security.repositories.IProfileRepository;
 
 import org.modelmapper.ModelMapper;
@@ -36,7 +38,10 @@ public class ProfileService implements IProfileService {
     private IProfileRepository profileRepository;
 
     @Autowired
-    private com.f8.turnera.repositories.IOrganizationRepository organizationRepository;
+    private IOrganizationRepository organizationRepository;
+
+    @Autowired
+    private IPermissionRepository permissionRepository;
 
     @Autowired
     private EntityManager em;
@@ -140,6 +145,11 @@ public class ProfileService implements IProfileService {
     }
 
     private Set<Permission> addPermissions(ProfileDTO profileDTO, ModelMapper modelMapper) {
+        if (profileDTO.getPermissions().stream().filter(x -> x.getCode().equals("home.index")).count() == 0) {
+            Optional<Permission> permissionHomeIndex = permissionRepository.findByCode("home.index");
+            profileDTO.getPermissions().add(modelMapper.map(permissionHomeIndex.get(), PermissionDTO.class));   
+        }
+
         Set<Permission> newPermissions = new HashSet<>();
         for (PermissionDTO permission : profileDTO.getPermissions()) {
                 newPermissions.add(modelMapper.map(permission, Permission.class));
