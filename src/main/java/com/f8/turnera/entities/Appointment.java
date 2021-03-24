@@ -13,6 +13,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
@@ -46,7 +47,9 @@ public class Appointment {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "appointment")
     private Set<AppointmentStatus> status;
 
-    private AppointmentStatusEnum currentStatus;
+    @OneToOne
+    @JoinColumn(name = "last_appointment_status_id")
+    private AppointmentStatus lastAppointmentStatus;
 
     public Long getId() {
         return id;
@@ -96,17 +99,18 @@ public class Appointment {
         this.status = status;
     }
 
-    public void addStatus(AppointmentStatusEnum appointmentStatus) {
-        status.add(new AppointmentStatus(LocalDateTime.now(), this, appointmentStatus));
-        setCurrentStatus(appointmentStatus);
+    public void addStatus(AppointmentStatusEnum appointmentStatus, String observations) {
+        AppointmentStatus newAppointmentStatus = new AppointmentStatus(LocalDateTime.now(), this, appointmentStatus, observations);
+        status.add(newAppointmentStatus);
+        setLastAppointmentStatus(newAppointmentStatus);
     }
 
-    public AppointmentStatusEnum getCurrentStatus() {
-        return currentStatus;
+    public AppointmentStatus getLastAppointmentStatus() {
+        return lastAppointmentStatus;
     }
 
-    public void setCurrentStatus(AppointmentStatusEnum currentStatus) {
-        this.currentStatus = currentStatus;
+    public void setLastAppointmentStatus(AppointmentStatus lastAppointmentStatus) {
+        this.lastAppointmentStatus = lastAppointmentStatus;
     }
 
     public Appointment(LocalDateTime createdDate, Organization organization, Agenda agenda, Customer customer) {

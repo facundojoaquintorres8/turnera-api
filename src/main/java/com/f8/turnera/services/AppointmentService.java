@@ -8,6 +8,7 @@ import com.f8.turnera.entities.Agenda;
 import com.f8.turnera.entities.Appointment;
 import com.f8.turnera.entities.Customer;
 import com.f8.turnera.entities.Organization;
+import com.f8.turnera.models.AppointmentCancelDTO;
 import com.f8.turnera.models.AppointmentDTO;
 import com.f8.turnera.models.AppointmentSaveDTO;
 import com.f8.turnera.models.AppointmentStatusEnum;
@@ -61,7 +62,7 @@ public class AppointmentService implements IAppointmentService {
         }
 
         Appointment appointment = new Appointment(LocalDateTime.now(), organization.get(), agenda.get(), customer);
-        appointment.addStatus(AppointmentStatusEnum.BOOKED);
+        appointment.addStatus(AppointmentStatusEnum.BOOKED, null);
         
         try {
             appointmentRepository.save(appointment);
@@ -83,7 +84,7 @@ public class AppointmentService implements IAppointmentService {
             throw new RuntimeException("Turno no encontrado - " + id);
         }
 
-        appointment.get().addStatus(AppointmentStatusEnum.ABSENT);
+        appointment.get().addStatus(AppointmentStatusEnum.ABSENT, null);
 
         try {
             appointmentRepository.save(appointment.get());
@@ -96,13 +97,13 @@ public class AppointmentService implements IAppointmentService {
     }
 
     @Override
-    public AppointmentDTO cancel(Long id) {
-        Optional<Appointment> appointment = appointmentRepository.findById(id);
+    public AppointmentDTO cancel(AppointmentCancelDTO appointmentCancelDTO) {
+        Optional<Appointment> appointment = appointmentRepository.findById(appointmentCancelDTO.getId());
         if (!appointment.isPresent()) {
-            throw new RuntimeException("Turno no encontrado - " + id);
+            throw new RuntimeException("Turno no encontrado - " + appointmentCancelDTO.getId());
         }
 
-        appointment.get().addStatus(AppointmentStatusEnum.CANCELLED);
+        appointment.get().addStatus(AppointmentStatusEnum.CANCELLED, appointmentCancelDTO.getObservations());
 
         emailService.sendCanceledAppointmentEmail(appointment.get());
 
@@ -123,7 +124,7 @@ public class AppointmentService implements IAppointmentService {
             throw new RuntimeException("Turno no encontrado - " + id);
         }
 
-        appointment.get().addStatus(AppointmentStatusEnum.IN_ATTENTION);
+        appointment.get().addStatus(AppointmentStatusEnum.IN_ATTENTION, null);
 
         try {
             appointmentRepository.save(appointment.get());
@@ -142,7 +143,7 @@ public class AppointmentService implements IAppointmentService {
             throw new RuntimeException("Turno no encontrado - " + id);
         }
 
-        appointment.get().addStatus(AppointmentStatusEnum.FINALIZED);
+        appointment.get().addStatus(AppointmentStatusEnum.FINALIZED, null);
 
         emailService.sendFinalizeAppointmentEmail(appointment.get());
 

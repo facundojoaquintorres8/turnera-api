@@ -6,7 +6,7 @@ public class AppointmentDTO {
 
     private String customerBusinessName;
 
-    private AppointmentStatusEnum currentStatus;
+    private AppointmentStatusDTO lastAppointmentStatus;
 
     public Long getId() {
         return id;
@@ -24,11 +24,11 @@ public class AppointmentDTO {
         this.customerBusinessName = customerBusinessName;
     }
 
-    public AppointmentStatusEnum getCurrentStatus() {
-        return currentStatus;
+    public AppointmentStatusDTO getLastAppointmentStatus() {
+        return lastAppointmentStatus;
     }
 
-    public void setCurrentStatus(AppointmentStatusEnum currentStatus) {
-        this.currentStatus = currentStatus;
+    public void setLastAppointmentStatus(AppointmentStatusDTO lastAppointmentStatus) {
+        this.lastAppointmentStatus = lastAppointmentStatus;
     }
 }

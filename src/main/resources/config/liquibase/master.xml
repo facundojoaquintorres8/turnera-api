@@ -14,4 +14,6 @@
     <include file="config/liquibase/changelog/202103051900_add_last_appointment_to_agenda.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/202103062200_add_current_status_to_appointment.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/202103200345_rename_agenda_permissions.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/202103221047_add_observations_to_appointment_status_and_add_last_status_to_appointment.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/202103241948_drop_not_null_contraint_to_last_appointment_status.xml" relativeToChangelogFile="false"/>
 </databaseChangeLog>

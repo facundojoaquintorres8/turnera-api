@@ -1,5 +1,6 @@
 package com.f8.turnera.controllers;
 
+import com.f8.turnera.models.AppointmentCancelDTO;
 import com.f8.turnera.models.AppointmentDTO;
 import com.f8.turnera.models.AppointmentSaveDTO;
 import com.f8.turnera.services.IAppointmentService;
@@ -44,12 +45,12 @@ public class AppointmentController {
         return ResponseEntity.ok().body(result);
     }
     
-    @GetMapping("appointments/{id}/cancel")
+    @PostMapping("appointments/cancel")
     @PreAuthorize("hasAuthority('appointments.cancel')")
-    public ResponseEntity<AppointmentDTO> cancel(@PathVariable Long id) {
-        log.info("REST request to cancel Appointment: {}", id);
+    public ResponseEntity<AppointmentDTO> cancel(@RequestBody AppointmentCancelDTO appointmentCancelDTO) {
+        log.info("REST request to cancel Appointment: {}", appointmentCancelDTO);
 
-        AppointmentDTO result = appointmentService.cancel(id);
+        AppointmentDTO result = appointmentService.cancel(appointmentCancelDTO);
 
         return ResponseEntity.ok().body(result);
     }
