@@ -39,6 +39,11 @@ public class AuthService implements IAuthService {
         SessionUserDTO result = new SessionUserDTO();
 
         Optional<User> user = userRepository.findByUsername(authDTO.getUsername());
+
+        if (user.isPresent() && !user.get().getActive()) {
+            throw new RuntimeException("El Usuario no está activado, revise sus Correo Electrónico para activarlo.");
+        }
+
         if (!user.isPresent() || !bCryptPasswordEncoder.matches(authDTO.getPassword(), user.get().getPassword())) {
             throw new RuntimeException("Revise sus credenciales. Usuario o contraseña inválido.");
         }
