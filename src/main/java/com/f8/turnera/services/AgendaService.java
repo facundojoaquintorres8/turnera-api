@@ -30,6 +30,7 @@ import com.f8.turnera.repositories.IResourceRepository;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -278,6 +279,8 @@ public class AgendaService implements IAgendaService {
 
         try {
             agendaRepository.delete(agenda.get());
+        } catch (DataIntegrityViolationException dive) {
+            throw new RuntimeException("No se puede borrar la Disponibilidad porque tiene Turnos asociados.");
         } catch (Exception e) {
             throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
         }

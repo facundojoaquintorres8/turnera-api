@@ -29,6 +29,7 @@ import com.f8.turnera.security.repositories.IProfileRepository;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -166,6 +167,8 @@ public class ProfileService implements IProfileService {
 
         try {
             profileRepository.delete(profile.get());
+        } catch (DataIntegrityViolationException dive) {
+            throw new RuntimeException("No se puede borrar el Perfil porque tiene Usuarios asociados.");
         } catch (Exception e) {
             throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
         }
