@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 
+import java.time.format.DateTimeFormatter;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
@@ -18,6 +20,8 @@ import org.thymeleaf.context.Context;
 
 @Service
 public class EmailService implements IEmailService {
+
+	final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
 
 	@Value("${baseUrl}")
 	private String baseUrl;
@@ -75,8 +79,8 @@ public class EmailService implements IEmailService {
 		Context context = new Context();
 		context.setVariable("businessName", appointment.getCustomer().getBusinessName());
 		context.setVariable("resource", appointment.getAgenda().getResource().getDescription());
-		context.setVariable("fromDate", appointment.getAgenda().getStartDate());
-		context.setVariable("toDate", appointment.getAgenda().getEndDate());
+		context.setVariable("fromDate", appointment.getAgenda().getStartDate().format(formatter));
+		context.setVariable("toDate", appointment.getAgenda().getEndDate().format(formatter));
 		String emailContent = templateEngine.process("confirmedAppointment", context);
 		sendEmail(emailContent, "Turnera - Turno Confirmado", appointment.getOrganization(), appointment.getCustomer().getEmail());		
 	}
@@ -86,8 +90,8 @@ public class EmailService implements IEmailService {
 		Context context = new Context();
 		context.setVariable("businessName", appointment.getCustomer().getBusinessName());
 		context.setVariable("resource", appointment.getAgenda().getResource().getDescription());
-		context.setVariable("fromDate", appointment.getAgenda().getStartDate());
-		context.setVariable("toDate", appointment.getAgenda().getEndDate());
+		context.setVariable("fromDate", appointment.getAgenda().getStartDate().format(formatter));
+		context.setVariable("toDate", appointment.getAgenda().getEndDate().format(formatter));
 		String emailContent = templateEngine.process("canceledAppointment", context);
 		sendEmail(emailContent, "Turnera - Turno Cancelado", appointment.getOrganization(), appointment.getCustomer().getEmail());	
 	}
@@ -97,8 +101,8 @@ public class EmailService implements IEmailService {
 		Context context = new Context();
 		context.setVariable("businessName", appointment.getCustomer().getBusinessName());
 		context.setVariable("resource", appointment.getAgenda().getResource().getDescription());
-		context.setVariable("fromDate", appointment.getAgenda().getStartDate());
-		context.setVariable("toDate", appointment.getAgenda().getEndDate());
+		context.setVariable("fromDate", appointment.getAgenda().getStartDate().format(formatter));
+		context.setVariable("toDate", appointment.getAgenda().getEndDate().format(formatter));
 		String emailContent = templateEngine.process("finalizeAppointment", context);
 		sendEmail(emailContent, "Turnera - Turno Finalizado", appointment.getOrganization(), appointment.getCustomer().getEmail());	
 	}

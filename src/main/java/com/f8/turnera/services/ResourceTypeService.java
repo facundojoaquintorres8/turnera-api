@@ -24,6 +24,7 @@ import com.f8.turnera.repositories.IResourceTypeRepository;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -142,6 +143,8 @@ public class ResourceTypeService implements IResourceTypeService {
 
         try {
             resourceTypeRepository.delete(resourceType.get());
+        } catch (DataIntegrityViolationException dive) {
+            throw new RuntimeException("No se puede borrar el Tipo de Recurso porque tiene Recursos asociados.");
         } catch (Exception e) {
             throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
         }

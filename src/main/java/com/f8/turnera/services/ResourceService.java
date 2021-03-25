@@ -25,6 +25,7 @@ import com.f8.turnera.repositories.IResourceRepository;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -146,6 +147,8 @@ public class ResourceService implements IResourceService {
 
         try {
             resourceRepository.delete(resource.get());
+        } catch (DataIntegrityViolationException dive) {
+            throw new RuntimeException("No se puede borrar el Recurso porque tiene Disponibilidades asociadas.");
         } catch (Exception e) {
             throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
         }

@@ -20,6 +20,8 @@ public class AppointmentFilterDTO extends DefaultFilterDTO {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate to;
 
+    private Boolean active;
+
     public Long getResourceTypeId() {
         return resourceTypeId;
     }
@@ -66,5 +68,13 @@ public class AppointmentFilterDTO extends DefaultFilterDTO {
 
     public void setTo(LocalDate to) {
         this.to = to;
+    }
+
+    public Boolean getActive() {
+        return active;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active;
     }
 }

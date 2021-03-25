@@ -2,7 +2,7 @@ package com.f8.turnera.security.controllers;
 
 import com.f8.turnera.security.models.LoginDTO;
 import com.f8.turnera.security.models.SessionUserDTO;
-import com.f8.turnera.security.services.AuthService;
+import com.f8.turnera.security.services.IAuthService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthenticateController {
 
   @Autowired
-  private AuthService authService;
+  private IAuthService authService;
 
   @PostMapping("/authenticate")
   public ResponseEntity<SessionUserDTO> authenticate(@RequestBody LoginDTO login) {

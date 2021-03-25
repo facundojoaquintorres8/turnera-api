@@ -1,5 +1,6 @@
 package com.f8.turnera.services;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -29,6 +30,7 @@ import com.f8.turnera.repositories.IResourceRepository;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -83,12 +85,13 @@ public class AgendaService implements IAgendaService {
         if (filter.getStatus() != null) {
             if (filter.getStatus() == AppointmentStatusEnum.FREE) {
                 Predicate predicate1 = root.join("lastAppointment", JoinType.LEFT).isNull();
-                Predicate predicate2 = cb.equal(root.join("lastAppointment", JoinType.LEFT).get("currentStatus"),
-                        AppointmentStatusEnum.CANCELLED);
+                Predicate predicate2 = cb.equal(root.join("lastAppointment", JoinType.LEFT)
+                    .join("lastStatus", JoinType.LEFT).get("status"), AppointmentStatusEnum.CANCELLED);
                 predicates.add(cb.or(predicate1, predicate2));
 
             } else {
-                Predicate predicate = cb.equal(root.join("lastAppointment", JoinType.LEFT).get("currentStatus"), filter.getStatus());
+                Predicate predicate = cb.equal(root.join("lastAppointment", JoinType.LEFT)
+                    .join("lastStatus", JoinType.LEFT).get("status"), filter.getStatus());
                 predicates.add(predicate);
             }
         }
@@ -97,10 +100,13 @@ public class AgendaService implements IAgendaService {
             Predicate predicate = cb.greaterThanOrEqualTo(root.get("startDate"), startDate);
             predicates.add(predicate);
         }
-
         if (filter.getTo() != null) {
             LocalDateTime endDate = LocalDateTime.of(filter.getTo().plusDays(1), LocalTime.MIN);
-            Predicate predicate = cb.lessThan(root.get("endDate"), endDate);
+            Predicate predicate = cb.lessThanOrEqualTo(root.get("endDate"), endDate);
+            predicates.add(predicate);
+        }
+        if (filter.getActive() != null) {
+            Predicate predicate = cb.equal(root.get("active"), filter.getActive());
             predicates.add(predicate);
         }
 
@@ -114,7 +120,7 @@ public class AgendaService implements IAgendaService {
     public AgendaDTO findById(Long id) {
         Optional<Agenda> agenda = agendaRepository.findById(id);
         if (!agenda.isPresent()) {
-            throw new RuntimeException("Agenda no encontrada - " + id);
+            throw new RuntimeException("Disponibilidad no encontrada - " + id);
         }
 
         ModelMapper modelMapper = new ModelMapper();
@@ -126,15 +132,38 @@ public class AgendaService implements IAgendaService {
     public List<AgendaDTO> create(AgendaSaveDTO agendaSaveDTO) {
         ModelMapper modelMapper = new ModelMapper();
 
+        // validations
         Optional<Organization> organization = organizationRepository.findById(agendaSaveDTO.getOrganizationId());
         if (!organization.isPresent()) {
-            throw new RuntimeException("La Agenda no tiene una Organización asociada válida.");
+            throw new RuntimeException("La Disponibilidad no tiene una Organización asociada válida.");
         }
-
         Optional<Resource> resource = resourceRepository.findById(agendaSaveDTO.getResource().getId());
         if (!resource.isPresent()) {
             throw new RuntimeException("Recurso no encontrado - " + agendaSaveDTO.getResource().getId());
         }
+        if (!agendaSaveDTO.getStartHour().isBefore(agendaSaveDTO.getEndHour())
+            && !agendaSaveDTO.getEndHour().equals(LocalTime.MIDNIGHT)) {
+                throw new RuntimeException("La hora de inicio deber ser menor a la de fin.");
+        }
+        if (agendaSaveDTO.getStartDate().isAfter(agendaSaveDTO.getEndDate())) {
+            throw new RuntimeException("La fecha de inicio deber ser menor o igual a la de fin.");
+        }
+        if (agendaSaveDTO.getDuration() == 0 || agendaSaveDTO.getDuration() > 1440) {
+            throw new RuntimeException("La duración debe ser mayor 0 y menor a 1440.");
+        }
+        if (agendaSaveDTO.getEndHour().equals(LocalTime.MIDNIGHT)) {
+            agendaSaveDTO.setEndHour(LocalTime.MAX);
+        }
+        if (LocalDateTime.of(LocalDate.now(), agendaSaveDTO.getStartHour()).plusMinutes(agendaSaveDTO.getDuration())
+                .isAfter(LocalDateTime.of(LocalDate.now(), agendaSaveDTO.getEndHour()))) {
+            throw new RuntimeException("La duración supera el intervalo de horarios.");
+        }
+        // to validate after generating agendas
+        AppointmentFilterDTO filter = new AppointmentFilterDTO();
+        filter.setResourceId(agendaSaveDTO.getResource().getId());
+        filter.setFrom(agendaSaveDTO.getStartDate());
+        filter.setTo(agendaSaveDTO.getEndDate());
+        filter.setActive(true);
 
         List<Agenda> agendas = new ArrayList<>();
         LocalDateTime createdDate = LocalDateTime.now();
@@ -143,10 +172,14 @@ public class AgendaService implements IAgendaService {
         while (agendaSaveDTO.getStartHour().isBefore(agendaSaveDTO.getEndHour())) {
             hours.add(agendaSaveDTO.getStartHour());
             LocalTime newTime = agendaSaveDTO.getStartHour().plusMinutes(agendaSaveDTO.getDuration());
-            if (newTime.equals(LocalTime.MIDNIGHT)) {
+            if (newTime.isBefore(agendaSaveDTO.getStartHour()) || newTime.equals(LocalTime.MIDNIGHT)) {
                 newTime = LocalTime.MAX;
             }
             agendaSaveDTO.setStartHour(newTime);
+        }
+
+        if (agendaSaveDTO.getStartDate().isBefore(LocalDate.now())) {
+            agendaSaveDTO.setStartDate(LocalDate.now());
         }
 
         while (!agendaSaveDTO.getStartDate().isAfter(agendaSaveDTO.getEndDate())) {
@@ -190,6 +223,33 @@ public class AgendaService implements IAgendaService {
             agendaSaveDTO.setStartDate(agendaSaveDTO.getStartDate().plusDays(1));
         }
 
+        // validation after generating agendas
+        List<Agenda> existingAgendas = findByCriteria(filter);
+        if (!existingAgendas.isEmpty()) {
+            Boolean flag = false;
+            for (Agenda newAgenda : agendas) {
+                List<Agenda> overlappingAgenda = existingAgendas.stream()
+                        .filter(oldAgenda -> ((newAgenda.getStartDate().isAfter(oldAgenda.getStartDate())
+                                || newAgenda.getStartDate().equals(oldAgenda.getStartDate()))
+                                && newAgenda.getStartDate().isBefore(oldAgenda.getEndDate())) ||
+                                ((newAgenda.getEndDate().isBefore(oldAgenda.getEndDate())
+                                    || newAgenda.getEndDate().equals(oldAgenda.getEndDate()))
+                                    && newAgenda.getEndDate().isAfter(oldAgenda.getStartDate())) ||
+                                ((newAgenda.getStartDate().isBefore(oldAgenda.getStartDate())
+                                || newAgenda.getStartDate().equals(oldAgenda.getStartDate()))
+                                && (newAgenda.getEndDate().isAfter(oldAgenda.getEndDate())
+                                || newAgenda.getEndDate().equals(oldAgenda.getEndDate())))
+                        ).collect(Collectors.toList());
+                if (!overlappingAgenda.isEmpty()) {
+                    flag = true;
+                }
+            }
+
+            if (flag) {
+                throw new RuntimeException("Hay Disponibilidades existentes para el Recurso en el período dado.");
+            }
+        }
+
         try {
             agendaRepository.saveAll(agendas);
         } catch (Exception e) {
@@ -200,6 +260,9 @@ public class AgendaService implements IAgendaService {
 
     private void createAgenda(AgendaSaveDTO agendaSaveDTO, List<LocalTime> hours, List<Agenda> agendaToSave,
             Resource resource, Organization organization, LocalDateTime createdDate) {
+        if (agendaSaveDTO.getStartDate().isEqual(LocalDate.now())) {
+            hours = hours.stream().filter(x -> x.isAfter(LocalTime.now())).collect(Collectors.toList());
+        }                
         for (LocalTime hour : hours) {
             LocalDateTime start = LocalDateTime.of(agendaSaveDTO.getStartDate(), hour);
             LocalDateTime end = start.plusMinutes(agendaSaveDTO.getDuration());
@@ -211,13 +274,36 @@ public class AgendaService implements IAgendaService {
     public void deleteById(Long id) {
         Optional<Agenda> agenda = agendaRepository.findById(id);
         if (!agenda.isPresent()) {
-            throw new RuntimeException("Agenda no encontrada - " + id);
+            throw new RuntimeException("Disponibilidad no encontrada - " + id);
         }
 
         try {
             agendaRepository.delete(agenda.get());
+        } catch (DataIntegrityViolationException dive) {
+            throw new RuntimeException("No se puede borrar la Disponibilidad porque tiene Turnos asociados.");
         } catch (Exception e) {
             throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
         }
+    }
+
+    @Override
+    public AgendaDTO desactivate(Long id) {
+        Optional<Agenda> agenda = agendaRepository.findById(id);
+        if (!agenda.isPresent()) {
+            throw new RuntimeException("Disponibilidad no encontrada - " + id);
+        }
+
+        ModelMapper modelMapper = new ModelMapper();
+
+        try {
+            agenda.ifPresent(a -> {
+                a.setActive(false);
+                agendaRepository.save(a);
+            });
+
+        } catch (Exception e) {
+            throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
+        }
+        return modelMapper.map(agenda.get(), AgendaDTO.class);
     }
 }

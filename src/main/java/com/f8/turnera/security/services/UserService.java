@@ -27,6 +27,7 @@ import com.f8.turnera.security.models.ProfileDTO;
 import com.f8.turnera.security.models.UserDTO;
 import com.f8.turnera.security.models.UserFilterDTO;
 import com.f8.turnera.security.repositories.IUserRepository;
+import com.f8.turnera.util.EmailValidation;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -105,7 +106,11 @@ public class UserService implements IUserService {
 
         Optional<User> existingUser = userRepository.findByUsername(userDTO.getUsername());
         if (existingUser.isPresent()) {
-            throw new RuntimeException("El Email ingresado ya está registrado. Por favor ingrese otro.");
+            throw new RuntimeException("El Correo Electrónico ingresado ya está registrado. Por favor ingrese otro.");
+        }
+
+        if (!EmailValidation.validateEmail(userDTO.getUsername())) {
+            throw new RuntimeException("El Correo Electrónico es inválido.");
         }
 
         User user = modelMapper.map(userDTO, User.class);
@@ -136,7 +141,11 @@ public class UserService implements IUserService {
 
         Optional<User> existingUser = userRepository.findByUsername(userDTO.getUsername());
         if (existingUser.isPresent() && !existingUser.get().getId().equals(userDTO.getId())) {
-            throw new RuntimeException("El Email ingresado ya está registrado. Por favor ingrese otro.");
+            throw new RuntimeException("El Correo Electrónico ingresado ya está registrado. Por favor ingrese otro.");
+        }
+
+        if (!EmailValidation.validateEmail(userDTO.getUsername())) {
+            throw new RuntimeException("El Correo Electrónico es inválido.");
         }
 
         ModelMapper modelMapper = new ModelMapper();

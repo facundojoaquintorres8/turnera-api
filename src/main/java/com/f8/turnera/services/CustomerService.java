@@ -21,9 +21,11 @@ import com.f8.turnera.models.CustomerDTO;
 import com.f8.turnera.models.CustomerFilterDTO;
 import com.f8.turnera.repositories.ICustomerRepository;
 import com.f8.turnera.repositories.IOrganizationRepository;
+import com.f8.turnera.util.EmailValidation;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -92,6 +94,10 @@ public class CustomerService implements ICustomerService {
             throw new RuntimeException("El Cliente no tiene una Organización asociada válida.");
         }
 
+        if (!EmailValidation.validateEmail(customerDTO.getEmail())) {
+            throw new RuntimeException("El Correo Electrónico es inválido.");
+        }
+
         Customer customer = modelMapper.map(customerDTO, Customer.class);
         customer.setCreatedDate(LocalDateTime.now());
         customer.setActive(true);
@@ -107,6 +113,10 @@ public class CustomerService implements ICustomerService {
 
     @Override
     public CustomerDTO createQuick(CustomerDTO customerDTO, Organization organization) {
+        if (!EmailValidation.validateEmail(customerDTO.getEmail())) {
+            throw new RuntimeException("El Correo Electrónico es inválido.");
+        }
+
         ModelMapper modelMapper = new ModelMapper();
 
         Customer customer = modelMapper.map(customerDTO, Customer.class);
@@ -127,6 +137,10 @@ public class CustomerService implements ICustomerService {
         Optional<Customer> customer = customerRepository.findById(customerDTO.getId());
         if (!customer.isPresent()) {
             throw new RuntimeException("Cliente no encontrado - " + customerDTO.getId());
+        }
+
+        if (!EmailValidation.validateEmail(customerDTO.getEmail())) {
+            throw new RuntimeException("El Correo Electrónico es inválido.");
         }
 
         ModelMapper modelMapper = new ModelMapper();
@@ -160,6 +174,8 @@ public class CustomerService implements ICustomerService {
 
         try {
             customerRepository.delete(customer.get());
+        } catch (DataIntegrityViolationException dive) {
+            throw new RuntimeException("No se puede borrar el Cliente porque tiene Turnos asociados.");
         } catch (Exception e) {
             throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
         }

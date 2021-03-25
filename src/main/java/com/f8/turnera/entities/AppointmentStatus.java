@@ -34,6 +34,9 @@ public class AppointmentStatus {
     @Column(name = "status")
     private AppointmentStatusEnum status;
 
+    @Column(name = "observations")
+    private String observations;
+
     public Long getId() {
         return id;
     }
@@ -66,10 +69,19 @@ public class AppointmentStatus {
         this.status = status;
     }
 
-    public AppointmentStatus(LocalDateTime createdDate, Appointment appointment, AppointmentStatusEnum status) {
+    public String getObservations() {
+        return observations;
+    }
+
+    public void setObservations(String observations) {
+        this.observations = observations;
+    }
+
+    public AppointmentStatus(LocalDateTime createdDate, Appointment appointment, AppointmentStatusEnum status, String observations) {
         this.createdDate = createdDate;
         this.appointment = appointment;
         this.status = status;
+        this.observations = observations;
     }
 
     public AppointmentStatus() {

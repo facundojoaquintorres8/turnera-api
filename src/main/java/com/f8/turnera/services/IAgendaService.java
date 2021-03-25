@@ -15,4 +15,6 @@ public interface IAgendaService {
     public List<AgendaDTO> create(AgendaSaveDTO agendaDTO);
 
     public void deleteById(Long id);
+
+    public AgendaDTO desactivate(Long id);
 }

@@ -5,6 +5,7 @@ import java.util.Optional;
 import com.f8.turnera.entities.Organization;
 import com.f8.turnera.models.OrganizationDTO;
 import com.f8.turnera.repositories.IOrganizationRepository;
+import com.f8.turnera.util.EmailValidation;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,10 @@ public class OrganizationService implements IOrganizationService {
         Optional<Organization> organization = organizationRepository.findById(organizationDTO.getId());
         if (!organization.isPresent()) {
             throw new RuntimeException("Organización no encontrada - " + organizationDTO.getId());
+        }
+
+        if (!EmailValidation.validateEmail(organizationDTO.getDefaultEmail())) {
+            throw new RuntimeException("El Correo Electrónico es inválido.");
         }
 
         ModelMapper modelMapper = new ModelMapper();
