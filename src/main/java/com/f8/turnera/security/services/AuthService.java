@@ -14,6 +14,7 @@ import com.f8.turnera.security.models.LoginDTO;
 import com.f8.turnera.security.models.SessionUserDTO;
 import com.f8.turnera.security.models.UserDTO;
 import com.f8.turnera.security.repositories.IUserRepository;
+import com.f8.turnera.util.EmailValidation;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +41,10 @@ public class AuthService implements IAuthService {
         Optional<User> user = userRepository.findByUsername(authDTO.getUsername());
         if (!user.isPresent() || !bCryptPasswordEncoder.matches(authDTO.getPassword(), user.get().getPassword())) {
             throw new RuntimeException("Revise sus credenciales. Usuario o contraseña inválido.");
+        }
+
+        if (!EmailValidation.validateEmail(authDTO.getUsername())) {
+            throw new RuntimeException("El Correo Electrónico es inválido.");
         }
 
         ModelMapper modelMapper = new ModelMapper();

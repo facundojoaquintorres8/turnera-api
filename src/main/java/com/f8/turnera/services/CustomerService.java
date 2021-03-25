@@ -21,6 +21,7 @@ import com.f8.turnera.models.CustomerDTO;
 import com.f8.turnera.models.CustomerFilterDTO;
 import com.f8.turnera.repositories.ICustomerRepository;
 import com.f8.turnera.repositories.IOrganizationRepository;
+import com.f8.turnera.util.EmailValidation;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -92,6 +93,10 @@ public class CustomerService implements ICustomerService {
             throw new RuntimeException("El Cliente no tiene una Organización asociada válida.");
         }
 
+        if (!EmailValidation.validateEmail(customerDTO.getEmail())) {
+            throw new RuntimeException("El Correo Electrónico es inválido.");
+        }
+
         Customer customer = modelMapper.map(customerDTO, Customer.class);
         customer.setCreatedDate(LocalDateTime.now());
         customer.setActive(true);
@@ -107,6 +112,10 @@ public class CustomerService implements ICustomerService {
 
     @Override
     public CustomerDTO createQuick(CustomerDTO customerDTO, Organization organization) {
+        if (!EmailValidation.validateEmail(customerDTO.getEmail())) {
+            throw new RuntimeException("El Correo Electrónico es inválido.");
+        }
+
         ModelMapper modelMapper = new ModelMapper();
 
         Customer customer = modelMapper.map(customerDTO, Customer.class);
@@ -127,6 +136,10 @@ public class CustomerService implements ICustomerService {
         Optional<Customer> customer = customerRepository.findById(customerDTO.getId());
         if (!customer.isPresent()) {
             throw new RuntimeException("Cliente no encontrado - " + customerDTO.getId());
+        }
+
+        if (!EmailValidation.validateEmail(customerDTO.getEmail())) {
+            throw new RuntimeException("El Correo Electrónico es inválido.");
         }
 
         ModelMapper modelMapper = new ModelMapper();

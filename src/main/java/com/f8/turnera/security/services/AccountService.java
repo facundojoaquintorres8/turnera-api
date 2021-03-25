@@ -20,6 +20,7 @@ import com.f8.turnera.security.models.UserDTO;
 import com.f8.turnera.security.repositories.IPermissionRepository;
 import com.f8.turnera.security.repositories.IProfileRepository;
 import com.f8.turnera.security.repositories.IUserRepository;
+import com.f8.turnera.util.EmailValidation;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +55,10 @@ public class AccountService implements IAccountService {
         Optional<User> existingUser = userRepository.findByUsername(registerDTO.getUsername());
         if (existingUser.isPresent()) {
             throw new RuntimeException("El Correo Electrónico ingresado ya está registrado. Por favor ingrese otro.");
+        }
+
+        if (!EmailValidation.validateEmail(registerDTO.getUsername())) {
+            throw new RuntimeException("El Correo Electrónico es inválido.");
         }
 
         // create organization
@@ -134,6 +139,10 @@ public class AccountService implements IAccountService {
         Optional<User> user = userRepository.findByUsername(passwordResetRequestDTO.getUsername());
         if (!user.isPresent()) {
             throw new RuntimeException("Usuario no encontrado.");
+        }
+
+        if (!EmailValidation.validateEmail(passwordResetRequestDTO.getUsername())) {
+            throw new RuntimeException("El Correo Electrónico es inválido.");
         }
 
         user.ifPresent(u -> {
