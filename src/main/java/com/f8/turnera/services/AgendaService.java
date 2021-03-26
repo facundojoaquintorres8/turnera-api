@@ -86,12 +86,12 @@ public class AgendaService implements IAgendaService {
             if (filter.getStatus() == AppointmentStatusEnum.FREE) {
                 Predicate predicate1 = root.join("lastAppointment", JoinType.LEFT).isNull();
                 Predicate predicate2 = cb.equal(root.join("lastAppointment", JoinType.LEFT)
-                    .join("lastStatus", JoinType.LEFT).get("status"), AppointmentStatusEnum.CANCELLED);
+                    .join("lastAppointmentStatus", JoinType.LEFT).get("status"), AppointmentStatusEnum.CANCELLED);
                 predicates.add(cb.or(predicate1, predicate2));
 
             } else {
                 Predicate predicate = cb.equal(root.join("lastAppointment", JoinType.LEFT)
-                    .join("lastStatus", JoinType.LEFT).get("status"), filter.getStatus());
+                    .join("lastAppointmentStatus", JoinType.LEFT).get("status"), filter.getStatus());
                 predicates.add(predicate);
             }
         }
