@@ -144,7 +144,7 @@ public class ResourceTypeService implements IResourceTypeService {
         try {
             resourceTypeRepository.delete(resourceType.get());
         } catch (DataIntegrityViolationException dive) {
-            throw new RuntimeException("No se puede borrar el Tipo de Recurso porque tiene Recursos asociados.");
+            throw new RuntimeException("No se puede eliminar el Tipo de Recurso porque tiene Recursos asociados.");
         } catch (Exception e) {
             throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
         }

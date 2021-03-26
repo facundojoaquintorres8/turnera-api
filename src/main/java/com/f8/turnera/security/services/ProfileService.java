@@ -168,7 +168,7 @@ public class ProfileService implements IProfileService {
         try {
             profileRepository.delete(profile.get());
         } catch (DataIntegrityViolationException dive) {
-            throw new RuntimeException("No se puede borrar el Perfil porque tiene Usuarios asociados.");
+            throw new RuntimeException("No se puede eliminar el Perfil porque tiene Usuarios asociados.");
         } catch (Exception e) {
             throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
         }

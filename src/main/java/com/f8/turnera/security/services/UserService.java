@@ -183,7 +183,7 @@ public class UserService implements IUserService {
         }
 
         if (TokenProvider.getUsernameWithoutToken().equals(user.get().getUsername())) {
-            throw new RuntimeException("No puede borrar su propio Usuario.");
+            throw new RuntimeException("No puede eliminar su propio Usuario.");
         }
 
         try {

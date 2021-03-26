@@ -148,7 +148,7 @@ public class ResourceService implements IResourceService {
         try {
             resourceRepository.delete(resource.get());
         } catch (DataIntegrityViolationException dive) {
-            throw new RuntimeException("No se puede borrar el Recurso porque tiene Disponibilidades asociadas.");
+            throw new RuntimeException("No se puede eliminar el Recurso porque tiene Disponibilidades asociadas.");
         } catch (Exception e) {
             throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
         }

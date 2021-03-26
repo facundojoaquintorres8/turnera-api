@@ -175,7 +175,7 @@ public class CustomerService implements ICustomerService {
         try {
             customerRepository.delete(customer.get());
         } catch (DataIntegrityViolationException dive) {
-            throw new RuntimeException("No se puede borrar el Cliente porque tiene Turnos asociados.");
+            throw new RuntimeException("No se puede eliminar el Cliente porque tiene Turnos asociados.");
         } catch (Exception e) {
             throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
         }
