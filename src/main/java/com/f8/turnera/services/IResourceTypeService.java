@@ -1,13 +1,13 @@
 package com.f8.turnera.services;
 
-import java.util.List;
-
 import com.f8.turnera.models.ResourceTypeDTO;
 import com.f8.turnera.models.ResourceTypeFilterDTO;
 
+import org.springframework.data.domain.Page;
+
 public interface IResourceTypeService {
 
-    public List<ResourceTypeDTO> findAllByFilter(ResourceTypeFilterDTO filter);
+    public Page<ResourceTypeDTO> findAllByFilter(ResourceTypeFilterDTO filter);
 
     public ResourceTypeDTO findById(Long id);
 

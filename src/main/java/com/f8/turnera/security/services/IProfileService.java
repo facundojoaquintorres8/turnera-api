@@ -1,13 +1,13 @@
 package com.f8.turnera.security.services;
 
-import java.util.List;
-
 import com.f8.turnera.security.models.ProfileDTO;
 import com.f8.turnera.security.models.ProfileFilterDTO;
 
+import org.springframework.data.domain.Page;
+
 public interface IProfileService {
 
-    public List<ProfileDTO> findAllByFilter(ProfileFilterDTO filter);
+    public Page<ProfileDTO> findAllByFilter(ProfileFilterDTO filter);
 
     public ProfileDTO findById(Long id);
 

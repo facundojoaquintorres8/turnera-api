@@ -7,10 +7,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.JoinType;
@@ -27,10 +25,15 @@ import com.f8.turnera.security.models.ProfileDTO;
 import com.f8.turnera.security.models.UserDTO;
 import com.f8.turnera.security.models.UserFilterDTO;
 import com.f8.turnera.security.repositories.IUserRepository;
+import com.f8.turnera.util.Constants;
 import com.f8.turnera.util.EmailValidation;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import net.bytebuddy.utility.RandomString;
@@ -46,30 +49,42 @@ public class UserService implements IUserService {
 
     @Autowired
     private EntityManager em;
-    
+
     @Autowired
     private IEmailService emailService;
 
     @Override
-    public List<UserDTO> findAllByFilter(UserFilterDTO filter) {
+    public Page<UserDTO> findAllByFilter(UserFilterDTO filter) {
         ModelMapper modelMapper = new ModelMapper();
 
-        List<User> users = findByCriteria(filter);
-        users.sort(Comparator.comparing(User::getLastName));
-        return users.stream().map(user -> modelMapper.map(user, UserDTO.class))
-                .collect(Collectors.toList());
+        Page<User> users = findByCriteria(filter);
+        return users.map(user -> modelMapper.map(user, UserDTO.class));
     }
 
-    private List<User> findByCriteria(UserFilterDTO filter) {
+    private Page<User> findByCriteria(UserFilterDTO filter) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<User> cq = cb.createQuery(User.class);
 
         List<Predicate> predicates = new ArrayList<>();
 
         Root<User> root = cq.from(User.class);
+        if (filter.getFirstName() != null) {
+            Predicate predicate = cb.like(cb.lower(root.get("firstName")),
+                    "%" + filter.getFirstName().toLowerCase() + "%");
+            predicates.add(predicate);
+        }
+        if (filter.getLastName() != null) {
+            Predicate predicate = cb.like(cb.lower(root.get("lastName")),
+                    "%" + filter.getLastName().toLowerCase() + "%");
+            predicates.add(predicate);
+        }
+        if (filter.getUsername() != null) {
+            Predicate predicate = cb.like(cb.lower(root.get("username")),
+                    "%" + filter.getUsername().toLowerCase() + "%");
+            predicates.add(predicate);
+        }
         if (filter.getOrganizationId() != null) {
-            Predicate predicate = cb.equal(root.join("organization", JoinType.LEFT),
-                    filter.getOrganizationId());
+            Predicate predicate = cb.equal(root.join("organization", JoinType.LEFT), filter.getOrganizationId());
             predicates.add(predicate);
         }
         if (filter.getActive() != null) {
@@ -79,8 +94,43 @@ public class UserService implements IUserService {
 
         cq.where(predicates.toArray(new Predicate[0]));
 
-        TypedQuery<User> query = em.createQuery(cq);
-        return query.getResultList();
+        List<User> result = em.createQuery(cq).getResultList();
+        if (filter.getSort() != null) {
+            if (filter.getSort().get(0).equals("ASC")) {
+                switch (filter.getSort().get(1)) {
+                case "firstName":
+                    result.sort(Comparator.comparing(User::getFirstName, String::compareToIgnoreCase));
+                    break;
+                case "lastName":
+                    result.sort(Comparator.comparing(User::getLastName, String::compareToIgnoreCase));
+                    break;
+                case "username":
+                    result.sort(Comparator.comparing(User::getUsername, String::compareToIgnoreCase));
+                    break;
+                default:
+                    break;
+                }
+            } else {
+                switch (filter.getSort().get(1)) {
+                case "firstName":
+                    result.sort(Comparator.comparing(User::getFirstName, String::compareToIgnoreCase).reversed());
+                    break;
+                case "lastName":
+                    result.sort(Comparator.comparing(User::getLastName, String::compareToIgnoreCase).reversed());
+                    break;
+                case "username":
+                    result.sort(Comparator.comparing(User::getUsername, String::compareToIgnoreCase).reversed());
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+        int count = result.size();
+        int fromIndex = Constants.ITEMS_PER_PAGE * (filter.getPage());
+        int toIndex = fromIndex + Constants.ITEMS_PER_PAGE > count ? count : fromIndex + Constants.ITEMS_PER_PAGE;
+        Pageable pageable = PageRequest.of(filter.getPage(), Constants.ITEMS_PER_PAGE);
+        return new PageImpl<User>(result.subList(fromIndex, toIndex), pageable, count);
     }
 
     @Override
@@ -170,7 +220,7 @@ public class UserService implements IUserService {
     private Set<Profile> addPermissions(UserDTO userDTO, ModelMapper modelMapper) {
         Set<Profile> newProfiles = new HashSet<>();
         for (ProfileDTO profile : userDTO.getProfiles()) {
-                newProfiles.add(modelMapper.map(profile, Profile.class));
+            newProfiles.add(modelMapper.map(profile, Profile.class));
         }
         return newProfiles;
     }

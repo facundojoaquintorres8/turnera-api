@@ -1,14 +1,14 @@
 package com.f8.turnera.services;
 
-import java.util.List;
-
 import com.f8.turnera.entities.Organization;
 import com.f8.turnera.models.CustomerDTO;
 import com.f8.turnera.models.CustomerFilterDTO;
 
+import org.springframework.data.domain.Page;
+
 public interface ICustomerService {
 
-    public List<CustomerDTO> findAllByFilter(CustomerFilterDTO filter);
+    public Page<CustomerDTO> findAllByFilter(CustomerFilterDTO filter);
 
     public CustomerDTO findById(Long id);
 

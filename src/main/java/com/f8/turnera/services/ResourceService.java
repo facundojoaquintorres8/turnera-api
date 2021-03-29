@@ -5,10 +5,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.JoinType;
@@ -22,10 +20,15 @@ import com.f8.turnera.models.ResourceDTO;
 import com.f8.turnera.models.ResourceFilterDTO;
 import com.f8.turnera.repositories.IOrganizationRepository;
 import com.f8.turnera.repositories.IResourceRepository;
+import com.f8.turnera.util.Constants;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -41,30 +44,40 @@ public class ResourceService implements IResourceService {
     private EntityManager em;
 
     @Override
-    public List<ResourceDTO> findAllByFilter(ResourceFilterDTO filter) {
+    public Page<ResourceDTO> findAllByFilter(ResourceFilterDTO filter) {
         ModelMapper modelMapper = new ModelMapper();
 
-        List<Resource> resources = findByCriteria(filter);
-        resources.sort(Comparator.comparing(Resource::getDescription));
-        return resources.stream().map(resource -> modelMapper.map(resource, ResourceDTO.class))
-                .collect(Collectors.toList());
+        Page<Resource> resources = findByCriteria(filter);
+        return resources.map(resource -> modelMapper.map(resource, ResourceDTO.class));
     }
 
-    private List<Resource> findByCriteria(ResourceFilterDTO filter) {
+    private Page<Resource> findByCriteria(ResourceFilterDTO filter) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Resource> cq = cb.createQuery(Resource.class);
 
         List<Predicate> predicates = new ArrayList<>();
 
         Root<Resource> root = cq.from(Resource.class);
+        if (filter.getDescription() != null) {
+            Predicate predicate = cb.like(cb.lower(root.get("description")),
+                    "%" + filter.getDescription().toLowerCase() + "%");
+            predicates.add(predicate);
+        }
+        if (filter.getCode() != null) {
+            Predicate predicate = cb.like(cb.lower(root.get("code")), "%" + filter.getCode().toLowerCase() + "%");
+            predicates.add(predicate);
+        }
+        if (filter.getResourceTypeDescription() != null) {
+            Predicate predicate = cb.like(cb.lower(root.join("resourceType", JoinType.LEFT).get("description")),
+                    "%" + filter.getResourceTypeDescription().toLowerCase() + "%");
+            predicates.add(predicate);
+        }
         if (filter.getOrganizationId() != null) {
-            Predicate predicate = cb.equal(root.join("organization", JoinType.LEFT),
-                    filter.getOrganizationId());
+            Predicate predicate = cb.equal(root.join("organization", JoinType.LEFT), filter.getOrganizationId());
             predicates.add(predicate);
         }
         if (filter.getResourceTypeId() != null) {
-            Predicate predicate = cb.equal(root.join("resourceType", JoinType.LEFT),
-                    filter.getResourceTypeId());
+            Predicate predicate = cb.equal(root.join("resourceType", JoinType.LEFT), filter.getResourceTypeId());
             predicates.add(predicate);
         }
         if (filter.getActive() != null) {
@@ -74,8 +87,48 @@ public class ResourceService implements IResourceService {
 
         cq.where(predicates.toArray(new Predicate[0]));
 
-        TypedQuery<Resource> query = em.createQuery(cq);
-        return query.getResultList();
+        List<Resource> result = em.createQuery(cq).getResultList();
+        if (filter.getSort() != null) {
+            if (filter.getSort().get(0).equals("ASC")) {
+                switch (filter.getSort().get(1)) {
+                case "description":
+                    result.sort(Comparator.comparing(Resource::getDescription, String::compareToIgnoreCase));
+                    break;
+                case "code":
+                    result.sort(Comparator.comparing(Resource::getCode,
+                            Comparator.nullsFirst(String::compareToIgnoreCase)));
+                    break;
+                case "resourceTypeDescription":
+                    result.sort(Comparator.comparing(x -> x.getResourceType().getDescription(),
+                            String::compareToIgnoreCase));
+                    break;
+                default:
+                    break;
+                }
+            } else {
+                switch (filter.getSort().get(1)) {
+                case "description":
+                    result.sort(Comparator.comparing(Resource::getDescription, String::compareToIgnoreCase).reversed());
+                    break;
+                case "code":
+                    result.sort(
+                            Comparator.comparing(Resource::getCode, Comparator.nullsFirst(String::compareToIgnoreCase))
+                                    .reversed());
+                    break;
+                case "resourceTypeDescription":
+                    result.sort(Comparator.comparing(x -> x.getResourceType().getDescription(),
+                            Comparator.nullsFirst(String::compareToIgnoreCase).reversed()));
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+        int count = result.size();
+        int fromIndex = Constants.ITEMS_PER_PAGE * (filter.getPage());
+        int toIndex = fromIndex + Constants.ITEMS_PER_PAGE > count ? count : fromIndex + Constants.ITEMS_PER_PAGE;
+        Pageable pageable = PageRequest.of(filter.getPage(), Constants.ITEMS_PER_PAGE);
+        return new PageImpl<Resource>(result.subList(fromIndex, toIndex), pageable, count);
     }
 
     @Override

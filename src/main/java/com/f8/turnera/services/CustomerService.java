@@ -5,10 +5,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.JoinType;
@@ -21,11 +19,16 @@ import com.f8.turnera.models.CustomerDTO;
 import com.f8.turnera.models.CustomerFilterDTO;
 import com.f8.turnera.repositories.ICustomerRepository;
 import com.f8.turnera.repositories.IOrganizationRepository;
+import com.f8.turnera.util.Constants;
 import com.f8.turnera.util.EmailValidation;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -36,30 +39,46 @@ public class CustomerService implements ICustomerService {
 
     @Autowired
     private IOrganizationRepository organizationRepository;
-    
+
     @Autowired
     private EntityManager em;
 
     @Override
-    public List<CustomerDTO> findAllByFilter(CustomerFilterDTO filter) {
+    public Page<CustomerDTO> findAllByFilter(CustomerFilterDTO filter) {
         ModelMapper modelMapper = new ModelMapper();
 
-        List<Customer> customers = findByCriteria(filter);
-        customers.sort(Comparator.comparing(Customer::getBusinessName));
-        return customers.stream().map(customer -> modelMapper.map(customer, CustomerDTO.class))
-                .collect(Collectors.toList());
+        Page<Customer> customers = findByCriteria(filter);
+
+        return customers.map(customer -> modelMapper.map(customer, CustomerDTO.class));
     }
 
-    private List<Customer> findByCriteria(CustomerFilterDTO filter) {
+    private Page<Customer> findByCriteria(CustomerFilterDTO filter) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Customer> cq = cb.createQuery(Customer.class);
 
         List<Predicate> predicates = new ArrayList<>();
 
         Root<Customer> root = cq.from(Customer.class);
+        if (filter.getBusinessName() != null) {
+            Predicate predicate = cb.like(cb.lower(root.get("businessName")),
+                    "%" + filter.getBusinessName().toLowerCase() + "%");
+            predicates.add(predicate);
+        }
+        if (filter.getBrandName() != null) {
+            Predicate predicate = cb.like(cb.lower(root.get("brandName")),
+                    "%" + filter.getBrandName().toLowerCase() + "%");
+            predicates.add(predicate);
+        }
+        if (filter.getEmail() != null) {
+            Predicate predicate = cb.like(cb.lower(root.get("email")), "%" + filter.getEmail().toLowerCase() + "%");
+            predicates.add(predicate);
+        }
+        if (filter.getPhone1() != null) {
+            Predicate predicate = cb.like(cb.lower(root.get("phone1")), "%" + filter.getPhone1().toLowerCase() + "%");
+            predicates.add(predicate);
+        }
         if (filter.getOrganizationId() != null) {
-            Predicate predicate = cb.equal(root.join("organization", JoinType.LEFT),
-                    filter.getOrganizationId());
+            Predicate predicate = cb.equal(root.join("organization", JoinType.LEFT), filter.getOrganizationId());
             predicates.add(predicate);
         }
         if (filter.getActive() != null) {
@@ -69,8 +88,53 @@ public class CustomerService implements ICustomerService {
 
         cq.where(predicates.toArray(new Predicate[0]));
 
-        TypedQuery<Customer> query = em.createQuery(cq);
-        return query.getResultList();
+        List<Customer> result = em.createQuery(cq).getResultList();
+        if (filter.getSort() != null) {
+            if (filter.getSort().get(0).equals("ASC")) {
+                switch (filter.getSort().get(1)) {
+                case "businessName":
+                    result.sort(Comparator.comparing(Customer::getBusinessName, String::compareToIgnoreCase));
+                    break;
+                case "brandName":
+                    result.sort(Comparator.comparing(Customer::getBrandName,
+                            Comparator.nullsFirst(String::compareToIgnoreCase)));
+                    break;
+                case "email":
+                    result.sort(Comparator.comparing(Customer::getEmail, String::compareToIgnoreCase));
+                    break;
+                case "phone1":
+                    result.sort(Comparator.comparing(Customer::getPhone1, String::compareToIgnoreCase));
+                    break;
+                default:
+                    break;
+                }
+            } else {
+                switch (filter.getSort().get(1)) {
+                case "businessName":
+                    result.sort(
+                            Comparator.comparing(Customer::getBusinessName, String::compareToIgnoreCase).reversed());
+                    break;
+                case "brandName":
+                    result.sort(Comparator
+                            .comparing(Customer::getBrandName, Comparator.nullsFirst(String::compareToIgnoreCase))
+                            .reversed());
+                    break;
+                case "email":
+                    result.sort(Comparator.comparing(Customer::getEmail, String::compareToIgnoreCase).reversed());
+                    break;
+                case "phone1":
+                    result.sort(Comparator.comparing(Customer::getPhone1, String::compareToIgnoreCase).reversed());
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+        int count = result.size();
+        int fromIndex = Constants.ITEMS_PER_PAGE * (filter.getPage());
+        int toIndex = fromIndex + Constants.ITEMS_PER_PAGE > count ? count : fromIndex + Constants.ITEMS_PER_PAGE;
+        Pageable pageable = PageRequest.of(filter.getPage(), Constants.ITEMS_PER_PAGE);
+        return new PageImpl<Customer>(result.subList(fromIndex, toIndex), pageable, count);
     }
 
     @Override

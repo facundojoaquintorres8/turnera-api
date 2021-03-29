@@ -5,10 +5,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.JoinType;
@@ -21,10 +19,15 @@ import com.f8.turnera.models.ResourceTypeDTO;
 import com.f8.turnera.models.ResourceTypeFilterDTO;
 import com.f8.turnera.repositories.IOrganizationRepository;
 import com.f8.turnera.repositories.IResourceTypeRepository;
+import com.f8.turnera.util.Constants;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -40,25 +43,27 @@ public class ResourceTypeService implements IResourceTypeService {
     private EntityManager em;
 
     @Override
-    public List<ResourceTypeDTO> findAllByFilter(ResourceTypeFilterDTO filter) {
+    public Page<ResourceTypeDTO> findAllByFilter(ResourceTypeFilterDTO filter) {
         ModelMapper modelMapper = new ModelMapper();
 
-        List<ResourceType> resourcesTypes = findByCriteria(filter);
-        resourcesTypes.sort(Comparator.comparing(ResourceType::getDescription));
-        return resourcesTypes.stream().map(resourceType -> modelMapper.map(resourceType, ResourceTypeDTO.class))
-                .collect(Collectors.toList());
+        Page<ResourceType> resourcesTypes = findByCriteria(filter);
+        return resourcesTypes.map(resourceType -> modelMapper.map(resourceType, ResourceTypeDTO.class));
     }
 
-    private List<ResourceType> findByCriteria(ResourceTypeFilterDTO filter) {
+    private Page<ResourceType> findByCriteria(ResourceTypeFilterDTO filter) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<ResourceType> cq = cb.createQuery(ResourceType.class);
 
         List<Predicate> predicates = new ArrayList<>();
 
         Root<ResourceType> root = cq.from(ResourceType.class);
+        if (filter.getDescription() != null) {
+            Predicate predicate = cb.like(cb.lower(root.get("description")),
+                    "%" + filter.getDescription().toLowerCase() + "%");
+            predicates.add(predicate);
+        }
         if (filter.getOrganizationId() != null) {
-            Predicate predicate = cb.equal(root.join("organization", JoinType.LEFT),
-                    filter.getOrganizationId());
+            Predicate predicate = cb.equal(root.join("organization", JoinType.LEFT), filter.getOrganizationId());
             predicates.add(predicate);
         }
         if (filter.getActive() != null) {
@@ -68,8 +73,32 @@ public class ResourceTypeService implements IResourceTypeService {
 
         cq.where(predicates.toArray(new Predicate[0]));
 
-        TypedQuery<ResourceType> query = em.createQuery(cq);
-        return query.getResultList();
+        List<ResourceType> result = em.createQuery(cq).getResultList();
+        if (filter.getSort() != null) {
+            if (filter.getSort().get(0).equals("ASC")) {
+                switch (filter.getSort().get(1)) {
+                case "description":
+                    result.sort(Comparator.comparing(ResourceType::getDescription, String::compareToIgnoreCase));
+                    break;
+                default:
+                    break;
+                }
+            } else {
+                switch (filter.getSort().get(1)) {
+                case "description":
+                    result.sort(
+                            Comparator.comparing(ResourceType::getDescription, String::compareToIgnoreCase).reversed());
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+        int count = result.size();
+        int fromIndex = Constants.ITEMS_PER_PAGE * (filter.getPage());
+        int toIndex = fromIndex + Constants.ITEMS_PER_PAGE > count ? count : fromIndex + Constants.ITEMS_PER_PAGE;
+        Pageable pageable = PageRequest.of(filter.getPage(), Constants.ITEMS_PER_PAGE);
+        return new PageImpl<ResourceType>(result.subList(fromIndex, toIndex), pageable, count);
     }
 
     @Override
@@ -113,9 +142,10 @@ public class ResourceTypeService implements IResourceTypeService {
             throw new RuntimeException("Tipo de Recurso no encontrado - " + resourceTypeDTO.getId());
         }
 
-        if (resourceType.get().getActive() && !resourceTypeDTO.getActive() 
-            && resourceType.get().getResources().stream().filter(x -> x.getActive()).count() > 0) {
-            throw new RuntimeException("Existen Recursos activos con este Tipo de Recurso asociado. Primero debe modificar los Recursos para continuar.");
+        if (resourceType.get().getActive() && !resourceTypeDTO.getActive()
+                && resourceType.get().getResources().stream().filter(x -> x.getActive()).count() > 0) {
+            throw new RuntimeException(
+                    "Existen Recursos activos con este Tipo de Recurso asociado. Primero debe modificar los Recursos para continuar.");
         }
 
         ModelMapper modelMapper = new ModelMapper();

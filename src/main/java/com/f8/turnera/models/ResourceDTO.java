@@ -14,6 +14,8 @@ public class ResourceDTO {
 
     private ResourceTypeDTO resourceType;
 
+    private String resourceTypeDescription;
+
     public Long getId() {
         return id;
     }
@@ -60,5 +62,13 @@ public class ResourceDTO {
 
     public void setResourceType(ResourceTypeDTO resourceType) {
         this.resourceType = resourceType;
+    }
+
+    public String getResourceTypeDescription() {
+        return resourceTypeDescription;
+    }
+
+    public void setResourceTypeDescription(String resourceTypeDescription) {
+        this.resourceTypeDescription = resourceTypeDescription;
     }
 }

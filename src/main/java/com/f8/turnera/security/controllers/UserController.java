@@ -1,7 +1,5 @@
 package com.f8.turnera.security.controllers;
 
-import java.util.List;
-
 import com.f8.turnera.security.models.UserDTO;
 import com.f8.turnera.security.models.UserFilterDTO;
 import com.f8.turnera.security.services.IUserService;
@@ -9,6 +7,7 @@ import com.f8.turnera.security.services.IUserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -30,10 +29,10 @@ public class UserController {
 
     @GetMapping("/users/findAllByFilter")
     @PreAuthorize("hasAuthority('users.read')")
-    public ResponseEntity<List<UserDTO>> findAllByFilter(UserFilterDTO filter) {
+    public ResponseEntity<Page<UserDTO>> findAllByFilter(UserFilterDTO filter) {
         log.info("REST request to get Users by filter: {}", filter);
 
-        List<UserDTO> result = service.findAllByFilter(filter);
+        Page<UserDTO> result = service.findAllByFilter(filter);
 
         return ResponseEntity.ok().body(result);
     }

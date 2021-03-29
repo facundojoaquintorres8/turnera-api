@@ -1,7 +1,5 @@
 package com.f8.turnera.security.controllers;
 
-import java.util.List;
-
 import com.f8.turnera.security.models.ProfileDTO;
 import com.f8.turnera.security.models.ProfileFilterDTO;
 import com.f8.turnera.security.services.IProfileService;
@@ -9,6 +7,7 @@ import com.f8.turnera.security.services.IProfileService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -30,10 +29,10 @@ public class ProfileController {
 
     @GetMapping("/profiles/findAllByFilter")
     @PreAuthorize("hasAuthority('profiles.read')")
-    public ResponseEntity<List<ProfileDTO>> findAllByFilter(ProfileFilterDTO filter) {
+    public ResponseEntity<Page<ProfileDTO>> findAllByFilter(ProfileFilterDTO filter) {
         log.info("REST request to get Profiles by filter: {}", filter);
 
-        List<ProfileDTO> result = service.findAllByFilter(filter);
+        Page<ProfileDTO> result = service.findAllByFilter(filter);
 
         return ResponseEntity.ok().body(result);
     }
