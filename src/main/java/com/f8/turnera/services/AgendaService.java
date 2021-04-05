@@ -10,7 +10,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.JoinType;
@@ -27,10 +26,15 @@ import com.f8.turnera.models.AppointmentStatusEnum;
 import com.f8.turnera.repositories.IAgendaRepository;
 import com.f8.turnera.repositories.IOrganizationRepository;
 import com.f8.turnera.repositories.IResourceRepository;
+import com.f8.turnera.util.Constants;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -49,15 +53,14 @@ public class AgendaService implements IAgendaService {
     private EntityManager em;
 
     @Override
-    public List<AgendaDTO> findAllByFilter(AppointmentFilterDTO filter) {
+    public Page<AgendaDTO> findAllByFilter(AppointmentFilterDTO filter) {
         ModelMapper modelMapper = new ModelMapper();
 
-        List<Agenda> agendas = findByCriteria(filter);
-        agendas.sort(Comparator.comparing(Agenda::getStartDate));
-        return agendas.stream().map(agenda -> modelMapper.map(agenda, AgendaDTO.class)).collect(Collectors.toList());
+        Page<Agenda> agendas = findByCriteria(filter);
+        return agendas.map(agenda -> modelMapper.map(agenda, AgendaDTO.class));
     }
 
-    private List<Agenda> findByCriteria(AppointmentFilterDTO filter) {
+    private Page<Agenda> findByCriteria(AppointmentFilterDTO filter) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Agenda> cq = cb.createQuery(Agenda.class);
 
@@ -66,6 +69,11 @@ public class AgendaService implements IAgendaService {
         Root<Agenda> root = cq.from(Agenda.class);
         if (filter.getResourceId() != null) {
             Predicate predicate = cb.equal(root.join("resource", JoinType.LEFT), filter.getResourceId());
+            predicates.add(predicate);
+        }
+        if (filter.getResourceDescription() != null) {
+            Predicate predicate = cb.like(cb.lower(root.join("resource", JoinType.LEFT).get("description")),
+                    "%" + filter.getResourceDescription().toLowerCase() + "%");
             predicates.add(predicate);
         }
         if (filter.getOrganizationId() != null) {
@@ -82,16 +90,22 @@ public class AgendaService implements IAgendaService {
                     filter.getCustomerId());
             predicates.add(predicate);
         }
+        if (filter.getCustomerBusinessName() != null) {
+            Predicate predicate = cb.like(
+                    cb.lower(root.join("lastAppointment", JoinType.LEFT).get("customer").get("businessName")),
+                    "%" + filter.getCustomerBusinessName().toLowerCase() + "%");
+            predicates.add(predicate);
+        }
         if (filter.getStatus() != null) {
             if (filter.getStatus() == AppointmentStatusEnum.FREE) {
                 Predicate predicate1 = root.join("lastAppointment", JoinType.LEFT).isNull();
                 Predicate predicate2 = cb.equal(root.join("lastAppointment", JoinType.LEFT)
-                    .join("lastAppointmentStatus", JoinType.LEFT).get("status"), AppointmentStatusEnum.CANCELLED);
+                        .join("lastAppointmentStatus", JoinType.LEFT).get("status"), AppointmentStatusEnum.CANCELLED);
                 predicates.add(cb.or(predicate1, predicate2));
 
             } else {
                 Predicate predicate = cb.equal(root.join("lastAppointment", JoinType.LEFT)
-                    .join("lastAppointmentStatus", JoinType.LEFT).get("status"), filter.getStatus());
+                        .join("lastAppointmentStatus", JoinType.LEFT).get("status"), filter.getStatus());
                 predicates.add(predicate);
             }
         }
@@ -112,8 +126,49 @@ public class AgendaService implements IAgendaService {
 
         cq.where(predicates.toArray(new Predicate[0]));
 
-        TypedQuery<Agenda> query = em.createQuery(cq);
-        return query.getResultList();
+        List<Agenda> result = em.createQuery(cq).getResultList();
+        if (filter.getSort() != null) {
+            if (filter.getSort().get(0).equals("ASC")) {
+                switch (filter.getSort().get(1)) {
+                case "startDate":
+                    result.sort(Comparator.comparing(Agenda::getStartDate));
+                    break;
+                case "endDate":
+                    result.sort(Comparator.comparing(Agenda::getEndDate));
+                    break;
+                case "resourceDescription":
+                    result.sort(
+                            Comparator.comparing(x -> x.getResource().getDescription(), String::compareToIgnoreCase));
+                    break;
+                default:
+                    break;
+                }
+            } else if (filter.getSort().get(0).equals("DESC")) {
+                switch (filter.getSort().get(1)) {
+                case "startDate":
+                    result.sort(Comparator.comparing(Agenda::getStartDate).reversed());
+                    break;
+                case "endDate":
+                    result.sort(Comparator.comparing(Agenda::getEndDate).reversed());
+                    break;
+                case "resourceDescription":
+                    result.sort(Comparator.comparing(x -> x.getResource().getDescription(),
+                            Comparator.nullsFirst(String::compareToIgnoreCase).reversed()));
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+        int count = result.size();
+        int fromIndex = Constants.ITEMS_PER_PAGE * (filter.getPage());
+        int toIndex = fromIndex + Constants.ITEMS_PER_PAGE > count ? count : fromIndex + Constants.ITEMS_PER_PAGE;
+        if (filter.getIgnorePaginated() != null && filter.getIgnorePaginated()) {
+            fromIndex = 0;
+            toIndex = count;
+        }
+        Pageable pageable = PageRequest.of(filter.getPage(), Constants.ITEMS_PER_PAGE);
+        return new PageImpl<Agenda>(result.subList(fromIndex, toIndex), pageable, count);
     }
 
     @Override
@@ -142,8 +197,8 @@ public class AgendaService implements IAgendaService {
             throw new RuntimeException("Recurso no encontrado - " + agendaSaveDTO.getResource().getId());
         }
         if (!agendaSaveDTO.getStartHour().isBefore(agendaSaveDTO.getEndHour())
-            && !agendaSaveDTO.getEndHour().equals(LocalTime.MIDNIGHT)) {
-                throw new RuntimeException("La hora de inicio deber ser menor a la de fin.");
+                && !agendaSaveDTO.getEndHour().equals(LocalTime.MIDNIGHT)) {
+            throw new RuntimeException("La hora de inicio deber ser menor a la de fin.");
         }
         if (agendaSaveDTO.getStartDate().isAfter(agendaSaveDTO.getEndDate())) {
             throw new RuntimeException("La fecha de inicio deber ser menor o igual a la de fin.");
@@ -164,6 +219,7 @@ public class AgendaService implements IAgendaService {
         filter.setFrom(agendaSaveDTO.getStartDate());
         filter.setTo(agendaSaveDTO.getEndDate());
         filter.setActive(true);
+        filter.setIgnorePaginated(true);
 
         List<Agenda> agendas = new ArrayList<>();
         LocalDateTime createdDate = LocalDateTime.now();
@@ -184,62 +240,62 @@ public class AgendaService implements IAgendaService {
 
         while (!agendaSaveDTO.getStartDate().isAfter(agendaSaveDTO.getEndDate())) {
             switch (agendaSaveDTO.getStartDate().getDayOfWeek()) {
-                case SUNDAY:
-                    if (agendaSaveDTO.getSunday()) {
-                        createAgenda(agendaSaveDTO, hours, agendas, resource.get(), organization.get(), createdDate);
-                    }
-                    break;
-                case MONDAY:
-                    if (agendaSaveDTO.getMonday()) {
-                        createAgenda(agendaSaveDTO, hours, agendas, resource.get(), organization.get(), createdDate);
-                    }
-                    break;
-                case TUESDAY:
-                    if (agendaSaveDTO.getTuesday()) {
-                        createAgenda(agendaSaveDTO, hours, agendas, resource.get(), organization.get(), createdDate);
-                    }
-                    break;
-                case WEDNESDAY:
-                    if (agendaSaveDTO.getWednesday()) {
-                        createAgenda(agendaSaveDTO, hours, agendas, resource.get(), organization.get(), createdDate);
-                    }
-                    break;
-                case THURSDAY:
-                    if (agendaSaveDTO.getThursday()) {
-                        createAgenda(agendaSaveDTO, hours, agendas, resource.get(), organization.get(), createdDate);
-                    }
-                    break;
-                case FRIDAY:
-                    if (agendaSaveDTO.getFriday()) {
-                        createAgenda(agendaSaveDTO, hours, agendas, resource.get(), organization.get(), createdDate);
-                    }
-                    break;
-                case SATURDAY:
-                    if (agendaSaveDTO.getSaturday()) {
-                        createAgenda(agendaSaveDTO, hours, agendas, resource.get(), organization.get(), createdDate);
-                    }
-                    break;
+            case SUNDAY:
+                if (agendaSaveDTO.getSunday()) {
+                    createAgenda(agendaSaveDTO, hours, agendas, resource.get(), organization.get(), createdDate);
+                }
+                break;
+            case MONDAY:
+                if (agendaSaveDTO.getMonday()) {
+                    createAgenda(agendaSaveDTO, hours, agendas, resource.get(), organization.get(), createdDate);
+                }
+                break;
+            case TUESDAY:
+                if (agendaSaveDTO.getTuesday()) {
+                    createAgenda(agendaSaveDTO, hours, agendas, resource.get(), organization.get(), createdDate);
+                }
+                break;
+            case WEDNESDAY:
+                if (agendaSaveDTO.getWednesday()) {
+                    createAgenda(agendaSaveDTO, hours, agendas, resource.get(), organization.get(), createdDate);
+                }
+                break;
+            case THURSDAY:
+                if (agendaSaveDTO.getThursday()) {
+                    createAgenda(agendaSaveDTO, hours, agendas, resource.get(), organization.get(), createdDate);
+                }
+                break;
+            case FRIDAY:
+                if (agendaSaveDTO.getFriday()) {
+                    createAgenda(agendaSaveDTO, hours, agendas, resource.get(), organization.get(), createdDate);
+                }
+                break;
+            case SATURDAY:
+                if (agendaSaveDTO.getSaturday()) {
+                    createAgenda(agendaSaveDTO, hours, agendas, resource.get(), organization.get(), createdDate);
+                }
+                break;
             }
             agendaSaveDTO.setStartDate(agendaSaveDTO.getStartDate().plusDays(1));
         }
 
         // validation after generating agendas
-        List<Agenda> existingAgendas = findByCriteria(filter);
+        Page<Agenda> existingAgendas = findByCriteria(filter);
         if (!existingAgendas.isEmpty()) {
             Boolean flag = false;
             for (Agenda newAgenda : agendas) {
                 List<Agenda> overlappingAgenda = existingAgendas.stream()
                         .filter(oldAgenda -> ((newAgenda.getStartDate().isAfter(oldAgenda.getStartDate())
                                 || newAgenda.getStartDate().equals(oldAgenda.getStartDate()))
-                                && newAgenda.getStartDate().isBefore(oldAgenda.getEndDate())) ||
-                                ((newAgenda.getEndDate().isBefore(oldAgenda.getEndDate())
-                                    || newAgenda.getEndDate().equals(oldAgenda.getEndDate()))
-                                    && newAgenda.getEndDate().isAfter(oldAgenda.getStartDate())) ||
-                                ((newAgenda.getStartDate().isBefore(oldAgenda.getStartDate())
-                                || newAgenda.getStartDate().equals(oldAgenda.getStartDate()))
-                                && (newAgenda.getEndDate().isAfter(oldAgenda.getEndDate())
-                                || newAgenda.getEndDate().equals(oldAgenda.getEndDate())))
-                        ).collect(Collectors.toList());
+                                && newAgenda.getStartDate().isBefore(oldAgenda.getEndDate()))
+                                || ((newAgenda.getEndDate().isBefore(oldAgenda.getEndDate())
+                                        || newAgenda.getEndDate().equals(oldAgenda.getEndDate()))
+                                        && newAgenda.getEndDate().isAfter(oldAgenda.getStartDate()))
+                                || ((newAgenda.getStartDate().isBefore(oldAgenda.getStartDate())
+                                        || newAgenda.getStartDate().equals(oldAgenda.getStartDate()))
+                                        && (newAgenda.getEndDate().isAfter(oldAgenda.getEndDate())
+                                                || newAgenda.getEndDate().equals(oldAgenda.getEndDate()))))
+                        .collect(Collectors.toList());
                 if (!overlappingAgenda.isEmpty()) {
                     flag = true;
                 }
@@ -262,7 +318,7 @@ public class AgendaService implements IAgendaService {
             Resource resource, Organization organization, LocalDateTime createdDate) {
         if (agendaSaveDTO.getStartDate().isEqual(LocalDate.now())) {
             hours = hours.stream().filter(x -> x.isAfter(LocalTime.now())).collect(Collectors.toList());
-        }                
+        }
         for (LocalTime hour : hours) {
             LocalDateTime start = LocalDateTime.of(agendaSaveDTO.getStartDate(), hour);
             LocalDateTime end = start.plusMinutes(agendaSaveDTO.getDuration());

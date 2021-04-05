@@ -6,9 +6,11 @@ import com.f8.turnera.models.AgendaDTO;
 import com.f8.turnera.models.AgendaSaveDTO;
 import com.f8.turnera.models.AppointmentFilterDTO;
 
+import org.springframework.data.domain.Page;
+
 public interface IAgendaService {
 
-    public List<AgendaDTO> findAllByFilter(AppointmentFilterDTO filter);
+    public Page<AgendaDTO> findAllByFilter(AppointmentFilterDTO filter);
 
     public AgendaDTO findById(Long id);
 

@@ -91,7 +91,7 @@ public class ProfileService implements IProfileService {
                 default:
                     break;
                 }
-            } else {
+            } else if (filter.getSort().get(0).equals("DESC")) {
                 switch (filter.getSort().get(1)) {
                 case "description":
                     result.sort(Comparator.comparing(Profile::getDescription, String::compareToIgnoreCase).reversed());

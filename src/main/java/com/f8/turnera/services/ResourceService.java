@@ -105,7 +105,7 @@ public class ResourceService implements IResourceService {
                 default:
                     break;
                 }
-            } else {
+            } else if (filter.getSort().get(0).equals("DESC")) {
                 switch (filter.getSort().get(1)) {
                 case "description":
                     result.sort(Comparator.comparing(Resource::getDescription, String::compareToIgnoreCase).reversed());

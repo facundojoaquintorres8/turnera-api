@@ -10,7 +10,11 @@ public class AppointmentFilterDTO extends DefaultFilterDTO {
 
     private Long resourceId;
 
+    private String resourceDescription;
+
     private Long customerId;
+
+    private String customerBusinessName;
 
     private AppointmentStatusEnum status;
     
@@ -20,7 +24,7 @@ public class AppointmentFilterDTO extends DefaultFilterDTO {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate to;
 
-    private Boolean active;
+    private Boolean ignorePaginated;
 
     public Long getResourceTypeId() {
         return resourceTypeId;
@@ -38,12 +42,28 @@ public class AppointmentFilterDTO extends DefaultFilterDTO {
         this.resourceId = resourceId;
     }
 
+    public String getResourceDescription() {
+        return resourceDescription;
+    }
+
+    public void setResourceDescription(String resourceDescription) {
+        this.resourceDescription = resourceDescription;
+    }
+
     public Long getCustomerId() {
         return customerId;
     }
 
     public void setCustomerId(Long customerId) {
         this.customerId = customerId;
+    }
+
+    public String getCustomerBusinessName() {
+        return customerBusinessName;
+    }
+
+    public void setCustomerBusinessName(String customerBusinessName) {
+        this.customerBusinessName = customerBusinessName;
     }
 
     public AppointmentStatusEnum getStatus() {
@@ -69,12 +89,12 @@ public class AppointmentFilterDTO extends DefaultFilterDTO {
     public void setTo(LocalDate to) {
         this.to = to;
     }
-
-    public Boolean getActive() {
-        return active;
+    
+    public Boolean getIgnorePaginated() {
+        return ignorePaginated;
     }
 
-    public void setActive(Boolean active) {
-        this.active = active;
+    public void setIgnorePaginated(Boolean ignorePaginated) {
+        this.ignorePaginated = ignorePaginated;
     }
 }
