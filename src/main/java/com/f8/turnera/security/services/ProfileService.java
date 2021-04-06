@@ -7,10 +7,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.JoinType;
@@ -26,10 +24,15 @@ import com.f8.turnera.security.models.ProfileDTO;
 import com.f8.turnera.security.models.ProfileFilterDTO;
 import com.f8.turnera.security.repositories.IPermissionRepository;
 import com.f8.turnera.security.repositories.IProfileRepository;
+import com.f8.turnera.util.Constants;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -48,25 +51,27 @@ public class ProfileService implements IProfileService {
     private EntityManager em;
 
     @Override
-    public List<ProfileDTO> findAllByFilter(ProfileFilterDTO filter) {
+    public Page<ProfileDTO> findAllByFilter(ProfileFilterDTO filter) {
         ModelMapper modelMapper = new ModelMapper();
 
-        List<Profile> profiles = findByCriteria(filter);
-        profiles.sort(Comparator.comparing(Profile::getDescription));
-        return profiles.stream().map(profile -> modelMapper.map(profile, ProfileDTO.class))
-                .collect(Collectors.toList());
+        Page<Profile> profiles = findByCriteria(filter);
+        return profiles.map(profile -> modelMapper.map(profile, ProfileDTO.class));
     }
 
-    private List<Profile> findByCriteria(ProfileFilterDTO filter) {
+    private Page<Profile> findByCriteria(ProfileFilterDTO filter) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Profile> cq = cb.createQuery(Profile.class);
 
         List<Predicate> predicates = new ArrayList<>();
 
         Root<Profile> root = cq.from(Profile.class);
+        if (filter.getDescription() != null) {
+            Predicate predicate = cb.like(cb.lower(root.get("description")),
+                    "%" + filter.getDescription().toLowerCase() + "%");
+            predicates.add(predicate);
+        }
         if (filter.getOrganizationId() != null) {
-            Predicate predicate = cb.equal(root.join("organization", JoinType.LEFT),
-                    filter.getOrganizationId());
+            Predicate predicate = cb.equal(root.join("organization", JoinType.LEFT), filter.getOrganizationId());
             predicates.add(predicate);
         }
         if (filter.getActive() != null) {
@@ -76,8 +81,31 @@ public class ProfileService implements IProfileService {
 
         cq.where(predicates.toArray(new Predicate[0]));
 
-        TypedQuery<Profile> query = em.createQuery(cq);
-        return query.getResultList();
+        List<Profile> result = em.createQuery(cq).getResultList();
+        if (filter.getSort() != null) {
+            if (filter.getSort().get(0).equals("ASC")) {
+                switch (filter.getSort().get(1)) {
+                case "description":
+                    result.sort(Comparator.comparing(Profile::getDescription, String::compareToIgnoreCase));
+                    break;
+                default:
+                    break;
+                }
+            } else if (filter.getSort().get(0).equals("DESC")) {
+                switch (filter.getSort().get(1)) {
+                case "description":
+                    result.sort(Comparator.comparing(Profile::getDescription, String::compareToIgnoreCase).reversed());
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+        int count = result.size();
+        int fromIndex = Constants.ITEMS_PER_PAGE * (filter.getPage());
+        int toIndex = fromIndex + Constants.ITEMS_PER_PAGE > count ? count : fromIndex + Constants.ITEMS_PER_PAGE;
+        Pageable pageable = PageRequest.of(filter.getPage(), Constants.ITEMS_PER_PAGE);
+        return new PageImpl<Profile>(result.subList(fromIndex, toIndex), pageable, count);
     }
 
     @Override
@@ -122,11 +150,11 @@ public class ProfileService implements IProfileService {
             throw new RuntimeException("Perfil no encontrado - " + profileDTO.getId());
         }
 
-        if (profile.get().getActive() && !profileDTO.getActive() 
-            && profile.get().getUsers().stream().filter(x -> x.getActive()).count() > 0) {
-            throw new RuntimeException("Existen Usuarios activos con este Perfil asociado. Primero debe modificar los Usuarios para continuar.");
+        if (profile.get().getActive() && !profileDTO.getActive()
+                && profile.get().getUsers().stream().filter(x -> x.getActive()).count() > 0) {
+            throw new RuntimeException(
+                    "Existen Usuarios activos con este Perfil asociado. Primero debe modificar los Usuarios para continuar.");
         }
-
 
         ModelMapper modelMapper = new ModelMapper();
 
@@ -148,12 +176,12 @@ public class ProfileService implements IProfileService {
     private Set<Permission> addPermissions(ProfileDTO profileDTO, ModelMapper modelMapper) {
         if (profileDTO.getPermissions().stream().filter(x -> x.getCode().equals("home.index")).count() == 0) {
             Optional<Permission> permissionHomeIndex = permissionRepository.findByCode("home.index");
-            profileDTO.getPermissions().add(modelMapper.map(permissionHomeIndex.get(), PermissionDTO.class));   
+            profileDTO.getPermissions().add(modelMapper.map(permissionHomeIndex.get(), PermissionDTO.class));
         }
 
         Set<Permission> newPermissions = new HashSet<>();
         for (PermissionDTO permission : profileDTO.getPermissions()) {
-                newPermissions.add(modelMapper.map(permission, Permission.class));
+            newPermissions.add(modelMapper.map(permission, Permission.class));
         }
         return newPermissions;
     }
@@ -168,7 +196,7 @@ public class ProfileService implements IProfileService {
         try {
             profileRepository.delete(profile.get());
         } catch (DataIntegrityViolationException dive) {
-            throw new RuntimeException("No se puede borrar el Perfil porque tiene Usuarios asociados.");
+            throw new RuntimeException("No se puede eliminar el Perfil porque tiene Usuarios asociados.");
         } catch (Exception e) {
             throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
         }

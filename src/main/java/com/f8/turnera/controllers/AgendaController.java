@@ -10,6 +10,7 @@ import com.f8.turnera.services.IAgendaService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -31,10 +32,10 @@ public class AgendaController {
 
     @GetMapping("/agendas/findAllByFilter")
     @PreAuthorize("hasAuthority('agendas.read')")
-    public ResponseEntity<List<AgendaDTO>> findAllByFilter(AppointmentFilterDTO filter) {
+    public ResponseEntity<Page<AgendaDTO>> findAllByFilter(AppointmentFilterDTO filter) {
         log.info("REST request to get Agendas by filter: {}", filter);
 
-        List<AgendaDTO> result = agendaService.findAllByFilter(filter);
+        Page<AgendaDTO> result = agendaService.findAllByFilter(filter);
 
         return ResponseEntity.ok().body(result);
     }

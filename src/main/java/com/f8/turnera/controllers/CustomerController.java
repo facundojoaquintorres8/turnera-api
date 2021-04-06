@@ -1,7 +1,5 @@
 package com.f8.turnera.controllers;
 
-import java.util.List;
-
 import com.f8.turnera.models.CustomerDTO;
 import com.f8.turnera.models.CustomerFilterDTO;
 import com.f8.turnera.services.ICustomerService;
@@ -9,6 +7,7 @@ import com.f8.turnera.services.ICustomerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -30,10 +29,10 @@ public class CustomerController {
 
     @GetMapping("/customers/findAllByFilter")
     @PreAuthorize("hasAuthority('customers.read')")
-    public ResponseEntity<List<CustomerDTO>> findAllByFilter(CustomerFilterDTO filter) {
+    public ResponseEntity<Page<CustomerDTO>> findAllByFilter(CustomerFilterDTO filter) {
         log.info("REST request to get Customers by filter: {}", filter);
 
-        List<CustomerDTO> result = service.findAllByFilter(filter);
+        Page<CustomerDTO> result = service.findAllByFilter(filter);
 
         return ResponseEntity.ok().body(result);
     }

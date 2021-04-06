@@ -1,7 +1,5 @@
 package com.f8.turnera.controllers;
 
-import java.util.List;
-
 import com.f8.turnera.models.ResourceDTO;
 import com.f8.turnera.models.ResourceFilterDTO;
 import com.f8.turnera.services.IResourceService;
@@ -9,6 +7,7 @@ import com.f8.turnera.services.IResourceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -30,10 +29,10 @@ public class ResourceController {
 
     @GetMapping("/resources/findAllByFilter")
     @PreAuthorize("hasAuthority('resources.read')")
-    public ResponseEntity<List<ResourceDTO>> findAllByFilter(ResourceFilterDTO filter) {
+    public ResponseEntity<Page<ResourceDTO>> findAllByFilter(ResourceFilterDTO filter) {
         log.info("REST request to get Resources by filter: {}", filter);
 
-        List<ResourceDTO> result = service.findAllByFilter(filter);
+        Page<ResourceDTO> result = service.findAllByFilter(filter);
 
         return ResponseEntity.ok().body(result);
     }

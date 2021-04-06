@@ -1,13 +1,13 @@
 package com.f8.turnera.security.services;
 
-import java.util.List;
-
 import com.f8.turnera.security.models.UserDTO;
 import com.f8.turnera.security.models.UserFilterDTO;
 
+import org.springframework.data.domain.Page;
+
 public interface IUserService {
 
-    public List<UserDTO> findAllByFilter(UserFilterDTO filter);
+    public Page<UserDTO> findAllByFilter(UserFilterDTO filter);
 
     public UserDTO findById(Long id);
 
