@@ -209,8 +209,9 @@ public class AgendaService implements IAgendaService {
         if (agendaSaveDTO.getEndHour().equals(LocalTime.MIDNIGHT)) {
             agendaSaveDTO.setEndHour(LocalTime.MAX);
         }
-        if (LocalDateTime.of(LocalDate.now(), agendaSaveDTO.getStartHour()).plusMinutes(agendaSaveDTO.getDuration())
-                .isAfter(LocalDateTime.of(LocalDate.now(), agendaSaveDTO.getEndHour()))) {
+        final LocalDate now = LocalDate.now();
+        if (LocalDateTime.of(now, agendaSaveDTO.getStartHour()).plusMinutes(agendaSaveDTO.getDuration())
+                .isAfter(LocalDateTime.of(now, agendaSaveDTO.getEndHour()))) {
             throw new RuntimeException("La duración supera el intervalo de horarios.");
         }
         // to validate after generating agendas
