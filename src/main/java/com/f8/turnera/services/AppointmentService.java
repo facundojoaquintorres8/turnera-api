@@ -8,7 +8,7 @@ import com.f8.turnera.entities.Agenda;
 import com.f8.turnera.entities.Appointment;
 import com.f8.turnera.entities.Customer;
 import com.f8.turnera.entities.Organization;
-import com.f8.turnera.models.AppointmentCancelDTO;
+import com.f8.turnera.models.AppointmentChangeStatusDTO;
 import com.f8.turnera.models.AppointmentDTO;
 import com.f8.turnera.models.AppointmentSaveDTO;
 import com.f8.turnera.models.AppointmentStatusEnum;
@@ -78,13 +78,13 @@ public class AppointmentService implements IAppointmentService {
     }
 
     @Override
-    public AppointmentDTO absent(Long id) {
-        Optional<Appointment> appointment = appointmentRepository.findById(id);
+    public AppointmentDTO absent(AppointmentChangeStatusDTO appointmentChangeStatusDTO) {
+        Optional<Appointment> appointment = appointmentRepository.findById(appointmentChangeStatusDTO.getId());
         if (!appointment.isPresent()) {
-            throw new RuntimeException("Turno no encontrado - " + id);
+            throw new RuntimeException("Turno no encontrado - " + appointmentChangeStatusDTO.getId());
         }
 
-        appointment.get().addStatus(AppointmentStatusEnum.ABSENT, null);
+        appointment.get().addStatus(AppointmentStatusEnum.ABSENT, appointmentChangeStatusDTO.getObservations());
 
         try {
             appointmentRepository.save(appointment.get());
@@ -97,13 +97,13 @@ public class AppointmentService implements IAppointmentService {
     }
 
     @Override
-    public AppointmentDTO cancel(AppointmentCancelDTO appointmentCancelDTO) {
-        Optional<Appointment> appointment = appointmentRepository.findById(appointmentCancelDTO.getId());
+    public AppointmentDTO cancel(AppointmentChangeStatusDTO appointmentChangeStatusDTO) {
+        Optional<Appointment> appointment = appointmentRepository.findById(appointmentChangeStatusDTO.getId());
         if (!appointment.isPresent()) {
-            throw new RuntimeException("Turno no encontrado - " + appointmentCancelDTO.getId());
+            throw new RuntimeException("Turno no encontrado - " + appointmentChangeStatusDTO.getId());
         }
 
-        appointment.get().addStatus(AppointmentStatusEnum.CANCELLED, appointmentCancelDTO.getObservations());
+        appointment.get().addStatus(AppointmentStatusEnum.CANCELLED, appointmentChangeStatusDTO.getObservations());
 
         emailService.sendCanceledAppointmentEmail(appointment.get());
 
@@ -118,13 +118,13 @@ public class AppointmentService implements IAppointmentService {
     }
 
     @Override
-    public AppointmentDTO attend(Long id) {
-        Optional<Appointment> appointment = appointmentRepository.findById(id);
+    public AppointmentDTO attend(AppointmentChangeStatusDTO appointmentChangeStatusDTO) {
+        Optional<Appointment> appointment = appointmentRepository.findById(appointmentChangeStatusDTO.getId());
         if (!appointment.isPresent()) {
-            throw new RuntimeException("Turno no encontrado - " + id);
+            throw new RuntimeException("Turno no encontrado - " + appointmentChangeStatusDTO.getId());
         }
 
-        appointment.get().addStatus(AppointmentStatusEnum.IN_ATTENTION, null);
+        appointment.get().addStatus(AppointmentStatusEnum.IN_ATTENTION, appointmentChangeStatusDTO.getObservations());
 
         try {
             appointmentRepository.save(appointment.get());
@@ -137,13 +137,13 @@ public class AppointmentService implements IAppointmentService {
     }
 
     @Override
-    public AppointmentDTO finalize(Long id) {
-        Optional<Appointment> appointment = appointmentRepository.findById(id);
+    public AppointmentDTO finalize(AppointmentChangeStatusDTO appointmentChangeStatusDTO) {
+        Optional<Appointment> appointment = appointmentRepository.findById(appointmentChangeStatusDTO.getId());
         if (!appointment.isPresent()) {
-            throw new RuntimeException("Turno no encontrado - " + id);
+            throw new RuntimeException("Turno no encontrado - " + appointmentChangeStatusDTO.getId());
         }
 
-        appointment.get().addStatus(AppointmentStatusEnum.FINALIZED, null);
+        appointment.get().addStatus(AppointmentStatusEnum.FINALIZED, appointmentChangeStatusDTO.getObservations());
 
         emailService.sendFinalizeAppointmentEmail(appointment.get());
 

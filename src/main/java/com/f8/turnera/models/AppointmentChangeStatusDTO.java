@@ -1,6 +1,6 @@
 package com.f8.turnera.models;
 
-public class AppointmentCancelDTO {
+public class AppointmentChangeStatusDTO {
 
     private Long id;
 
