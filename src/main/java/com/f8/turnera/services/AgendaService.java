@@ -206,12 +206,12 @@ public class AgendaService implements IAgendaService {
         if (agendaSaveDTO.getDuration() == 0 || agendaSaveDTO.getDuration() > 1440) {
             throw new RuntimeException("La duración debe ser mayor 0 y menor a 1440.");
         }
-        if (agendaSaveDTO.getEndHour().equals(LocalTime.MIDNIGHT)) {
-            agendaSaveDTO.setEndHour(LocalTime.MAX);
-        }
         final LocalDate now = LocalDate.now();
+        LocalDateTime endDate = agendaSaveDTO.getEndHour().equals(LocalTime.MIDNIGHT)
+            ? LocalDateTime.of(now.plusDays(1), LocalTime.MIDNIGHT)
+            : LocalDateTime.of(now, agendaSaveDTO.getEndHour());
         if (LocalDateTime.of(now, agendaSaveDTO.getStartHour()).plusMinutes(agendaSaveDTO.getDuration())
-                .isAfter(LocalDateTime.of(now, agendaSaveDTO.getEndHour()))) {
+                .isAfter(endDate)) {
             throw new RuntimeException("La duración supera el intervalo de horarios.");
         }
         // to validate after generating agendas
@@ -226,6 +226,9 @@ public class AgendaService implements IAgendaService {
         LocalDateTime createdDate = LocalDateTime.now();
 
         List<LocalTime> hours = new ArrayList<>();
+        if (agendaSaveDTO.getEndHour().equals(LocalTime.MIDNIGHT)) {
+            agendaSaveDTO.setEndHour(LocalTime.MAX);
+        }
         while (agendaSaveDTO.getStartHour().isBefore(agendaSaveDTO.getEndHour())) {
             hours.add(agendaSaveDTO.getStartHour());
             LocalTime newTime = agendaSaveDTO.getStartHour().plusMinutes(agendaSaveDTO.getDuration());
@@ -323,7 +326,9 @@ public class AgendaService implements IAgendaService {
         for (LocalTime hour : hours) {
             LocalDateTime start = LocalDateTime.of(agendaSaveDTO.getStartDate(), hour);
             LocalDateTime end = start.plusMinutes(agendaSaveDTO.getDuration());
-            agendaToSave.add(new Agenda(true, createdDate, organization, resource, start, end));
+            if (!end.toLocalTime().isAfter(agendaSaveDTO.getEndHour())) {
+                agendaToSave.add(new Agenda(true, createdDate, organization, resource, start, end));
+            }
         }
     }
 
