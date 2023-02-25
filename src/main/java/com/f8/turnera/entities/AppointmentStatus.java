@@ -14,8 +14,11 @@ import javax.persistence.Table;
 
 import com.f8.turnera.models.AppointmentStatusEnum;
 
+import lombok.Data;
+
 @Entity
 @Table(name = "appointments_status")
+@Data
 public class AppointmentStatus {
 
     @Id
@@ -37,47 +40,8 @@ public class AppointmentStatus {
     @Column(name = "observations")
     private String observations;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public LocalDateTime getCreatedDate() {
-        return createdDate;
-    }
-
-    public void setCreatedDate(LocalDateTime createdDate) {
-        this.createdDate = createdDate;
-    }
-
-    public Appointment getAppointment() {
-        return appointment;
-    }
-
-    public void setAppointment(Appointment appointment) {
-        this.appointment = appointment;
-    }
-
-    public AppointmentStatusEnum getStatus() {
-        return status;
-    }
-
-    public void setStatus(AppointmentStatusEnum status) {
-        this.status = status;
-    }
-
-    public String getObservations() {
-        return observations;
-    }
-
-    public void setObservations(String observations) {
-        this.observations = observations;
-    }
-
-    public AppointmentStatus(LocalDateTime createdDate, Appointment appointment, AppointmentStatusEnum status, String observations) {
+    public AppointmentStatus(LocalDateTime createdDate, Appointment appointment, AppointmentStatusEnum status,
+            String observations) {
         this.createdDate = createdDate;
         this.appointment = appointment;
         this.status = status;

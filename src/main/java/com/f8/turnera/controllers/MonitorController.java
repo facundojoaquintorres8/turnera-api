@@ -10,7 +10,6 @@ public class MonitorController {
 
     @GetMapping("/monitor")
     public String monitor() {
-
-        return "Api Turnera";
+        return "Api Turnera OK!";
     }
 }

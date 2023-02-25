@@ -52,6 +52,7 @@ public class AccountService implements IAccountService {
 
     @Override
     public UserDTO register(RegisterDTO registerDTO) {
+        // TODO: hacer transactional por si falla
         Optional<User> existingUser = userRepository.findByUsername(registerDTO.getUsername());
         if (existingUser.isPresent()) {
             throw new RuntimeException("El Correo Electrónico ingresado ya está registrado. Por favor ingrese otro.");
@@ -76,7 +77,7 @@ public class AccountService implements IAccountService {
         user.setLastName(registerDTO.getLastName());
         user.setFirstName(registerDTO.getFirstName());
         user.setUsername(registerDTO.getUsername());
-        user.setIsAdmin(true);
+        user.setAdmin(true);
         user.setActivationKey(RandomString.make(20));
         user.setPassword(RandomString.make(40));
 
@@ -105,7 +106,7 @@ public class AccountService implements IAccountService {
         }
 
         user.ifPresent(u -> {
-            if (u.getIsAdmin()) {
+            if (u.getAdmin()) {
                 u.getOrganization().setActive(true);
                 addDefaultProfiles(u);
             }

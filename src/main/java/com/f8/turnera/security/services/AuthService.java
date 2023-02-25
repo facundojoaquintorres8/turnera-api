@@ -65,7 +65,7 @@ public class AuthService implements IAuthService {
 
         String token = Jwts.builder()
                 .claim(SecurityConstants.AUTHORITIES_KEY, authorities)
-				.setIssuer("f8")
+                .setIssuer("f8")
                 .setSubject(authDTO.getUsername())
 
                 .setExpiration(new Date(System.currentTimeMillis() + SecurityConstants.EXPIRATION_TIME))

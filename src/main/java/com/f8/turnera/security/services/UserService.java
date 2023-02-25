@@ -167,7 +167,7 @@ public class UserService implements IUserService {
         user.setCreatedDate(LocalDateTime.now());
         user.setActive(false);
         user.setOrganization(organization.get());
-        user.setIsAdmin(false);
+        user.setAdmin(false);
         user.setActivationKey(RandomString.make(20));
         user.setPassword(RandomString.make(40));
         user.setProfiles(addPermissions(userDTO, modelMapper));

@@ -77,7 +77,7 @@
             <column name="reset_date" type="timestamp">
                 <constraints nullable="true" />
             </column>
-            <column name="is_admin" type="boolean">
+            <column name="admin" type="boolean">
                 <constraints nullable="false" />
             </column>
 		</createTable>
