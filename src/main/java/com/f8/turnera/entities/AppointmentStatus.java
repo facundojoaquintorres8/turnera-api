@@ -11,6 +11,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 
 import com.f8.turnera.models.AppointmentStatusEnum;
 
@@ -24,17 +25,21 @@ public class AppointmentStatus {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequenceGenerator")
     @SequenceGenerator(name = "sequenceGenerator")
-    @Column(name = "id")
+    @Column(name = "id")    
+    @NotNull
     private Long id;
 
     @Column(name = "created_date")
+    @NotNull
     private LocalDateTime createdDate;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "appointment_id")
+    @NotNull
     private Appointment appointment;
 
     @Column(name = "status")
+    @NotNull
     private AppointmentStatusEnum status;
 
     @Column(name = "observations")

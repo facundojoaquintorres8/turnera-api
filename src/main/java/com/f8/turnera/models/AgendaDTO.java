@@ -1,6 +1,6 @@
 package com.f8.turnera.models;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 import lombok.Data;
 
@@ -11,8 +11,8 @@ public class AgendaDTO {
     private Long organizationId;
     private Boolean active;
     private ResourceDTO resource;
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
+    private ZonedDateTime startDate;
+    private ZonedDateTime endDate;
     private AppointmentDTO lastAppointment;
 
 }

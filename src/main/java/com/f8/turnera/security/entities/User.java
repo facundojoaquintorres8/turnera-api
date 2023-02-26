@@ -15,6 +15,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 
 import com.f8.turnera.entities.Organization;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -32,25 +33,32 @@ public class User {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequenceGenerator")
     @SequenceGenerator(name = "sequenceGenerator")
     @Column(name = "id")
+    @NotNull
     private Long id;
 
     @Column(name = "active")
+    @NotNull
     private Boolean active;
 
     @Column(name = "created_date")
+    @NotNull
     private LocalDateTime createdDate;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "organization_id")
+    @NotNull
     private Organization organization;
     
     @Column(name = "first_name")
+    @NotNull
     private String firstName;
 
     @Column(name = "last_name")
+    @NotNull
     private String lastName;
 
     @Column(name = "username")
+    @NotNull
     private String username;
     
     @Column(name = "password")

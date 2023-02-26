@@ -1,7 +1,5 @@
 package com.f8.turnera.controllers;
 
-import java.util.List;
-
 import com.f8.turnera.models.AgendaDTO;
 import com.f8.turnera.models.AgendaSaveDTO;
 import com.f8.turnera.models.AppointmentFilterDTO;
@@ -42,12 +40,12 @@ public class AgendaController {
 
     @PostMapping("/agendas")
     @PreAuthorize("hasAuthority('agendas.write')")
-    public ResponseEntity<List<AgendaDTO>> createAgenda(@RequestBody AgendaSaveDTO agendaDTO) {
+    public ResponseEntity<Boolean> createAgenda(@RequestBody AgendaSaveDTO agendaDTO) {
         log.info("REST request to create Agenda: {}", agendaDTO);
 
-        List<AgendaDTO> result = agendaService.create(agendaDTO);
+        Boolean result = agendaService.create(agendaDTO);
 
-        if (result.isEmpty()) {
+        if (!result) {
             return ResponseEntity.noContent().build();
         }
 

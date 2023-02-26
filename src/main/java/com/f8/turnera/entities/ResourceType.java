@@ -14,6 +14,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 
 import lombok.Data;
 
@@ -26,19 +27,24 @@ public class ResourceType {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequenceGenerator")
     @SequenceGenerator(name = "sequenceGenerator")
     @Column(name = "id")
+    @NotNull
     private Long id;
 
     @Column(name = "active")
+    @NotNull
     private Boolean active;
 
     @Column(name = "created_date")
+    @NotNull
     private LocalDateTime createdDate;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "organization_id")
+    @NotNull
     private Organization organization;
     
     @Column(name = "description")
+    @NotNull
     private String description;
 
     @OneToMany(cascade = CascadeType.REFRESH, mappedBy = "resourceType")

@@ -11,6 +11,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 
 import lombok.Data;
 
@@ -23,19 +24,24 @@ public class Customer {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequenceGenerator")
     @SequenceGenerator(name = "sequenceGenerator")
     @Column(name = "id")
+    @NotNull
     private Long id;
 
     @Column(name = "active")
+    @NotNull
     private Boolean active;
 
     @Column(name = "created_date")
+    @NotNull
     private LocalDateTime createdDate;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "organization_id")
+    @NotNull
     private Organization organization;
     
     @Column(name = "business_name")
+    @NotNull
     private String businessName;
     
     @Column(name = "brand_name")
@@ -48,12 +54,14 @@ public class Customer {
     private String address;
     
     @Column(name = "phone1")
+    @NotNull
     private String phone1;
     
     @Column(name = "phone2")
     private String phone2;
 
     @Column(name = "email")
+    @NotNull
     private String email;
 
 }

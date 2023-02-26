@@ -7,6 +7,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 
 import lombok.Data;
 
@@ -19,12 +20,15 @@ public class Permission {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequenceGenerator")
     @SequenceGenerator(name = "sequenceGenerator")
     @Column(name = "id")
+    @NotNull
     private Long id;
 
     @Column(name = "description")
+    @NotNull
     private String description;
 
     @Column(name = "code")
+    @NotNull
     private String code;
 
 }

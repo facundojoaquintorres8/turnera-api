@@ -21,6 +21,7 @@ public class AppointmentFilterDTO extends DefaultFilterDTO {
     private LocalDate from;
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate to;
+    private String zoneId;
     private Boolean ignorePaginated;
 
 }

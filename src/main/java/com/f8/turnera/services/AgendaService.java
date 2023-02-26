@@ -2,6 +2,8 @@ package com.f8.turnera.services;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -110,13 +112,14 @@ public class AgendaService implements IAgendaService {
                 predicates.add(predicate);
             }
         }
+        ZoneId zoneId = ZoneId.of(filter.getZoneId());
         if (filter.getFrom() != null) {
-            LocalDateTime startDate = LocalDateTime.of(filter.getFrom(), LocalTime.MIN);
+            ZonedDateTime startDate = ZonedDateTime.of(filter.getFrom(), LocalTime.MIN, zoneId);
             Predicate predicate = cb.greaterThanOrEqualTo(root.get("startDate"), startDate);
             predicates.add(predicate);
         }
         if (filter.getTo() != null) {
-            LocalDateTime endDate = LocalDateTime.of(filter.getTo().plusDays(1), LocalTime.MIN);
+            ZonedDateTime endDate = ZonedDateTime.of(filter.getTo().plusDays(1), LocalTime.MIN, zoneId);
             Predicate predicate = cb.lessThanOrEqualTo(root.get("endDate"), endDate);
             predicates.add(predicate);
         }
@@ -186,7 +189,7 @@ public class AgendaService implements IAgendaService {
     }
 
     @Override
-    public List<AgendaDTO> create(AgendaSaveDTO agendaSaveDTO) {
+    public Boolean create(AgendaSaveDTO agendaSaveDTO) {
         ModelMapper modelMapper = new ModelMapper();
 
         // validations
@@ -238,17 +241,18 @@ public class AgendaService implements IAgendaService {
         AppointmentFilterDTO filter = new AppointmentFilterDTO();
         filter.setResourceId(agendaSaveDTO.getResource().getId());
         filter.setFrom(agendaSaveDTO.getStartDate());
-        filter.setTo(agendaSaveDTO.getEndDate());
+        filter.setTo(agendaSaveDTO.getFinalize() != null ? agendaSaveDTO.getFinalize() : agendaSaveDTO.getEndDate());
+        filter.setZoneId(agendaSaveDTO.getZoneId());
         filter.setActive(true);
         filter.setIgnorePaginated(true);
 
         List<Agenda> agendas = new ArrayList<>();
         LocalDateTime createdDate = LocalDateTime.now();
-
-        LocalDateTime tempStart = LocalDateTime.of(agendaSaveDTO.getStartDate(), agendaSaveDTO.getStartHour());
-        LocalDateTime segmentSetEndDate = LocalDateTime.of(agendaSaveDTO.getEndDate(), agendaSaveDTO.getEndHour());
+        ZoneId zoneId = ZoneId.of(agendaSaveDTO.getZoneId()); // TODO: ZoneRulesException
+        ZonedDateTime tempStart = ZonedDateTime.of(agendaSaveDTO.getStartDate(), agendaSaveDTO.getStartHour(), zoneId);
+        ZonedDateTime segmentSetEndDate = ZonedDateTime.of(agendaSaveDTO.getEndDate(), agendaSaveDTO.getEndHour(), zoneId);
         if (agendaSaveDTO.getRepeat() != null && agendaSaveDTO.getRepeat()) {
-            LocalDateTime finalize = LocalDateTime.of(agendaSaveDTO.getFinalize(), LocalTime.MIN);
+            ZonedDateTime finalize = ZonedDateTime.of(agendaSaveDTO.getFinalize(), LocalTime.MIN, zoneId);
             switch (agendaSaveDTO.getRepeatType()) {
                 case DAILY:
                     if (isSegmented) {
@@ -257,11 +261,11 @@ public class AgendaService implements IAgendaService {
                             agendas.addAll(createAgendasSegmented(resource.get(), organization.get(), createdDate,
                                 tempStart, segmentSetEndDate, agendaSaveDTO.getDuration()));
                             daysCount++;
-                            tempStart = LocalDateTime.of(agendaSaveDTO.getStartDate(), agendaSaveDTO.getStartHour()).plusDays(daysCount);
-                            segmentSetEndDate = LocalDateTime.of(agendaSaveDTO.getEndDate(), agendaSaveDTO.getEndHour()).plusDays(daysCount);
+                            tempStart = ZonedDateTime.of(agendaSaveDTO.getStartDate(), agendaSaveDTO.getStartHour(), zoneId).plusDays(daysCount);
+                            segmentSetEndDate = ZonedDateTime.of(agendaSaveDTO.getEndDate(), agendaSaveDTO.getEndHour(), zoneId).plusDays(daysCount);
                         }
                     } else {
-                        LocalDateTime tempEnd = segmentSetEndDate;
+                        ZonedDateTime tempEnd = segmentSetEndDate;
                         while (!tempEnd.isAfter(finalize)) {
                             agendas.add(new Agenda(createdDate, organization.get(), resource.get(), tempStart, tempEnd));
                             tempStart = tempStart.plusDays(1);
@@ -271,9 +275,9 @@ public class AgendaService implements IAgendaService {
                     break;
                 case WEEKLY:
                     if (isSegmented) {
-                        createAgendasSegmentedWeekly(agendaSaveDTO, agendas, resource.get(), organization.get(), createdDate);
+                        createAgendasSegmentedWeekly(agendaSaveDTO, agendas, resource.get(), organization.get(), createdDate, zoneId);
                     } else {
-                        createAgendasWeekly(agendaSaveDTO, agendas, resource.get(), organization.get(), createdDate);
+                        createAgendasWeekly(agendaSaveDTO, agendas, resource.get(), organization.get(), createdDate, zoneId);
                     }
                     break;
                 case MONTHLY:
@@ -283,15 +287,15 @@ public class AgendaService implements IAgendaService {
                             agendas.addAll(createAgendasSegmented(resource.get(), organization.get(), createdDate,
                                 tempStart, segmentSetEndDate, agendaSaveDTO.getDuration()));
                             monthsCount++;
-                            tempStart = LocalDateTime.of(agendaSaveDTO.getStartDate(), agendaSaveDTO.getStartHour()).plusMonths(monthsCount);
-                            segmentSetEndDate = LocalDateTime.of(agendaSaveDTO.getEndDate(), agendaSaveDTO.getEndHour()).plusMonths(monthsCount);
+                            tempStart = ZonedDateTime.of(agendaSaveDTO.getStartDate(), agendaSaveDTO.getStartHour(), zoneId).plusMonths(monthsCount);
+                            segmentSetEndDate = ZonedDateTime.of(agendaSaveDTO.getEndDate(), agendaSaveDTO.getEndHour(), zoneId).plusMonths(monthsCount);
                         }
                     } else {
-                        LocalDateTime tempEnd = segmentSetEndDate;
+                        ZonedDateTime tempEnd = segmentSetEndDate;
                         while (!tempEnd.isAfter(finalize)) {
                             agendas.add(new Agenda(createdDate, organization.get(), resource.get(), tempStart, tempEnd));
                             monthsCount++;
-                            tempStart = LocalDateTime.of(agendaSaveDTO.getStartDate(), agendaSaveDTO.getStartHour()).plusMonths(monthsCount);
+                            tempStart = ZonedDateTime.of(agendaSaveDTO.getStartDate(), agendaSaveDTO.getStartHour(), zoneId).plusMonths(monthsCount);
                             tempEnd = segmentSetEndDate.plusMonths(monthsCount);
                         }
                     }
@@ -307,11 +311,34 @@ public class AgendaService implements IAgendaService {
                 agendas.add(new Agenda(createdDate, organization.get(), resource.get(), tempStart, segmentSetEndDate));
             }
         }
+        // validate overlay new Agendas
+        Boolean areThereOverlapping = false;
+        // TODO: revisar que para grandes creaciones demora un siglo, literal
+        for (Agenda newAgenda : agendas) {
+            List<Agenda> overlappingAgenda = agendas.stream()
+                    .filter(a -> ((newAgenda.getStartDate().isAfter(a.getStartDate())
+                            || newAgenda.getStartDate().equals(a.getStartDate()))
+                            && newAgenda.getStartDate().isBefore(a.getEndDate()))
+                            || ((newAgenda.getEndDate().isBefore(a.getEndDate())
+                                    || newAgenda.getEndDate().equals(a.getEndDate()))
+                                    && newAgenda.getEndDate().isAfter(a.getStartDate()))
+                            || ((newAgenda.getStartDate().isBefore(a.getStartDate())
+                                    || newAgenda.getStartDate().equals(a.getStartDate()))
+                                    && (newAgenda.getEndDate().isAfter(a.getEndDate())
+                                            || newAgenda.getEndDate().equals(a.getEndDate()))))
+                    .collect(Collectors.toList());
+            if (!overlappingAgenda.isEmpty() && overlappingAgenda.size() > 1) {
+                areThereOverlapping = true;
+                break;
+            }
+        }
 
-        // validation after generating agendas
+        if (areThereOverlapping) {
+            throw new RuntimeException("No se pueden crear Disponibilidades. Hay superposición entre las que intenta crear.");
+        }
+        // validate overlay old Agendas
         Page<Agenda> existingAgendas = findByCriteria(filter);
         if (!existingAgendas.isEmpty()) {
-            Boolean flag = false;
             for (Agenda newAgenda : agendas) {
                 List<Agenda> overlappingAgenda = existingAgendas.stream()
                         .filter(oldAgenda -> ((newAgenda.getStartDate().isAfter(oldAgenda.getStartDate())
@@ -326,13 +353,13 @@ public class AgendaService implements IAgendaService {
                                                 || newAgenda.getEndDate().equals(oldAgenda.getEndDate()))))
                         .collect(Collectors.toList());
                 if (!overlappingAgenda.isEmpty()) {
-                    flag = true;
+                    areThereOverlapping = true;
+                    break;
                 }
             }
-
-            if (flag) {
-                throw new RuntimeException("Hay Disponibilidades existentes para el Recurso en el período dado.");
-            }
+        }          
+        if (areThereOverlapping) {
+            throw new RuntimeException("No se pueden crear Disponibilidades. Hay superposición con las creadas anteriormente.");
         }
 
         try {
@@ -340,14 +367,14 @@ public class AgendaService implements IAgendaService {
         } catch (Exception e) {
             throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
         }
-        return agendas.stream().map(a -> modelMapper.map(a, AgendaDTO.class)).collect(Collectors.toList());
+        return !agendas.isEmpty();
     }
 
     private List<Agenda> createAgendasWeekly(AgendaSaveDTO agendaSaveDTO,
-            List<Agenda> agendas, Resource resource, Organization organization, LocalDateTime createdDate) {
+            List<Agenda> agendas, Resource resource, Organization organization, LocalDateTime createdDate, ZoneId zoneId) {
         while (!agendaSaveDTO.getEndDate().isAfter(agendaSaveDTO.getFinalize())) {
-            LocalDateTime start = LocalDateTime.of(agendaSaveDTO.getStartDate(), agendaSaveDTO.getStartHour());
-            LocalDateTime end = LocalDateTime.of(agendaSaveDTO.getEndDate(), agendaSaveDTO.getEndHour());
+            ZonedDateTime start = ZonedDateTime.of(agendaSaveDTO.getStartDate(), agendaSaveDTO.getStartHour(), zoneId);
+            ZonedDateTime end = ZonedDateTime.of(agendaSaveDTO.getEndDate(), agendaSaveDTO.getEndHour(), zoneId);
             switch (agendaSaveDTO.getStartDate().getDayOfWeek()) {
                 case SUNDAY:
                     if (agendaSaveDTO.getSunday() != null && agendaSaveDTO.getSunday()) {
@@ -392,10 +419,10 @@ public class AgendaService implements IAgendaService {
     }
 
     private List<Agenda> createAgendasSegmentedWeekly(AgendaSaveDTO agendaSaveDTO,
-            List<Agenda> agendas, Resource resource, Organization organization, LocalDateTime createdDate) {
-        LocalDateTime segmentSetEndDate = LocalDateTime.of(agendaSaveDTO.getEndDate(), agendaSaveDTO.getEndHour());
-        LocalDateTime tempStart = LocalDateTime.of(agendaSaveDTO.getStartDate(), agendaSaveDTO.getStartHour());
-        LocalDateTime finalize = LocalDateTime.of(agendaSaveDTO.getFinalize(), LocalTime.MIN);
+            List<Agenda> agendas, Resource resource, Organization organization, LocalDateTime createdDate, ZoneId zoneId) {
+        ZonedDateTime segmentSetEndDate = ZonedDateTime.of(agendaSaveDTO.getEndDate(), agendaSaveDTO.getEndHour(), zoneId);
+        ZonedDateTime tempStart = ZonedDateTime.of(agendaSaveDTO.getStartDate(), agendaSaveDTO.getStartHour(), zoneId);
+        ZonedDateTime finalize = ZonedDateTime.of(agendaSaveDTO.getFinalize(), LocalTime.MIN, zoneId);
         Long daysCount = 0L;
         while (!segmentSetEndDate.isAfter(finalize)) {
             switch (tempStart.getDayOfWeek()) {
@@ -443,18 +470,18 @@ public class AgendaService implements IAgendaService {
                     break;
             }
             daysCount++;
-            tempStart = LocalDateTime.of(agendaSaveDTO.getStartDate(), agendaSaveDTO.getStartHour())
+            tempStart = ZonedDateTime.of(agendaSaveDTO.getStartDate(), agendaSaveDTO.getStartHour(), zoneId)
                     .plusDays(daysCount);
-            segmentSetEndDate = LocalDateTime.of(agendaSaveDTO.getEndDate(), agendaSaveDTO.getEndHour())
+            segmentSetEndDate = ZonedDateTime.of(agendaSaveDTO.getEndDate(), agendaSaveDTO.getEndHour(), zoneId)
                     .plusDays(daysCount);
         }
         return agendas;
     }
 
     private List<Agenda> createAgendasSegmented(Resource resource, Organization organization, LocalDateTime createdDate,
-            LocalDateTime tempStart, LocalDateTime segmentSetEndDate, Long duration) {
+            ZonedDateTime tempStart, ZonedDateTime segmentSetEndDate, Long duration) {
         List<Agenda> agendas = new ArrayList<>();
-        LocalDateTime tempEnd = tempStart.plusMinutes(duration);
+        ZonedDateTime tempEnd = tempStart.plusMinutes(duration);
         while (!tempEnd.isAfter(segmentSetEndDate)) {
             agendas.add(new Agenda(createdDate, organization, resource, tempStart, tempEnd));
             tempStart = tempEnd;

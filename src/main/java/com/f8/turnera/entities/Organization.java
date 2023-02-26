@@ -9,6 +9,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 
 import lombok.Data;
 
@@ -21,15 +22,19 @@ public class Organization {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequenceGenerator")
     @SequenceGenerator(name = "sequenceGenerator")
     @Column(name = "id")
+    @NotNull
     private Long id;
 
     @Column(name = "active")
+    @NotNull
     private Boolean active;
 
     @Column(name = "created_date")
+    @NotNull
     private LocalDateTime createdDate;
 
     @Column(name = "business_name")
+    @NotNull
     private String businessName;
     
     @Column(name = "brand_name")
@@ -48,6 +53,7 @@ public class Organization {
     private String phone2;
 
     @Column(name = "default_email")
+    @NotNull
     private String defaultEmail;
 
 }

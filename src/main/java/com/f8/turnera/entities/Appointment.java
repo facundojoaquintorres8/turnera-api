@@ -16,6 +16,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 
 import com.f8.turnera.models.AppointmentStatusEnum;
 
@@ -30,17 +31,21 @@ public class Appointment {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequenceGenerator")
     @SequenceGenerator(name = "sequenceGenerator")
     @Column(name = "id")
+    @NotNull
     private Long id;
 
     @Column(name = "created_date")
+    @NotNull
     private LocalDateTime createdDate;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "organization_id")
+    @NotNull
     private Organization organization;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "agenda_id")
+    @NotNull
     private Agenda agenda;
 
     @ManyToOne(optional = false)

@@ -1,6 +1,7 @@
 package com.f8.turnera.entities;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -12,6 +13,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 
 import lombok.Data;
 
@@ -24,27 +26,34 @@ public class Agenda {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequenceGenerator")
     @SequenceGenerator(name = "sequenceGenerator")
     @Column(name = "id")
+    @NotNull
     private Long id;
 
     @Column(name = "active")
+    @NotNull
     private Boolean active;
 
     @Column(name = "created_date")
+    @NotNull
     private LocalDateTime createdDate;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "organization_id")
+    @NotNull
     private Organization organization;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "resource_id")
+    @NotNull
     private Resource resource;
-    
+
     @Column(name = "start_date")
-    private LocalDateTime startDate;
+    @NotNull
+    private ZonedDateTime startDate;
 
     @Column(name = "end_date")
-    private LocalDateTime endDate;
+    @NotNull
+    private ZonedDateTime endDate;
 
     @OneToOne()
     @JoinColumn(name = "last_appointment_id")
@@ -53,8 +62,8 @@ public class Agenda {
     public Agenda() {
     }
 
-    public Agenda(LocalDateTime createdDate, Organization organization, Resource resource,
-            LocalDateTime startDate, LocalDateTime endDate) {
+    public Agenda(LocalDateTime createdDate, Organization organization, Resource resource, ZonedDateTime startDate,
+            ZonedDateTime endDate) {
         this.active = true;
         this.createdDate = createdDate;
         this.organization = organization;

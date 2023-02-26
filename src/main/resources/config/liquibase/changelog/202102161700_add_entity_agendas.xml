@@ -18,11 +18,11 @@
             <column name="organization_id" type="bigint">
                 <constraints nullable="false" />
             </column>
-            <column name="start_date" type="timestamp">
+            <column name="start_date" type="timestamptz">
                 <constraints nullable="false" />
             </column>
-            <column name="end_date" type="timestamp">
-                <constraints nullable="true" />
+            <column name="end_date" type="timestamptz">
+                <constraints nullable="false" />
             </column>
             <column name="resource_id" type="bigint">
                 <constraints nullable="false" />
