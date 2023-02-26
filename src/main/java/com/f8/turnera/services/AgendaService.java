@@ -1,6 +1,5 @@
 package com.f8.turnera.services;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
@@ -193,7 +192,7 @@ public class AgendaService implements IAgendaService {
         // validations
         Optional<Organization> organization = organizationRepository.findById(agendaSaveDTO.getOrganizationId());
         if (!organization.isPresent()) {
-            throw new RuntimeException("La disponibilidad no tiene una Organización asociada válida.");
+            throw new RuntimeException("La Disponibilidad no tiene una Organización asociada válida.");
         }
         Optional<Resource> resource = resourceRepository.findById(agendaSaveDTO.getResource().getId());
         if (!resource.isPresent()) {
@@ -230,7 +229,7 @@ public class AgendaService implements IAgendaService {
                 LocalDateTime start = LocalDateTime.of(agendaSaveDTO.getStartDate(), agendaSaveDTO.getStartHour());
                 LocalDateTime end = LocalDateTime.of(agendaSaveDTO.getEndDate(), agendaSaveDTO.getEndHour());
                 if (ChronoUnit.MINUTES.between(start, end) > 1440) {
-                    throw new RuntimeException("La disponibilidad diaria no puede superar las 24 hs.");                    
+                    throw new RuntimeException("La disponibilidad diaria no puede superar las 24 hs.");
                 }
             }
         }
@@ -246,73 +245,54 @@ public class AgendaService implements IAgendaService {
         List<Agenda> agendas = new ArrayList<>();
         LocalDateTime createdDate = LocalDateTime.now();
 
-        if (agendaSaveDTO.getEndHour().equals(LocalTime.MIDNIGHT)) {
-            agendaSaveDTO.setEndHour(LocalTime.MAX);
-        }
-        List<LocalTime> hours = new ArrayList<>();
-        // while (agendaSaveDTO.getStartHour().isBefore(agendaSaveDTO.getEndHour())) {
-        // hours.add(agendaSaveDTO.getStartHour());
-        // LocalTime newTime =
-        // agendaSaveDTO.getStartHour().plusMinutes(agendaSaveDTO.getDuration());
-        // if (newTime.isBefore(agendaSaveDTO.getStartHour()) ||
-        // newTime.equals(LocalTime.MIDNIGHT)) {
-        // newTime = LocalTime.MAX;
-        // }
-        // agendaSaveDTO.setStartHour(newTime);
-        // }
-
+        LocalDateTime tempStart = LocalDateTime.of(agendaSaveDTO.getStartDate(), agendaSaveDTO.getStartHour());
+        LocalDateTime segmentSetEndDate = LocalDateTime.of(agendaSaveDTO.getEndDate(), agendaSaveDTO.getEndHour());
         if (agendaSaveDTO.getRepeat() != null && agendaSaveDTO.getRepeat()) {
+            LocalDateTime finalize = LocalDateTime.of(agendaSaveDTO.getFinalize(), LocalTime.MIN);
             switch (agendaSaveDTO.getRepeatType()) {
                 case DAILY:
                     if (isSegmented) {
-                        LocalDateTime start = LocalDateTime.of(agendaSaveDTO.getStartDate(),
-                                agendaSaveDTO.getStartHour());
-                        LocalDateTime end = LocalDateTime.of(agendaSaveDTO.getEndDate(), agendaSaveDTO.getEndHour());
-                        LocalDateTime finalize = LocalDateTime.of(agendaSaveDTO.getFinalize(), LocalTime.MIN);
                         Long daysCount = 0L;
-                        while (!end.isAfter(finalize)) {
-                            while (!start.isAfter(end)) {
-                                // if the last agenda exceeds the end date
-                                if (start.plusMinutes(agendaSaveDTO.getDuration()).isAfter(end)) {
-                                    break;
-                                }
-                                agendas.add(new Agenda(true, createdDate, organization.get(), resource.get(), start, end));
-                                start = start.plusMinutes(agendaSaveDTO.getDuration());
-                            }
+                        while (!segmentSetEndDate.isAfter(finalize)) {
+                            agendas.addAll(createAgendasSegmented(resource.get(), organization.get(), createdDate,
+                                tempStart, segmentSetEndDate, agendaSaveDTO.getDuration()));
                             daysCount++;
-                            start = LocalDateTime.of(agendaSaveDTO.getStartDate(), agendaSaveDTO.getStartHour()).plusDays(daysCount);
-                            end = end.plusDays(1);
+                            tempStart = LocalDateTime.of(agendaSaveDTO.getStartDate(), agendaSaveDTO.getStartHour()).plusDays(daysCount);
+                            segmentSetEndDate = LocalDateTime.of(agendaSaveDTO.getEndDate(), agendaSaveDTO.getEndHour()).plusDays(daysCount);
                         }
                     } else {
-                        LocalDateTime start = LocalDateTime.of(agendaSaveDTO.getStartDate(),
-                                agendaSaveDTO.getStartHour());
-                        LocalDateTime end = LocalDateTime.of(agendaSaveDTO.getEndDate(), agendaSaveDTO.getEndHour());
-                        LocalDateTime finalize = LocalDateTime.of(agendaSaveDTO.getFinalize(), LocalTime.MIN);
-                        while (!end.isAfter(finalize)) {
-                            agendas.add(new Agenda(true, createdDate, organization.get(), resource.get(), start, end));
-                            start = start.plusDays(1);
-                            end = end.plusDays(1);
+                        LocalDateTime tempEnd = segmentSetEndDate;
+                        while (!tempEnd.isAfter(finalize)) {
+                            agendas.add(new Agenda(createdDate, organization.get(), resource.get(), tempStart, tempEnd));
+                            tempStart = tempStart.plusDays(1);
+                            tempEnd = tempEnd.plusDays(1);
                         }
                     }
                     break;
                 case WEEKLY:
                     if (isSegmented) {
+                        createAgendasSegmentedWeekly(agendaSaveDTO, agendas, resource.get(), organization.get(), createdDate);
                     } else {
+                        createAgendasWeekly(agendaSaveDTO, agendas, resource.get(), organization.get(), createdDate);
                     }
                     break;
                 case MONTHLY:
+                    Long monthsCount = 0L;
                     if (isSegmented) {
-                    } else {
-                        LocalDateTime start = LocalDateTime.of(agendaSaveDTO.getStartDate(),
-                                agendaSaveDTO.getStartHour());
-                        LocalDateTime end = LocalDateTime.of(agendaSaveDTO.getEndDate(), agendaSaveDTO.getEndHour());
-                        LocalDateTime finalize = LocalDateTime.of(agendaSaveDTO.getFinalize(), LocalTime.MIN);
-                        Long monthsCount = 0L;
-                        while (!end.isAfter(finalize)) {
-                            agendas.add(new Agenda(true, createdDate, organization.get(), resource.get(), start, end));
+                        while (!segmentSetEndDate.isAfter(finalize)) {
+                            agendas.addAll(createAgendasSegmented(resource.get(), organization.get(), createdDate,
+                                tempStart, segmentSetEndDate, agendaSaveDTO.getDuration()));
                             monthsCount++;
-                            start = LocalDateTime.of(agendaSaveDTO.getStartDate(), agendaSaveDTO.getStartHour()).plusMonths(monthsCount);
-                            end = LocalDateTime.of(agendaSaveDTO.getEndDate(), agendaSaveDTO.getEndHour()).plusMonths(monthsCount);
+                            tempStart = LocalDateTime.of(agendaSaveDTO.getStartDate(), agendaSaveDTO.getStartHour()).plusMonths(monthsCount);
+                            segmentSetEndDate = LocalDateTime.of(agendaSaveDTO.getEndDate(), agendaSaveDTO.getEndHour()).plusMonths(monthsCount);
+                        }
+                    } else {
+                        LocalDateTime tempEnd = segmentSetEndDate;
+                        while (!tempEnd.isAfter(finalize)) {
+                            agendas.add(new Agenda(createdDate, organization.get(), resource.get(), tempStart, tempEnd));
+                            monthsCount++;
+                            tempStart = LocalDateTime.of(agendaSaveDTO.getStartDate(), agendaSaveDTO.getStartHour()).plusMonths(monthsCount);
+                            tempEnd = segmentSetEndDate.plusMonths(monthsCount);
                         }
                     }
                     break;
@@ -320,19 +300,11 @@ public class AgendaService implements IAgendaService {
                     break;
             }
         } else {
-            LocalDateTime start = LocalDateTime.of(agendaSaveDTO.getStartDate(), agendaSaveDTO.getStartHour());
-            LocalDateTime end = LocalDateTime.of(agendaSaveDTO.getEndDate(), agendaSaveDTO.getEndHour());
             if (isSegmented) {
-                while (!start.isAfter(end)) {
-                    // if the last agenda exceeds the end date
-                    if (start.plusMinutes(agendaSaveDTO.getDuration()).isAfter(end)) {
-                        break;
-                    }
-                    agendas.add(new Agenda(true, createdDate, organization.get(), resource.get(), start, end));
-                    start = start.plusMinutes(agendaSaveDTO.getDuration());
-                }
+                agendas = createAgendasSegmented(resource.get(), organization.get(), createdDate, 
+                    tempStart, segmentSetEndDate, agendaSaveDTO.getDuration());
             } else {
-                agendas.add(new Agenda(true, createdDate, organization.get(), resource.get(), start, end));
+                agendas.add(new Agenda(createdDate, organization.get(), resource.get(), tempStart, segmentSetEndDate));
             }
         }
 
@@ -371,60 +343,124 @@ public class AgendaService implements IAgendaService {
         return agendas.stream().map(a -> modelMapper.map(a, AgendaDTO.class)).collect(Collectors.toList());
     }
 
-    private void createAgendasNoRepeatAndSegmented(AgendaSaveDTO agendaSaveDTO, List<LocalTime> hours,
-            List<Agenda> agendas,
-            Resource resource, Organization organization, LocalDateTime createdDate) {
-        while (!agendaSaveDTO.getStartDate().isAfter(agendaSaveDTO.getEndDate())) {
+    private List<Agenda> createAgendasWeekly(AgendaSaveDTO agendaSaveDTO,
+            List<Agenda> agendas, Resource resource, Organization organization, LocalDateTime createdDate) {
+        while (!agendaSaveDTO.getEndDate().isAfter(agendaSaveDTO.getFinalize())) {
+            LocalDateTime start = LocalDateTime.of(agendaSaveDTO.getStartDate(), agendaSaveDTO.getStartHour());
+            LocalDateTime end = LocalDateTime.of(agendaSaveDTO.getEndDate(), agendaSaveDTO.getEndHour());
             switch (agendaSaveDTO.getStartDate().getDayOfWeek()) {
                 case SUNDAY:
                     if (agendaSaveDTO.getSunday() != null && agendaSaveDTO.getSunday()) {
-                        createAgenda(agendaSaveDTO, hours, agendas, resource, organization, createdDate);
+                        agendas.add(new Agenda(createdDate, organization, resource, start, end));
                     }
                     break;
                 case MONDAY:
                     if (agendaSaveDTO.getMonday() != null && agendaSaveDTO.getMonday()) {
-                        createAgenda(agendaSaveDTO, hours, agendas, resource, organization, createdDate);
+                        agendas.add(new Agenda(createdDate, organization, resource, start, end));
                     }
                     break;
                 case TUESDAY:
                     if (agendaSaveDTO.getTuesday() != null && agendaSaveDTO.getTuesday()) {
-                        createAgenda(agendaSaveDTO, hours, agendas, resource, organization, createdDate);
+                        agendas.add(new Agenda(createdDate, organization, resource, start, end));
                     }
                     break;
                 case WEDNESDAY:
                     if (agendaSaveDTO.getWednesday() != null && agendaSaveDTO.getWednesday()) {
-                        createAgenda(agendaSaveDTO, hours, agendas, resource, organization, createdDate);
+                        agendas.add(new Agenda(createdDate, organization, resource, start, end));
                     }
                     break;
                 case THURSDAY:
                     if (agendaSaveDTO.getThursday() != null && agendaSaveDTO.getThursday()) {
-                        createAgenda(agendaSaveDTO, hours, agendas, resource, organization, createdDate);
+                        agendas.add(new Agenda(createdDate, organization, resource, start, end));
                     }
                     break;
                 case FRIDAY:
                     if (agendaSaveDTO.getFriday() != null && agendaSaveDTO.getFriday()) {
-                        createAgenda(agendaSaveDTO, hours, agendas, resource, organization, createdDate);
+                        agendas.add(new Agenda(createdDate, organization, resource, start, end));
                     }
                     break;
                 case SATURDAY:
                     if (agendaSaveDTO.getSaturday() != null && agendaSaveDTO.getSaturday()) {
-                        createAgenda(agendaSaveDTO, hours, agendas, resource, organization, createdDate);
+                        agendas.add(new Agenda(createdDate, organization, resource, start, end));
                     }
                     break;
             }
             agendaSaveDTO.setStartDate(agendaSaveDTO.getStartDate().plusDays(1));
+            agendaSaveDTO.setEndDate(agendaSaveDTO.getEndDate().plusDays(1));
         }
+        return agendas;
     }
 
-    private void createAgenda(AgendaSaveDTO agendaSaveDTO, List<LocalTime> hours, List<Agenda> agendaToSave,
-            Resource resource, Organization organization, LocalDateTime createdDate) {
-        for (LocalTime hour : hours) {
-            LocalDateTime start = LocalDateTime.of(agendaSaveDTO.getStartDate(), hour);
-            LocalDateTime end = start.plusMinutes(agendaSaveDTO.getDuration());
-            if (!end.toLocalTime().isAfter(agendaSaveDTO.getEndHour())) {
-                agendaToSave.add(new Agenda(true, createdDate, organization, resource, start, end));
+    private List<Agenda> createAgendasSegmentedWeekly(AgendaSaveDTO agendaSaveDTO,
+            List<Agenda> agendas, Resource resource, Organization organization, LocalDateTime createdDate) {
+        LocalDateTime segmentSetEndDate = LocalDateTime.of(agendaSaveDTO.getEndDate(), agendaSaveDTO.getEndHour());
+        LocalDateTime tempStart = LocalDateTime.of(agendaSaveDTO.getStartDate(), agendaSaveDTO.getStartHour());
+        LocalDateTime finalize = LocalDateTime.of(agendaSaveDTO.getFinalize(), LocalTime.MIN);
+        Long daysCount = 0L;
+        while (!segmentSetEndDate.isAfter(finalize)) {
+            switch (tempStart.getDayOfWeek()) {
+                case SUNDAY:
+                    if (agendaSaveDTO.getSunday() != null && agendaSaveDTO.getSunday()) {
+                        agendas.addAll(createAgendasSegmented(resource, organization, createdDate, tempStart,
+                                segmentSetEndDate, agendaSaveDTO.getDuration()));
+                    }
+                    break;
+                case MONDAY:
+                    if (agendaSaveDTO.getMonday() != null && agendaSaveDTO.getMonday()) {
+                        agendas.addAll(createAgendasSegmented(resource, organization, createdDate, tempStart,
+                                segmentSetEndDate, agendaSaveDTO.getDuration()));
+                    }
+                    break;
+                case TUESDAY:
+                    if (agendaSaveDTO.getTuesday() != null && agendaSaveDTO.getTuesday()) {
+                        agendas.addAll(createAgendasSegmented(resource, organization, createdDate, tempStart,
+                                segmentSetEndDate, agendaSaveDTO.getDuration()));
+                    }
+                    break;
+                case WEDNESDAY:
+                    if (agendaSaveDTO.getWednesday() != null && agendaSaveDTO.getWednesday()) {
+                        agendas.addAll(createAgendasSegmented(resource, organization, createdDate, tempStart,
+                                segmentSetEndDate, agendaSaveDTO.getDuration()));
+                    }
+                    break;
+                case THURSDAY:
+                    if (agendaSaveDTO.getThursday() != null && agendaSaveDTO.getThursday()) {
+                        agendas.addAll(createAgendasSegmented(resource, organization, createdDate, tempStart,
+                                segmentSetEndDate, agendaSaveDTO.getDuration()));
+                    }
+                    break;
+                case FRIDAY:
+                    if (agendaSaveDTO.getFriday() != null && agendaSaveDTO.getFriday()) {
+                        agendas.addAll(createAgendasSegmented(resource, organization, createdDate, tempStart,
+                                segmentSetEndDate, agendaSaveDTO.getDuration()));
+                    }
+                    break;
+                case SATURDAY:
+                    if (agendaSaveDTO.getSaturday() != null && agendaSaveDTO.getSaturday()) {
+                        agendas.addAll(createAgendasSegmented(resource, organization, createdDate, tempStart,
+                                segmentSetEndDate, agendaSaveDTO.getDuration()));
+                    }
+                    break;
             }
+            daysCount++;
+            tempStart = LocalDateTime.of(agendaSaveDTO.getStartDate(), agendaSaveDTO.getStartHour())
+                    .plusDays(daysCount);
+            segmentSetEndDate = LocalDateTime.of(agendaSaveDTO.getEndDate(), agendaSaveDTO.getEndHour())
+                    .plusDays(daysCount);
         }
+        return agendas;
+    }
+
+    private List<Agenda> createAgendasSegmented(Resource resource, Organization organization, LocalDateTime createdDate,
+            LocalDateTime tempStart, LocalDateTime segmentSetEndDate, Long duration) {
+        List<Agenda> agendas = new ArrayList<>();
+        LocalDateTime tempEnd = tempStart.plusMinutes(duration);
+        while (!tempEnd.isAfter(segmentSetEndDate)) {
+            agendas.add(new Agenda(createdDate, organization, resource, tempStart, tempEnd));
+            tempStart = tempEnd;
+            tempEnd = tempEnd.plusMinutes(duration);
+        }
+        return agendas;
     }
 
     @Override

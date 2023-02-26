@@ -53,9 +53,9 @@ public class Agenda {
     public Agenda() {
     }
 
-    public Agenda(Boolean active, LocalDateTime createdDate, Organization organization, Resource resource,
+    public Agenda(LocalDateTime createdDate, Organization organization, Resource resource,
             LocalDateTime startDate, LocalDateTime endDate) {
-        this.active = active;
+        this.active = true;
         this.createdDate = createdDate;
         this.organization = organization;
         this.resource = resource;
