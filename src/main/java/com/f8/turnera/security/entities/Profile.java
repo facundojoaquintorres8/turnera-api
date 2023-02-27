@@ -60,10 +60,10 @@ public class Profile {
     @JoinTable(name = "users_profiles", joinColumns = @JoinColumn(name = "profile_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
     private Set<User> users;
 
-    public Profile(Boolean active, LocalDateTime createdDate, Organization organization, String description,
+    public Profile(Organization organization, String description,
             Set<Permission> permissions) {
-        this.active = active;
-        this.createdDate = createdDate;
+        this.active = true;
+        this.createdDate = LocalDateTime.now();
         this.organization = organization;
         this.description = description;
         this.permissions = permissions;

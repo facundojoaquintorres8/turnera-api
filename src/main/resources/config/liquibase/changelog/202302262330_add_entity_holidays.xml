@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+	<changeSet id="202302262330-1" author="FacuTorres">
+		<createTable tableName="holidays">
+			<column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+			</column>
+            <column name="active" type="boolean">
+                <constraints nullable="false" />
+            </column>
+            <column name="created_date" type="timestamp">
+                <constraints nullable="false" />
+            </column>
+            <column name="organization_id" type="bigint">
+                <constraints nullable="false" />
+            </column>
+            <column name="date" type="date">
+                <constraints nullable="false" />
+            </column>
+            <column name="description" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="use_in_agenda" type="boolean">
+                <constraints nullable="false" />
+            </column>                   
+		</createTable>
+
+        <!-- add FKs -->
+        <addForeignKeyConstraint
+            baseColumnNames="organization_id"
+            baseTableName="holidays"
+            constraintName="fk_holidays_organizations"
+            referencedColumnNames="id"
+            referencedTableName="organizations"/>
+            
+        <!-- add permissions -->
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="27"/>            
+            <column name="description" value="Ver Feriados"/>
+            <column name="code" value="holidays.read"/>
+        </insert>
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="28"/>            
+            <column name="description" value="Actualizar Feriado"/>
+            <column name="code" value="holidays.write"/>
+        </insert>
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="29"/>            
+            <column name="description" value="Eliminar Feriado"/>
+            <column name="code" value="holidays.delete"/>
+        </insert>
+	</changeSet>
+</databaseChangeLog>

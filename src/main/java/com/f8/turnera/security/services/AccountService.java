@@ -129,7 +129,7 @@ public class AccountService implements IAccountService {
 
     private void addDefaultProfiles(User user) {
         Set<Permission> permissions = new HashSet<>(permissionRepository.findAll());
-        Profile profile = new Profile(true, LocalDateTime.now(), user.getOrganization(), "Administrador", permissions);
+        Profile profile = new Profile(user.getOrganization(), "Administrador", permissions);
         Set<Profile> profiles = new HashSet<>();
         profiles.add(profile);
         user.setProfiles(profiles);

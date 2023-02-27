@@ -190,8 +190,6 @@ public class AgendaService implements IAgendaService {
 
     @Override
     public Boolean create(AgendaSaveDTO agendaSaveDTO) {
-        ModelMapper modelMapper = new ModelMapper();
-
         // validations
         Optional<Organization> organization = organizationRepository.findById(agendaSaveDTO.getOrganizationId());
         if (!organization.isPresent()) {
@@ -241,7 +239,8 @@ public class AgendaService implements IAgendaService {
         AppointmentFilterDTO filter = new AppointmentFilterDTO();
         filter.setResourceId(agendaSaveDTO.getResource().getId());
         filter.setFrom(agendaSaveDTO.getStartDate());
-        filter.setTo(agendaSaveDTO.getFinalize() != null ? agendaSaveDTO.getFinalize() : agendaSaveDTO.getEndDate());
+        filter.setTo(agendaSaveDTO.getRepeat() != null && agendaSaveDTO.getRepeat() ? agendaSaveDTO.getFinalize()
+                : agendaSaveDTO.getEndDate());
         filter.setZoneId(agendaSaveDTO.getZoneId());
         filter.setActive(true);
         filter.setIgnorePaginated(true);
