@@ -1,5 +1,6 @@
 package com.f8.turnera.services;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -51,6 +52,9 @@ public class AgendaService implements IAgendaService {
 
     @Autowired
     private IResourceRepository resourceRepository;
+    
+    @Autowired
+    private IHolidayService holidayService;
 
     @Autowired
     private EntityManager em;
@@ -235,6 +239,12 @@ public class AgendaService implements IAgendaService {
             }
         }
 
+        final List<LocalDate> holidayDates = new ArrayList<LocalDate>();
+        if (agendaSaveDTO.getOmitHolidays()) {
+            // TODO: podría agregar fechas para filtra más
+            holidayDates.addAll(holidayService.findAllDatesToAgenda());
+        }
+
         // to validate after generating agendas
         AppointmentFilterDTO filter = new AppointmentFilterDTO();
         filter.setResourceId(agendaSaveDTO.getResource().getId());
@@ -313,6 +323,7 @@ public class AgendaService implements IAgendaService {
         // validate overlay new Agendas
         Boolean areThereOverlapping = false;
         // TODO: revisar que para grandes creaciones demora un siglo, literal
+        // TODO: search "overlap objects by date java"
         for (Agenda newAgenda : agendas) {
             List<Agenda> overlappingAgenda = agendas.stream()
                     .filter(a -> ((newAgenda.getStartDate().isAfter(a.getStartDate())
@@ -359,6 +370,13 @@ public class AgendaService implements IAgendaService {
         }          
         if (areThereOverlapping) {
             throw new RuntimeException("No se pueden crear Disponibilidades. Hay superposición con las creadas anteriormente.");
+        }
+
+        // filter holidays
+        if (agendaSaveDTO.getOmitHolidays()) {
+            agendas = agendas.stream().filter(
+                x -> !holidayDates.contains(x.getStartDate().toLocalDate())
+            ).collect(Collectors.toList());   
         }
 
         try {

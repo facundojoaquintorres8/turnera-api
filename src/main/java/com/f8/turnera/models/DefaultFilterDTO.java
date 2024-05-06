@@ -11,5 +11,6 @@ public class DefaultFilterDTO {
     private List<String> sort;
     private Long organizationId;
     private Boolean active;
+    private Boolean ignorePaginated;
 
 }

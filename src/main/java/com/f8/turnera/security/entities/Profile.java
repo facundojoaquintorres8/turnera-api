@@ -71,9 +71,4 @@ public class Profile {
 
     public Profile() {
     }
-
-    @Override
-    public String toString() {
-        return "Profile()..."; // TODO
-    }
 }

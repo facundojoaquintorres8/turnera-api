@@ -7,6 +7,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 import lombok.Data;
@@ -24,11 +25,11 @@ public class Permission {
     private Long id;
 
     @Column(name = "description")
-    @NotNull
+    @NotBlank
     private String description;
 
-    @Column(name = "code")
-    @NotNull
+    @Column(name = "code", unique = true)
+    @NotBlank
     private String code;
 
 }

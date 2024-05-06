@@ -38,5 +38,6 @@ public class AgendaSaveDTO {
     private Boolean thursday;
     private Boolean friday;
     private Boolean saturday;
+    private Boolean omitHolidays;
 
 }

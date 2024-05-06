@@ -1,10 +1,12 @@
 package com.f8.turnera.services;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -102,7 +104,8 @@ public class HolidayService implements IHolidayService {
                         result.sort(Comparator.comparing(Holiday::getDate).reversed());
                         break;
                     case "description":
-                        result.sort(Comparator.comparing(Holiday::getDescription, String::compareToIgnoreCase).reversed());
+                        result.sort(
+                                Comparator.comparing(Holiday::getDescription, String::compareToIgnoreCase).reversed());
                         break;
                     case "useInAgenda":
                         result.sort(Comparator.comparing(Holiday::getUseInAgenda).reversed());
@@ -115,6 +118,10 @@ public class HolidayService implements IHolidayService {
         int count = result.size();
         int fromIndex = Constants.ITEMS_PER_PAGE * (filter.getPage());
         int toIndex = fromIndex + Constants.ITEMS_PER_PAGE > count ? count : fromIndex + Constants.ITEMS_PER_PAGE;
+        if (filter.getIgnorePaginated() != null && filter.getIgnorePaginated()) {
+            fromIndex = 0;
+            toIndex = count;
+        }
         Pageable pageable = PageRequest.of(filter.getPage(), Constants.ITEMS_PER_PAGE);
         return new PageImpl<Holiday>(result.subList(fromIndex, toIndex), pageable, count);
     }
@@ -140,6 +147,11 @@ public class HolidayService implements IHolidayService {
             throw new RuntimeException("El Feriado no tiene una Organización asociada válida.");
         }
 
+        Optional<Holiday> existingHoliday = holidayRepository.findByDateAndOrganizationId(holidayDTO.getDate(), holidayDTO.getOrganizationId());
+        if (existingHoliday.isPresent()) {
+            throw new RuntimeException("El feriado ingresado ya está registrado.");
+        }
+
         Holiday holiday = modelMapper.map(holidayDTO, Holiday.class);
         holiday.setCreatedDate(LocalDateTime.now());
         holiday.setActive(true);
@@ -158,6 +170,11 @@ public class HolidayService implements IHolidayService {
         Optional<Holiday> holiday = holidayRepository.findById(holidayDTO.getId());
         if (!holiday.isPresent()) {
             throw new RuntimeException("Feriado no encontrado - " + holidayDTO.getId());
+        }
+
+        Optional<Holiday> existingHoliday = holidayRepository.findByDateAndOrganizationId(holidayDTO.getDate(), holidayDTO.getOrganizationId());
+        if (existingHoliday.isPresent() && !existingHoliday.get().getId().equals(holidayDTO.getId())) {
+            throw new RuntimeException("El feriado ingresado ya está registrado.");
         }
 
         ModelMapper modelMapper = new ModelMapper();
@@ -190,5 +207,20 @@ public class HolidayService implements IHolidayService {
         } catch (Exception e) {
             throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
         }
+    }
+
+    @Override
+    public List<LocalDate> findAllDatesToAgenda() {
+        HolidayFilterDTO filter = new HolidayFilterDTO();
+        filter.setActive(true);
+        filter.setUseInAgenda(true);
+        filter.setIgnorePaginated(true);
+
+        Page<Holiday> holidays = findByCriteria(filter);
+
+        if (!holidays.isEmpty()) {
+            return holidays.stream().map(Holiday::getDate).collect(Collectors.toList());
+        }
+        return new ArrayList<LocalDate>();
     }
 }

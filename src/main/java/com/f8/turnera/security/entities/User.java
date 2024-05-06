@@ -57,7 +57,7 @@ public class User {
     @NotNull
     private String lastName;
 
-    @Column(name = "username")
+    @Column(name = "username", unique = true)
     @NotNull
     private String username;
     
@@ -85,10 +85,5 @@ public class User {
         inverseJoinColumns=@JoinColumn(name="profile_id")
     )                    
     private Set<Profile> profiles;
-
-    @Override
-    public String toString() {
-        return "User()..."; // TODO
-    }
 
 }
