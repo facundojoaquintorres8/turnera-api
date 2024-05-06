@@ -11,6 +11,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 import lombok.Data;
@@ -41,7 +42,7 @@ public class Customer {
     private Organization organization;
     
     @Column(name = "business_name")
-    @NotNull
+    @NotBlank
     private String businessName;
     
     @Column(name = "brand_name")
@@ -54,14 +55,14 @@ public class Customer {
     private String address;
     
     @Column(name = "phone1")
-    @NotNull
+    @NotBlank
     private String phone1;
     
     @Column(name = "phone2")
     private String phone2;
 
     @Column(name = "email")
-    @NotNull
+    @NotBlank
     private String email;
 
 }

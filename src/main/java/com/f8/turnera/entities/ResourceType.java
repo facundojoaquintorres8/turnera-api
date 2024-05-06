@@ -14,6 +14,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 import lombok.Data;
@@ -44,7 +45,7 @@ public class ResourceType {
     private Organization organization;
     
     @Column(name = "description")
-    @NotNull
+    @NotBlank
     private String description;
 
     @OneToMany(cascade = CascadeType.REFRESH, mappedBy = "resourceType")

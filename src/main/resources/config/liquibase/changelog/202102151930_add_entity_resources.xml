@@ -41,6 +41,30 @@
             baseTableName="resources"
             constraintName="fk_resources_resources_types"
             referencedColumnNames="id"
-            referencedTableName="resources_types"/>        
+            referencedTableName="resources_types"/>
+            
+        <!-- permissions -->
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="13"/>            
+            <column name="description" value="Ver Recursos"/>
+            <column name="code" value="resources.read"/>
+        </insert>
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="14"/>            
+            <column name="description" value="Actualizar Recurso"/>
+            <column name="code" value="resources.write"/>
+        </insert>
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="15"/>            
+            <column name="description" value="Eliminar Recurso"/>
+            <column name="code" value="resources.delete"/>
+        </insert>
+
 	</changeSet>
 </databaseChangeLog>

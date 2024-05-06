@@ -9,12 +9,7 @@
     <include file="config/liquibase/changelog/202102151730_add_entity_resources_types.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/202102151930_add_entity_resources.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/202102161700_add_entity_agendas.xml" relativeToChangelogFile="false"/>
-    <include file="config/liquibase/changelog/202102271100_insert_permissions_customers_resources_resources_types_agendas.xml" relativeToChangelogFile="false"/>
-    <include file="config/liquibase/changelog/202103022200_added_entity_appointments_with_permissions.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/202103022200_add_entity_appointments.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/202103051900_add_last_appointment_to_agenda.xml" relativeToChangelogFile="false"/>
-    <include file="config/liquibase/changelog/202103062200_add_current_status_to_appointment.xml" relativeToChangelogFile="false"/>
-    <include file="config/liquibase/changelog/202103200345_rename_agenda_permissions.xml" relativeToChangelogFile="false"/>
-    <include file="config/liquibase/changelog/202103221047_add_observations_to_appointment_status_and_add_last_status_to_appointment.xml" relativeToChangelogFile="false"/>
-    <include file="config/liquibase/changelog/202103241948_drop_not_null_contraint_to_last_appointment_status.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/202302262330_add_entity_holidays.xml" relativeToChangelogFile="false"/>
 </databaseChangeLog>

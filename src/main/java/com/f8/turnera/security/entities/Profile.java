@@ -15,6 +15,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 import com.f8.turnera.entities.Organization;
@@ -47,7 +48,7 @@ public class Profile {
     private Organization organization;
 
     @Column(name = "description")
-    @NotNull
+    @NotBlank
     private String description;
 
     @ManyToMany(cascade = CascadeType.REFRESH)
@@ -58,8 +59,7 @@ public class Profile {
     @JoinTable(name = "users_profiles", joinColumns = @JoinColumn(name = "profile_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
     private Set<User> users;
 
-    public Profile(Organization organization, String description,
-            Set<Permission> permissions) {
+    public Profile(Organization organization, String description, Set<Permission> permissions) {
         this.active = true;
         this.createdDate = LocalDateTime.now();
         this.organization = organization;

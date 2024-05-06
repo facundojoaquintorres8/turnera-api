@@ -4,8 +4,6 @@ import com.f8.turnera.models.HolidayDTO;
 import com.f8.turnera.models.HolidayFilterDTO;
 import com.f8.turnera.services.IHolidayService;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api")
 public class HolidayController {
-    private final Logger log = LoggerFactory.getLogger(HolidayController.class);
 
     @Autowired
     private IHolidayService service;
@@ -30,8 +27,6 @@ public class HolidayController {
     @GetMapping("/holidays/findAllByFilter")
     @PreAuthorize("hasAuthority('holidays.read')")
     public ResponseEntity<Page<HolidayDTO>> findAllByFilter(HolidayFilterDTO filter) {
-        log.info("REST request to get Holidays by filter: {}", filter);
-
         Page<HolidayDTO> result = service.findAllByFilter(filter);
 
         return ResponseEntity.ok().body(result);
@@ -40,8 +35,6 @@ public class HolidayController {
     @GetMapping("/holidays/{id}")
     @PreAuthorize("hasAuthority('holidays.read')")
     public ResponseEntity<HolidayDTO> getHoliday(@PathVariable Long id) {
-        log.info("REST request to get Holiday {}", id);
-
         HolidayDTO result = service.findById(id);
 
         return ResponseEntity.ok().body(result);
@@ -50,8 +43,6 @@ public class HolidayController {
     @PostMapping("/holidays")
     @PreAuthorize("hasAuthority('holidays.write')")
     public ResponseEntity<HolidayDTO> createHoliday(@RequestBody HolidayDTO holidayDTO) {
-        log.info("REST request to create Holiday: {}", holidayDTO);
-
         HolidayDTO result = service.create(holidayDTO);
 
         return ResponseEntity.ok().body(result);
@@ -60,8 +51,6 @@ public class HolidayController {
     @PutMapping("/holidays")
     @PreAuthorize("hasAuthority('holidays.write')")
     public ResponseEntity<HolidayDTO> updateHoliday(@RequestBody HolidayDTO holidayDTO) {
-        log.info("REST request to update Holiday: {}", holidayDTO);
-
         HolidayDTO result = service.update(holidayDTO);
 
         return ResponseEntity.ok().body(result);
@@ -70,8 +59,6 @@ public class HolidayController {
     @DeleteMapping("holidays/{id}")
     @PreAuthorize("hasAuthority('holidays.delete')")
     public ResponseEntity<Void> deleteHoliday(@PathVariable Long id) {
-        log.info("REST request to delete Holiday {}", id);
-
         service.deleteById(id);
 
         return ResponseEntity.ok().build();

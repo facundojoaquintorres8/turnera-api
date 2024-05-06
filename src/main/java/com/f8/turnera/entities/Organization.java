@@ -9,6 +9,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 import lombok.Data;
@@ -34,7 +35,7 @@ public class Organization {
     private LocalDateTime createdDate;
 
     @Column(name = "business_name")
-    @NotNull
+    @NotBlank
     private String businessName;
     
     @Column(name = "brand_name")
@@ -53,7 +54,7 @@ public class Organization {
     private String phone2;
 
     @Column(name = "default_email")
-    @NotNull
+    @NotBlank
     private String defaultEmail;
 
 }
