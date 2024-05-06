@@ -2,6 +2,7 @@ package com.f8.turnera.config;
 
 import io.jsonwebtoken.*;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -17,6 +18,9 @@ import com.f8.turnera.security.entities.User;
 
 public class TokenProvider {
 
+	@Value("${jwt.secret.key}")
+    private static String secretKey;
+
 	private TokenProvider() {
 	}
 
@@ -26,14 +30,14 @@ public class TokenProvider {
 
 		return Jwts.builder().setSubject(((User) authentication.getPrincipal()).getUsername())
 				.claim(SecurityConstants.AUTHORITIES_KEY, authorities)
-				.signWith(SignatureAlgorithm.HS256, SecurityConstants.SECRET).setIssuer("f8")
+				.signWith(SignatureAlgorithm.HS256, secretKey).setIssuer("f8")
 				.setExpiration(new Date(System.currentTimeMillis() + SecurityConstants.EXPIRATION_TIME * 1000))
 				.compact();
 	}
 
 	public static UsernamePasswordAuthenticationToken getAuthentication(final String token) {
 
-		final JwtParser jwtParser = Jwts.parser().setSigningKey(SecurityConstants.SECRET);
+		final JwtParser jwtParser = Jwts.parser().setSigningKey(secretKey);
 
 		final Jws<Claims> claimsJws = jwtParser.parseClaimsJws(token);
 
@@ -50,7 +54,7 @@ public class TokenProvider {
 	}
 
 	public static String getUsername(final String token) {
-		final JwtParser jwtParser = Jwts.parser().setSigningKey(SecurityConstants.SECRET);
+		final JwtParser jwtParser = Jwts.parser().setSigningKey(secretKey);
 
 		final Jws<Claims> claimsJws = jwtParser.parseClaimsJws(token);
 

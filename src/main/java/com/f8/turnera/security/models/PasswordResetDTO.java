@@ -6,7 +6,6 @@ import lombok.Data;
 public class PasswordResetDTO {
     
     private String password;
-    
     private String resetKey;
 
 }
