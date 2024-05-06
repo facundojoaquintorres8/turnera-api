@@ -3,10 +3,9 @@ package com.f8.turnera.models;
 import lombok.Data;
 
 @Data
-public class AppointmentStatusDTO {
+public class AppointmentChangeStatusDTO {
 
     private Long id;
-    private AppointmentStatusEnum status;
     private String observations;
 
 }

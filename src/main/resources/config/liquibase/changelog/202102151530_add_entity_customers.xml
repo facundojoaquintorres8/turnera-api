@@ -47,6 +47,29 @@
             baseTableName="customers"
             constraintName="fk_customers_organizations"
             referencedColumnNames="id"
-            referencedTableName="organizations"/>        
+            referencedTableName="organizations"/>
+            
+        <!-- permissions -->
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="10"/>            
+            <column name="description" value="Ver Clientes"/>
+            <column name="code" value="customers.read"/>
+        </insert>
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="11"/>            
+            <column name="description" value="Actualizar Cliente"/>
+            <column name="code" value="customers.write"/>
+        </insert>
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="12"/>            
+            <column name="description" value="Eliminar Cliente"/>
+            <column name="code" value="customers.delete"/>
+        </insert>
 	</changeSet>
 </databaseChangeLog>

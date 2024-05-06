@@ -21,7 +21,10 @@
             </column>
             <column name="customer_id" type="bigint">
                 <constraints nullable="false" />
-            </column>                                 
+            </column>
+            <column name="last_appointment_status_id" type="bigint">
+                <constraints nullable="true"/>
+            </column>
 		</createTable>
 
         <!-- add Appointments Status -->
@@ -37,7 +40,10 @@
             </column>
             <column name="status" type="bigint">
                 <constraints nullable="false" />
-            </column>                             
+            </column>
+            <column name="observations" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
 		</createTable>
 
 
@@ -61,11 +67,17 @@
             referencedColumnNames="id"
             referencedTableName="customers"/>
         <addForeignKeyConstraint
+            baseColumnNames="last_appointment_status_id"
+            baseTableName="appointments"
+            constraintName="fk_appointments_last_appointment_status"
+            referencedColumnNames="id"
+            referencedTableName="appointments_status"/> 
+        <addForeignKeyConstraint
             baseColumnNames="appointment_id"
             baseTableName="appointments_status"
             constraintName="fk_appointments_status_appointments"
             referencedColumnNames="id"
-            referencedTableName="appointments"/>               
+            referencedTableName="appointments"/>     
 
         <!-- add new permissions -->
         <insert
@@ -103,19 +115,6 @@
             <column name="description" value="Finalizar Turno"/>
             <column name="code" value="appointments.finalize"/>
         </insert>
-        <insert
-            schemaName="public"
-            tableName="permissions"> 
-            <column name="id" value="25"/>            
-            <column name="description" value="Ver Agendas"/>
-            <column name="code" value="agendas.read"/>
-        </insert>
-        <insert
-            schemaName="public"
-            tableName="permissions"> 
-            <column name="id" value="26"/>            
-            <column name="description" value="Eliminar Agenda"/>
-            <column name="code" value="agendas.delete"/>
-        </insert>        
+      
 	</changeSet>
 </databaseChangeLog>

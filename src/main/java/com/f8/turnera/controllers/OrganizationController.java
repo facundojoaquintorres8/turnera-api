@@ -3,8 +3,6 @@ package com.f8.turnera.controllers;
 import com.f8.turnera.models.OrganizationDTO;
 import com.f8.turnera.services.IOrganizationService;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api")
 public class OrganizationController {
-    private final Logger log = LoggerFactory.getLogger(OrganizationController.class);
 
     @Autowired
     private IOrganizationService service;
@@ -26,8 +23,6 @@ public class OrganizationController {
     @GetMapping("/organizations/{id}")
     @PreAuthorize("hasAuthority('organizations.read')")
     public ResponseEntity<OrganizationDTO> getCustomer(@PathVariable Long id) {
-        log.info("REST request to get Organization {}", id);
-
         OrganizationDTO result = service.findById(id);
 
         return ResponseEntity.ok().body(result);
@@ -36,8 +31,6 @@ public class OrganizationController {
     @PutMapping("/organizations")
     @PreAuthorize("hasAuthority('organizations.write')")
     public ResponseEntity<OrganizationDTO> updateOrganization(@RequestBody OrganizationDTO organizationDTO) {
-        log.info("REST request to update Organization: {}", organizationDTO);
-
         OrganizationDTO result = service.update(organizationDTO);
 
         return ResponseEntity.ok().body(result);

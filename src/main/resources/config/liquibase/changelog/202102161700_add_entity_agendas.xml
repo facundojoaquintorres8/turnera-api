@@ -18,11 +18,11 @@
             <column name="organization_id" type="bigint">
                 <constraints nullable="false" />
             </column>
-            <column name="start_date" type="timestamp">
+            <column name="start_date" type="timestamptz">
                 <constraints nullable="false" />
             </column>
-            <column name="end_date" type="timestamp">
-                <constraints nullable="true" />
+            <column name="end_date" type="timestamptz">
+                <constraints nullable="false" />
             </column>
             <column name="resource_id" type="bigint">
                 <constraints nullable="false" />
@@ -41,6 +41,30 @@
             baseTableName="agendas"
             constraintName="fk_agendas_resources"
             referencedColumnNames="id"
-            referencedTableName="resources"/>        
+            referencedTableName="resources"/>
+            
+        <!-- permissions -->
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="25"/>            
+            <column name="description" value="Ver Disponibilidades"/>
+            <column name="code" value="agendas.read"/>
+        </insert>
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="19"/>            
+            <column name="description" value="Crear Disponibilidades"/>
+            <column name="code" value="agendas.write"/>
+        </insert>
+        <insert
+            schemaName="public"
+            tableName="permissions"> 
+            <column name="id" value="26"/>            
+            <column name="description" value="Eliminar Disponibilidades"/>
+            <column name="code" value="agendas.delete"/>
+        </insert>  
+    
 	</changeSet>
 </databaseChangeLog>

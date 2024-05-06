@@ -4,8 +4,8 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
 
-	<changeSet id="202102151930-1" author="FacuTorres">
-		<createTable tableName="resources">
+	<changeSet id="202302262330-1" author="FacuTorres">
+		<createTable tableName="holidays">
 			<column name="id" type="bigint">
                 <constraints primaryKey="true" nullable="false"/>
 			</column>
@@ -18,53 +18,46 @@
             <column name="organization_id" type="bigint">
                 <constraints nullable="false" />
             </column>
+            <column name="date" type="date">
+                <constraints nullable="false" />
+            </column>
             <column name="description" type="varchar(255)">
                 <constraints nullable="false" />
             </column>
-            <column name="code" type="varchar(100)">
-                <constraints nullable="true" />
-            </column>
-            <column name="resource_type_id" type="bigint">
+            <column name="use_in_agenda" type="boolean">
                 <constraints nullable="false" />
-            </column>                        
+            </column>                   
 		</createTable>
 
         <!-- add FKs -->
         <addForeignKeyConstraint
             baseColumnNames="organization_id"
-            baseTableName="resources"
-            constraintName="fk_resources_organizations"
+            baseTableName="holidays"
+            constraintName="fk_holidays_organizations"
             referencedColumnNames="id"
             referencedTableName="organizations"/>
-        <addForeignKeyConstraint
-            baseColumnNames="resource_type_id"
-            baseTableName="resources"
-            constraintName="fk_resources_resources_types"
-            referencedColumnNames="id"
-            referencedTableName="resources_types"/>
             
-        <!-- permissions -->
+        <!-- add permissions -->
         <insert
             schemaName="public"
             tableName="permissions"> 
-            <column name="id" value="13"/>            
-            <column name="description" value="Ver Recursos"/>
-            <column name="code" value="resources.read"/>
+            <column name="id" value="27"/>            
+            <column name="description" value="Ver Feriados"/>
+            <column name="code" value="holidays.read"/>
         </insert>
         <insert
             schemaName="public"
             tableName="permissions"> 
-            <column name="id" value="14"/>            
-            <column name="description" value="Actualizar Recurso"/>
-            <column name="code" value="resources.write"/>
+            <column name="id" value="28"/>            
+            <column name="description" value="Actualizar Feriado"/>
+            <column name="code" value="holidays.write"/>
         </insert>
         <insert
             schemaName="public"
             tableName="permissions"> 
-            <column name="id" value="15"/>            
-            <column name="description" value="Eliminar Recurso"/>
-            <column name="code" value="resources.delete"/>
+            <column name="id" value="29"/>            
+            <column name="description" value="Eliminar Feriado"/>
+            <column name="code" value="holidays.delete"/>
         </insert>
-
 	</changeSet>
 </databaseChangeLog>

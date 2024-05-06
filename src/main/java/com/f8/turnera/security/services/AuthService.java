@@ -18,6 +18,7 @@ import com.f8.turnera.util.EmailValidation;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -32,6 +33,9 @@ public class AuthService implements IAuthService {
 
     @Autowired
     private BCryptPasswordEncoder bCryptPasswordEncoder;
+
+    @Value("${jwt.secret.key}")
+    private String secretKey;
 
     @Override
     public SessionUserDTO login(LoginDTO authDTO) {
@@ -60,16 +64,15 @@ public class AuthService implements IAuthService {
                 .collect(Collectors.toSet());
         Set<Stream<String>> streamPermissions = setPermissions.stream().map(x -> x.stream().map(Permission::getCode))
                 .collect(Collectors.toSet());
-        Set<String> permissions = streamPermissions.stream().flatMap(x -> x.distinct()).collect(Collectors.toSet());
+        Set<String> permissions = streamPermissions.stream().flatMap(Stream::distinct).collect(Collectors.toSet());
         String authorities = permissions.stream().collect(Collectors.joining(","));
 
         String token = Jwts.builder()
                 .claim(SecurityConstants.AUTHORITIES_KEY, authorities)
-				.setIssuer("f8")
+                .setIssuer("f8")
                 .setSubject(authDTO.getUsername())
-
                 .setExpiration(new Date(System.currentTimeMillis() + SecurityConstants.EXPIRATION_TIME))
-                .signWith(SignatureAlgorithm.HS512, SecurityConstants.SECRET).compact();
+                .signWith(SignatureAlgorithm.HS512, secretKey).compact();
         result.setToken(token);
 
         return result;

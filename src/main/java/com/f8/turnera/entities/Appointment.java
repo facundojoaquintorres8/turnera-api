@@ -16,28 +16,36 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 
 import com.f8.turnera.models.AppointmentStatusEnum;
 
+import lombok.Data;
+
 @Entity
 @Table(name = "appointments")
+@Data
 public class Appointment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequenceGenerator")
     @SequenceGenerator(name = "sequenceGenerator")
     @Column(name = "id")
+    @NotNull
     private Long id;
 
     @Column(name = "created_date")
+    @NotNull
     private LocalDateTime createdDate;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "organization_id")
+    @NotNull
     private Organization organization;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "agenda_id")
+    @NotNull
     private Agenda agenda;
 
     @ManyToOne(optional = false)
@@ -51,66 +59,10 @@ public class Appointment {
     @JoinColumn(name = "last_appointment_status_id")
     private AppointmentStatus lastAppointmentStatus;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public LocalDateTime getCreatedDate() {
-        return createdDate;
-    }
-
-    public void setCreatedDate(LocalDateTime createdDate) {
-        this.createdDate = createdDate;
-    }
-
-    public Organization getOrganization() {
-        return organization;
-    }
-
-    public void setOrganization(Organization organization) {
-        this.organization = organization;
-    }
-
-    public Agenda getAgenda() {
-        return agenda;
-    }
-
-    public void setAgenda(Agenda agenda) {
-        this.agenda = agenda;
-    }
-
-    public Customer getCustomer() {
-        return customer;
-    }
-
-    public void setCustomer(Customer customer) {
-        this.customer = customer;
-    }
-
-    public Set<AppointmentStatus> getStatus() {
-        return status;
-    }
-
-    public void setStatus(Set<AppointmentStatus> status) {
-        this.status = status;
-    }
-
     public void addStatus(AppointmentStatusEnum appointmentStatus, String observations) {
         AppointmentStatus newAppointmentStatus = new AppointmentStatus(LocalDateTime.now(), this, appointmentStatus, observations);
         status.add(newAppointmentStatus);
         setLastAppointmentStatus(newAppointmentStatus);
-    }
-
-    public AppointmentStatus getLastAppointmentStatus() {
-        return lastAppointmentStatus;
-    }
-
-    public void setLastAppointmentStatus(AppointmentStatus lastAppointmentStatus) {
-        this.lastAppointmentStatus = lastAppointmentStatus;
     }
 
     public Appointment(LocalDateTime createdDate, Organization organization, Agenda agenda, Customer customer) {

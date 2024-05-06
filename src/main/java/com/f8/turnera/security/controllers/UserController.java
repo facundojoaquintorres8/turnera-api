@@ -4,8 +4,6 @@ import com.f8.turnera.security.models.UserDTO;
 import com.f8.turnera.security.models.UserFilterDTO;
 import com.f8.turnera.security.services.IUserService;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api")
 public class UserController {
-    private final Logger log = LoggerFactory.getLogger(UserController.class);
 
     @Autowired
     private IUserService service;
@@ -30,8 +27,6 @@ public class UserController {
     @GetMapping("/users/findAllByFilter")
     @PreAuthorize("hasAuthority('users.read')")
     public ResponseEntity<Page<UserDTO>> findAllByFilter(UserFilterDTO filter) {
-        log.info("REST request to get Users by filter: {}", filter);
-
         Page<UserDTO> result = service.findAllByFilter(filter);
 
         return ResponseEntity.ok().body(result);
@@ -40,8 +35,6 @@ public class UserController {
     @GetMapping("/users/{id}")
     @PreAuthorize("hasAuthority('users.read')")
     public ResponseEntity<UserDTO> getUser(@PathVariable Long id) {
-        log.info("REST request to get User {}", id);
-
         UserDTO result = service.findById(id);
 
         return ResponseEntity.ok().body(result);
@@ -50,8 +43,6 @@ public class UserController {
     @PostMapping("/users")
     @PreAuthorize("hasAuthority('users.write')")
     public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO userDTO) {
-        log.info("REST request to create User: {}", userDTO);
-
         UserDTO result = service.create(userDTO);
 
         return ResponseEntity.ok().body(result);
@@ -60,8 +51,6 @@ public class UserController {
     @PutMapping("/users")
     @PreAuthorize("hasAuthority('users.write')")
     public ResponseEntity<UserDTO> updateUser(@RequestBody UserDTO userDTO) {
-        log.info("REST request to update User: {}", userDTO);
-
         UserDTO result = service.update(userDTO);
 
         return ResponseEntity.ok().body(result);
@@ -70,8 +59,6 @@ public class UserController {
     @DeleteMapping("users/{id}")
     @PreAuthorize("hasAuthority('users.delete')")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        log.info("REST request to delete User {}", id);
-
         service.deleteById(id);
 
         return ResponseEntity.ok().build();

@@ -1,16 +1,17 @@
-package com.f8.turnera.security.models;
+package com.f8.turnera.models;
 
-import java.util.List;
+import java.time.LocalDate;
 
 import lombok.Data;
 
 @Data
-public class ProfileDTO {
+public class HolidayDTO {
 
     private Long id;
     private Long organizationId;
     private Boolean active;
+    private LocalDate date;
     private String description;
-    private List<PermissionDTO> permissions;
+    private Boolean useInAgenda;
 
 }

@@ -4,8 +4,6 @@ import com.f8.turnera.models.CustomerDTO;
 import com.f8.turnera.models.CustomerFilterDTO;
 import com.f8.turnera.services.ICustomerService;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api")
 public class CustomerController {
-    private final Logger log = LoggerFactory.getLogger(CustomerController.class);
 
     @Autowired
     private ICustomerService service;
@@ -30,8 +27,6 @@ public class CustomerController {
     @GetMapping("/customers/findAllByFilter")
     @PreAuthorize("hasAuthority('customers.read')")
     public ResponseEntity<Page<CustomerDTO>> findAllByFilter(CustomerFilterDTO filter) {
-        log.info("REST request to get Customers by filter: {}", filter);
-
         Page<CustomerDTO> result = service.findAllByFilter(filter);
 
         return ResponseEntity.ok().body(result);
@@ -40,8 +35,6 @@ public class CustomerController {
     @GetMapping("/customers/{id}")
     @PreAuthorize("hasAuthority('customers.read')")
     public ResponseEntity<CustomerDTO> getCustomer(@PathVariable Long id) {
-        log.info("REST request to get Customer {}", id);
-
         CustomerDTO result = service.findById(id);
 
         return ResponseEntity.ok().body(result);
@@ -50,8 +43,6 @@ public class CustomerController {
     @PostMapping("/customers")
     @PreAuthorize("hasAuthority('customers.write')")
     public ResponseEntity<CustomerDTO> createCustomer(@RequestBody CustomerDTO customerDTO) {
-        log.info("REST request to create Customer: {}", customerDTO);
-
         CustomerDTO result = service.create(customerDTO);
 
         return ResponseEntity.ok().body(result);
@@ -60,8 +51,6 @@ public class CustomerController {
     @PutMapping("/customers")
     @PreAuthorize("hasAuthority('customers.write')")
     public ResponseEntity<CustomerDTO> updateCustomer(@RequestBody CustomerDTO customerDTO) {
-        log.info("REST request to update Customer: {}", customerDTO);
-
         CustomerDTO result = service.update(customerDTO);
 
         return ResponseEntity.ok().body(result);
@@ -70,8 +59,6 @@ public class CustomerController {
     @DeleteMapping("customers/{id}")
     @PreAuthorize("hasAuthority('customers.delete')")
     public ResponseEntity<Void> deleteCustomer(@PathVariable Long id) {
-        log.info("REST request to delete Customer {}", id);
-
         service.deleteById(id);
 
         return ResponseEntity.ok().build();
