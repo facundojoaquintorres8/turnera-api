@@ -17,8 +17,8 @@ import com.f8.turnera.entities.Customer;
 import com.f8.turnera.entities.Organization;
 import com.f8.turnera.models.CustomerDTO;
 import com.f8.turnera.models.CustomerFilterDTO;
+import com.f8.turnera.models.OrganizationDTO;
 import com.f8.turnera.repositories.ICustomerRepository;
-import com.f8.turnera.repositories.IOrganizationRepository;
 import com.f8.turnera.util.Constants;
 import com.f8.turnera.util.EmailValidation;
 
@@ -38,7 +38,7 @@ public class CustomerService implements ICustomerService {
     private ICustomerRepository customerRepository;
 
     @Autowired
-    private IOrganizationRepository organizationRepository;
+    private IOrganizationService organizationService;
 
     @Autowired
     private EntityManager em;
@@ -153,10 +153,7 @@ public class CustomerService implements ICustomerService {
     public CustomerDTO create(CustomerDTO customerDTO) {
         ModelMapper modelMapper = new ModelMapper();
 
-        Optional<Organization> organization = organizationRepository.findById(customerDTO.getOrganizationId());
-        if (!organization.isPresent()) {
-            throw new RuntimeException("El Cliente no tiene una Organización asociada válida.");
-        }
+        OrganizationDTO organization = organizationService.findById(customerDTO.getOrganizationId());
 
         if (!EmailValidation.validateEmail(customerDTO.getEmail())) {
             throw new RuntimeException("El Correo Electrónico es inválido.");
@@ -165,7 +162,7 @@ public class CustomerService implements ICustomerService {
         Customer customer = modelMapper.map(customerDTO, Customer.class);
         customer.setCreatedDate(LocalDateTime.now());
         customer.setActive(true);
-        customer.setOrganization(organization.get());
+        customer.setOrganization(modelMapper.map(organization, Organization.class));
 
         try {
             customerRepository.save(customer);
@@ -176,7 +173,7 @@ public class CustomerService implements ICustomerService {
     }
 
     @Override
-    public CustomerDTO createQuick(CustomerDTO customerDTO, Organization organization) {
+    public CustomerDTO createQuick(CustomerDTO customerDTO, OrganizationDTO organizationDTO) {
         if (!EmailValidation.validateEmail(customerDTO.getEmail())) {
             throw new RuntimeException("El Correo Electrónico es inválido.");
         }
@@ -186,7 +183,7 @@ public class CustomerService implements ICustomerService {
         Customer customer = modelMapper.map(customerDTO, Customer.class);
         customer.setCreatedDate(LocalDateTime.now());
         customer.setActive(true);
-        customer.setOrganization(organization);
+        customer.setOrganization(modelMapper.map(organizationDTO, Organization.class));
 
         try {
             customerRepository.save(customer);

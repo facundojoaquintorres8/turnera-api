@@ -19,7 +19,7 @@ import com.f8.turnera.entities.Organization;
 import com.f8.turnera.entities.Holiday;
 import com.f8.turnera.models.HolidayDTO;
 import com.f8.turnera.models.HolidayFilterDTO;
-import com.f8.turnera.repositories.IOrganizationRepository;
+import com.f8.turnera.models.OrganizationDTO;
 import com.f8.turnera.repositories.IHolidayRepository;
 import com.f8.turnera.util.Constants;
 
@@ -38,7 +38,7 @@ public class HolidayService implements IHolidayService {
     private IHolidayRepository holidayRepository;
 
     @Autowired
-    private IOrganizationRepository organizationRepository;
+    private IOrganizationService organizationService;
 
     @Autowired
     private EntityManager em;
@@ -142,10 +142,7 @@ public class HolidayService implements IHolidayService {
     public HolidayDTO create(HolidayDTO holidayDTO) {
         ModelMapper modelMapper = new ModelMapper();
 
-        Optional<Organization> organization = organizationRepository.findById(holidayDTO.getOrganizationId());
-        if (!organization.isPresent()) {
-            throw new RuntimeException("El Feriado no tiene una Organización asociada válida.");
-        }
+        OrganizationDTO organization = organizationService.findById(holidayDTO.getOrganizationId());
 
         Optional<Holiday> existingHoliday = holidayRepository.findByDateAndOrganizationId(holidayDTO.getDate(), holidayDTO.getOrganizationId());
         if (existingHoliday.isPresent()) {
@@ -155,7 +152,7 @@ public class HolidayService implements IHolidayService {
         Holiday holiday = modelMapper.map(holidayDTO, Holiday.class);
         holiday.setCreatedDate(LocalDateTime.now());
         holiday.setActive(true);
-        holiday.setOrganization(organization.get());
+        holiday.setOrganization(modelMapper.map(organization, Organization.class));
 
         try {
             holidayRepository.save(holiday);

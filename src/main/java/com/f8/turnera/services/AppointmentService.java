@@ -8,13 +8,13 @@ import com.f8.turnera.entities.Agenda;
 import com.f8.turnera.entities.Appointment;
 import com.f8.turnera.entities.Customer;
 import com.f8.turnera.entities.Organization;
+import com.f8.turnera.models.AgendaDTO;
 import com.f8.turnera.models.AppointmentChangeStatusDTO;
 import com.f8.turnera.models.AppointmentDTO;
 import com.f8.turnera.models.AppointmentSaveDTO;
 import com.f8.turnera.models.AppointmentStatusEnum;
-import com.f8.turnera.repositories.IAgendaRepository;
+import com.f8.turnera.models.OrganizationDTO;
 import com.f8.turnera.repositories.IAppointmentRepository;
-import com.f8.turnera.repositories.IOrganizationRepository;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,29 +27,21 @@ public class AppointmentService implements IAppointmentService {
     private IAppointmentRepository appointmentRepository;
 
     @Autowired
-    private ICustomerService customerService;
+    private IOrganizationService organizationService;
 
     @Autowired
-    private IOrganizationRepository organizationRepository;
-    
+    private IAgendaService agendaService;
+
     @Autowired
-    private IAgendaRepository agendaRepository;
+    private ICustomerService customerService;
 
     @Autowired
     private IEmailService emailService;
 
     @Override
     public AppointmentDTO book(AppointmentSaveDTO appointmentSaveDTO) {
-        Optional<Organization> organization = organizationRepository
-                .findById(appointmentSaveDTO.getAgenda().getOrganizationId());
-        if (!organization.isPresent()) {
-            throw new RuntimeException("El Turno no tiene una Organización asociada válida.");
-        }
-
-        Optional<Agenda> agenda = agendaRepository.findById(appointmentSaveDTO.getAgenda().getId());
-        if (!agenda.isPresent()) {
-            throw new RuntimeException("El Turno no tiene una Disponibilidad válida.");
-        }
+        OrganizationDTO organization = organizationService.findById(appointmentSaveDTO.getAgenda().getOrganizationId());
+        AgendaDTO agenda = agendaService.findById(appointmentSaveDTO.getAgenda().getId());
 
         ModelMapper modelMapper = new ModelMapper();
 
@@ -58,16 +50,19 @@ public class AppointmentService implements IAppointmentService {
             customer = modelMapper.map(appointmentSaveDTO.getCustomer(), Customer.class);
         } else {
             customer = modelMapper.map(
-                    customerService.createQuick(appointmentSaveDTO.getCustomer(), organization.get()), Customer.class);
+                    customerService.createQuick(appointmentSaveDTO.getCustomer(), organization), Customer.class);
         }
 
-        Appointment appointment = new Appointment(LocalDateTime.now(), organization.get(), agenda.get(), customer);
+        Appointment appointment = new Appointment(LocalDateTime.now(),
+                modelMapper.map(organization, Organization.class),
+                modelMapper.map(agenda, Agenda.class), customer);
         appointment.addStatus(AppointmentStatusEnum.BOOKED, null);
-        
+
         try {
             appointmentRepository.save(appointment);
-            agenda.get().setLastAppointment(appointment);
-            agendaRepository.save(agenda.get());
+            AppointmentDTO appointmentDTO = modelMapper.map(appointment, AppointmentDTO.class);
+            agenda.setLastAppointment(appointmentDTO);
+            agendaService.update(agenda);
         } catch (Exception e) {
             throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
         }

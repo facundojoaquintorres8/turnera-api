@@ -18,13 +18,14 @@ import javax.persistence.criteria.Root;
 import com.f8.turnera.config.TokenProvider;
 import com.f8.turnera.email.IEmailService;
 import com.f8.turnera.entities.Organization;
-import com.f8.turnera.repositories.IOrganizationRepository;
+import com.f8.turnera.models.OrganizationDTO;
 import com.f8.turnera.security.entities.Profile;
 import com.f8.turnera.security.entities.User;
 import com.f8.turnera.security.models.ProfileDTO;
 import com.f8.turnera.security.models.UserDTO;
 import com.f8.turnera.security.models.UserFilterDTO;
 import com.f8.turnera.security.repositories.IUserRepository;
+import com.f8.turnera.services.IOrganizationService;
 import com.f8.turnera.util.Constants;
 import com.f8.turnera.util.EmailValidation;
 
@@ -45,13 +46,13 @@ public class UserService implements IUserService {
     private IUserRepository userRepository;
 
     @Autowired
-    private IOrganizationRepository organizationRepository;
-
-    @Autowired
-    private EntityManager em;
+    private IOrganizationService organizationService;
 
     @Autowired
     private IEmailService emailService;
+
+    @Autowired
+    private EntityManager em;
 
     @Override
     public Page<UserDTO> findAllByFilter(UserFilterDTO filter) {
@@ -149,10 +150,7 @@ public class UserService implements IUserService {
     public UserDTO create(UserDTO userDTO) {
         ModelMapper modelMapper = new ModelMapper();
 
-        Optional<Organization> organization = organizationRepository.findById(userDTO.getOrganizationId());
-        if (!organization.isPresent()) {
-            throw new RuntimeException("El Usuario no tiene una Organización asociada válida.");
-        }
+        OrganizationDTO organization = organizationService.findById(userDTO.getOrganizationId());
 
         Optional<User> existingUser = userRepository.findByUsername(userDTO.getUsername());
         if (existingUser.isPresent()) {
@@ -165,11 +163,8 @@ public class UserService implements IUserService {
 
         User user = modelMapper.map(userDTO, User.class);
         user.setCreatedDate(LocalDateTime.now());
-        user.setActive(false);
-        user.setOrganization(organization.get());
-        user.setAdmin(false);
+        user.setOrganization(modelMapper.map(organization, Organization.class));
         user.setActivationKey(RandomString.make(20));
-        user.setPassword(RandomString.make(40));
         user.setProfiles(addPermissions(userDTO, modelMapper));
 
         emailService.sendAccountActivationEmail(user);

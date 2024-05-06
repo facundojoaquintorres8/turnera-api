@@ -14,6 +14,8 @@ public interface IAgendaService {
 
     public Boolean create(AgendaSaveDTO agendaDTO);
 
+    public AgendaDTO update(AgendaDTO agendaDTO);
+
     public void deleteById(Long id);
 
     public AgendaDTO desactivate(Long id);

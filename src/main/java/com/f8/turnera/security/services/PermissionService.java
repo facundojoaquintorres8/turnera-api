@@ -1,6 +1,7 @@
 package com.f8.turnera.security.services;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.f8.turnera.security.entities.Permission;
@@ -23,5 +24,17 @@ public class PermissionService implements IPermissionService {
 
         List<Permission> permissions = repository.findAll();
         return permissions.stream().map(permission -> modelMapper.map(permission, PermissionDTO.class)).collect(Collectors.toList());
+    }
+
+    @Override
+    public PermissionDTO findByCode(String code) {
+        Optional<Permission> permission = repository.findByCode(code);
+        if (!permission.isPresent()) {
+            return null;
+        }
+
+        ModelMapper modelMapper = new ModelMapper();
+
+        return modelMapper.map(permission.get(), PermissionDTO.class);
     }
 }

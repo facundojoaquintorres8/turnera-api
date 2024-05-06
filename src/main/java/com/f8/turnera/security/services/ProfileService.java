@@ -16,14 +16,15 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import com.f8.turnera.entities.Organization;
-import com.f8.turnera.repositories.IOrganizationRepository;
+import com.f8.turnera.models.OrganizationDTO;
 import com.f8.turnera.security.entities.Permission;
 import com.f8.turnera.security.entities.Profile;
+import com.f8.turnera.security.entities.User;
 import com.f8.turnera.security.models.PermissionDTO;
 import com.f8.turnera.security.models.ProfileDTO;
 import com.f8.turnera.security.models.ProfileFilterDTO;
-import com.f8.turnera.security.repositories.IPermissionRepository;
 import com.f8.turnera.security.repositories.IProfileRepository;
+import com.f8.turnera.services.IOrganizationService;
 import com.f8.turnera.util.Constants;
 
 import org.modelmapper.ModelMapper;
@@ -42,10 +43,10 @@ public class ProfileService implements IProfileService {
     private IProfileRepository profileRepository;
 
     @Autowired
-    private IOrganizationRepository organizationRepository;
+    private IOrganizationService organizationService;
 
     @Autowired
-    private IPermissionRepository permissionRepository;
+    private IPermissionService permissionService;
 
     @Autowired
     private EntityManager em;
@@ -124,15 +125,12 @@ public class ProfileService implements IProfileService {
     public ProfileDTO create(ProfileDTO profileDTO) {
         ModelMapper modelMapper = new ModelMapper();
 
-        Optional<Organization> organization = organizationRepository.findById(profileDTO.getOrganizationId());
-        if (!organization.isPresent()) {
-            throw new RuntimeException("El Perfil no tiene una Organización asociada válida.");
-        }
+        OrganizationDTO organization = organizationService.findById(profileDTO.getOrganizationId());
 
         Profile profile = modelMapper.map(profileDTO, Profile.class);
         profile.setCreatedDate(LocalDateTime.now());
         profile.setActive(true);
-        profile.setOrganization(organization.get());
+        profile.setOrganization(modelMapper.map(organization, Organization.class));
         profile.setPermissions(addPermissions(profileDTO, modelMapper));
 
         try {
@@ -151,7 +149,7 @@ public class ProfileService implements IProfileService {
         }
 
         if (profile.get().getActive() && !profileDTO.getActive()
-                && profile.get().getUsers().stream().filter(x -> x.getActive()).count() > 0) {
+                && profile.get().getUsers().stream().filter(User::getActive).count() > 0) {
             throw new RuntimeException(
                     "Existen Usuarios activos con este Perfil asociado. Primero debe modificar los Usuarios para continuar.");
         }
@@ -175,8 +173,8 @@ public class ProfileService implements IProfileService {
 
     private Set<Permission> addPermissions(ProfileDTO profileDTO, ModelMapper modelMapper) {
         if (profileDTO.getPermissions().stream().filter(x -> x.getCode().equals("home.index")).count() == 0) {
-            Optional<Permission> permissionHomeIndex = permissionRepository.findByCode("home.index");
-            profileDTO.getPermissions().add(modelMapper.map(permissionHomeIndex.get(), PermissionDTO.class));
+            PermissionDTO permissionHomeIndex = permissionService.findByCode("home.index");
+            profileDTO.getPermissions().add(permissionHomeIndex);
         }
 
         Set<Permission> newPermissions = new HashSet<>();

@@ -15,9 +15,9 @@ import javax.persistence.criteria.Root;
 
 import com.f8.turnera.entities.Organization;
 import com.f8.turnera.entities.ResourceType;
+import com.f8.turnera.models.OrganizationDTO;
 import com.f8.turnera.models.ResourceTypeDTO;
 import com.f8.turnera.models.ResourceTypeFilterDTO;
-import com.f8.turnera.repositories.IOrganizationRepository;
 import com.f8.turnera.repositories.IResourceTypeRepository;
 import com.f8.turnera.util.Constants;
 
@@ -35,9 +35,9 @@ public class ResourceTypeService implements IResourceTypeService {
 
     @Autowired
     private IResourceTypeRepository resourceTypeRepository;
-
+    
     @Autowired
-    private IOrganizationRepository organizationRepository;
+    private IOrganizationService organizationService;
 
     @Autowired
     private EntityManager em;
@@ -117,15 +117,12 @@ public class ResourceTypeService implements IResourceTypeService {
     public ResourceTypeDTO create(ResourceTypeDTO resourceTypeDTO) {
         ModelMapper modelMapper = new ModelMapper();
 
-        Optional<Organization> organization = organizationRepository.findById(resourceTypeDTO.getOrganizationId());
-        if (!organization.isPresent()) {
-            throw new RuntimeException("El Tipo de Recurso no tiene una Organización asociada válida.");
-        }
+        OrganizationDTO organization = organizationService.findById(resourceTypeDTO.getOrganizationId());
 
         ResourceType resourceType = modelMapper.map(resourceTypeDTO, ResourceType.class);
         resourceType.setCreatedDate(LocalDateTime.now());
         resourceType.setActive(true);
-        resourceType.setOrganization(organization.get());
+        resourceType.setOrganization(modelMapper.map(organization, Organization.class));
 
         try {
             resourceTypeRepository.save(resourceType);
