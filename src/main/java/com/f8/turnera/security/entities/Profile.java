@@ -20,12 +20,10 @@ import javax.validation.constraints.NotNull;
 import com.f8.turnera.entities.Organization;
 
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 @Entity
 @Table(name = "profiles")
 @Data
-@EqualsAndHashCode(exclude = "users")
 public class Profile {
 
     @Id

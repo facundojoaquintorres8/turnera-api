@@ -21,12 +21,10 @@ import com.f8.turnera.entities.Organization;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 @Entity
 @Table(name = "users")
 @Data
-@EqualsAndHashCode(exclude = "profiles")
 public class User {
 
     @Id
@@ -83,7 +81,7 @@ public class User {
     @JoinTable(name="users_profiles",
         joinColumns=@JoinColumn(name="user_id"),
         inverseJoinColumns=@JoinColumn(name="profile_id")
-    )                    
+    )
     private Set<Profile> profiles;
 
 }
