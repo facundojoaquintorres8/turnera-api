@@ -1,8 +1,8 @@
 package com.f8.turnera.security.controllers;
 
-import com.f8.turnera.security.models.LoginDTO;
-import com.f8.turnera.security.models.SessionUserDTO;
-import com.f8.turnera.security.services.IAuthService;
+import com.f8.turnera.security.domain.dtos.LoginDTO;
+import com.f8.turnera.security.domain.dtos.SessionUserDTO;
+import com.f8.turnera.security.domain.services.IAuthService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

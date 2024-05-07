@@ -1,7 +1,7 @@
 package com.f8.turnera.controllers;
 
-import com.f8.turnera.models.OrganizationDTO;
-import com.f8.turnera.services.IOrganizationService;
+import com.f8.turnera.domain.dtos.OrganizationDTO;
+import com.f8.turnera.domain.services.IOrganizationService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

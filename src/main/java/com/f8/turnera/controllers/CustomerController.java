@@ -1,8 +1,8 @@
 package com.f8.turnera.controllers;
 
-import com.f8.turnera.models.CustomerDTO;
-import com.f8.turnera.models.CustomerFilterDTO;
-import com.f8.turnera.services.ICustomerService;
+import com.f8.turnera.domain.dtos.CustomerDTO;
+import com.f8.turnera.domain.dtos.CustomerFilterDTO;
+import com.f8.turnera.domain.services.ICustomerService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;

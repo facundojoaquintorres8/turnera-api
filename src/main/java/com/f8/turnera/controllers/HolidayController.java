@@ -1,8 +1,8 @@
 package com.f8.turnera.controllers;
 
-import com.f8.turnera.models.HolidayDTO;
-import com.f8.turnera.models.HolidayFilterDTO;
-import com.f8.turnera.services.IHolidayService;
+import com.f8.turnera.domain.dtos.HolidayDTO;
+import com.f8.turnera.domain.dtos.HolidayFilterDTO;
+import com.f8.turnera.domain.services.IHolidayService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;

@@ -1,9 +1,9 @@
 package com.f8.turnera.controllers;
 
-import com.f8.turnera.models.AppointmentChangeStatusDTO;
-import com.f8.turnera.models.AppointmentDTO;
-import com.f8.turnera.models.AppointmentSaveDTO;
-import com.f8.turnera.services.IAppointmentService;
+import com.f8.turnera.domain.dtos.AppointmentChangeStatusDTO;
+import com.f8.turnera.domain.dtos.AppointmentDTO;
+import com.f8.turnera.domain.dtos.AppointmentSaveDTO;
+import com.f8.turnera.domain.services.IAppointmentService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

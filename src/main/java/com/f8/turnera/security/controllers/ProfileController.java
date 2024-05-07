@@ -1,8 +1,8 @@
 package com.f8.turnera.security.controllers;
 
-import com.f8.turnera.security.models.ProfileDTO;
-import com.f8.turnera.security.models.ProfileFilterDTO;
-import com.f8.turnera.security.services.IProfileService;
+import com.f8.turnera.security.domain.dtos.ProfileDTO;
+import com.f8.turnera.security.domain.dtos.ProfileFilterDTO;
+import com.f8.turnera.security.domain.services.IProfileService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;

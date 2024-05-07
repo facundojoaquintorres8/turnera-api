@@ -2,8 +2,8 @@ package com.f8.turnera.security.controllers;
 
 import java.util.List;
 
-import com.f8.turnera.security.models.PermissionDTO;
-import com.f8.turnera.security.services.IPermissionService;
+import com.f8.turnera.security.domain.dtos.PermissionDTO;
+import com.f8.turnera.security.domain.services.IPermissionService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;

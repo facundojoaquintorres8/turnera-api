@@ -1,8 +1,8 @@
 package com.f8.turnera.controllers;
 
-import com.f8.turnera.models.ResourceTypeDTO;
-import com.f8.turnera.models.ResourceTypeFilterDTO;
-import com.f8.turnera.services.IResourceTypeService;
+import com.f8.turnera.domain.dtos.ResourceTypeDTO;
+import com.f8.turnera.domain.dtos.ResourceTypeFilterDTO;
+import com.f8.turnera.domain.services.IResourceTypeService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;

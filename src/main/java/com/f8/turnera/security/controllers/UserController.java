@@ -1,8 +1,8 @@
 package com.f8.turnera.security.controllers;
 
-import com.f8.turnera.security.models.UserDTO;
-import com.f8.turnera.security.models.UserFilterDTO;
-import com.f8.turnera.security.services.IUserService;
+import com.f8.turnera.security.domain.dtos.UserDTO;
+import com.f8.turnera.security.domain.dtos.UserFilterDTO;
+import com.f8.turnera.security.domain.services.IUserService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;

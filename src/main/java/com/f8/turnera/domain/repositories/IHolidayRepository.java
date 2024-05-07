@@ -1,0 +1,14 @@
+package com.f8.turnera.domain.repositories;
+
+import java.time.LocalDate;
+import java.util.Optional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import com.f8.turnera.domain.entities.Holiday;
+
+@Repository
+public interface IHolidayRepository extends JpaRepository<Holiday, Long> {
+    Optional<Holiday> findByDateAndOrganizationId(LocalDate date, Long organizationId);
+}

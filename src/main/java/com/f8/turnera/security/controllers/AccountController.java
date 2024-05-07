@@ -1,12 +1,12 @@
 package com.f8.turnera.security.controllers;
 
-import com.f8.turnera.security.models.ActivateDTO;
-import com.f8.turnera.security.models.PasswordChangeDTO;
-import com.f8.turnera.security.models.PasswordResetDTO;
-import com.f8.turnera.security.models.PasswordResetRequestDTO;
-import com.f8.turnera.security.models.RegisterDTO;
-import com.f8.turnera.security.models.UserDTO;
-import com.f8.turnera.security.services.IAccountService;
+import com.f8.turnera.security.domain.dtos.ActivateDTO;
+import com.f8.turnera.security.domain.dtos.PasswordChangeDTO;
+import com.f8.turnera.security.domain.dtos.PasswordResetDTO;
+import com.f8.turnera.security.domain.dtos.PasswordResetRequestDTO;
+import com.f8.turnera.security.domain.dtos.RegisterDTO;
+import com.f8.turnera.security.domain.dtos.UserDTO;
+import com.f8.turnera.security.domain.services.IAccountService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

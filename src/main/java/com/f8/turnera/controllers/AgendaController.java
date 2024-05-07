@@ -1,9 +1,9 @@
 package com.f8.turnera.controllers;
 
-import com.f8.turnera.models.AgendaDTO;
-import com.f8.turnera.models.AgendaSaveDTO;
-import com.f8.turnera.models.AppointmentFilterDTO;
-import com.f8.turnera.services.IAgendaService;
+import com.f8.turnera.domain.dtos.AgendaDTO;
+import com.f8.turnera.domain.dtos.AgendaSaveDTO;
+import com.f8.turnera.domain.dtos.AppointmentFilterDTO;
+import com.f8.turnera.domain.services.IAgendaService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
