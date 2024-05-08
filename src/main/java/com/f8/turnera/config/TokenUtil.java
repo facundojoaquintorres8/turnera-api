@@ -60,14 +60,6 @@ public class TokenUtil {
 		return new UsernamePasswordAuthenticationToken(principal, token, authorities);
 	}
 
-	public static String getUsername(final String token) {
-		final JwtParser jwtParser = Jwts.parser().setSigningKey(secretKey);
-
-		final Jws<Claims> claimsJws = jwtParser.parseClaimsJws(token);
-
-		return claimsJws.getBody().getSubject();
-	}
-
 	public static String getUsernameWithoutToken() {
 		org.springframework.security.core.userdetails.User user = (org.springframework.security.core.userdetails.User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 		return user.getUsername();

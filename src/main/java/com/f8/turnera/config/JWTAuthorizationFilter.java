@@ -17,13 +17,13 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter {
     @SuppressWarnings("null")
     protected void doFilterInternal(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse,
             FilterChain filterChain) throws ServletException, IOException {
-        String authorizationHeader = httpServletRequest.getHeader(SecurityConstants.HEADER_TOKEN);
+        String token = httpServletRequest.getHeader(SecurityConstants.HEADER_TOKEN);
 
-        if (authorizationHeader == null || !authorizationHeader.startsWith(SecurityConstants.TOKEN_PREFIX)) {
+        if (token == null || !token.startsWith(SecurityConstants.TOKEN_PREFIX)) {
             filterChain.doFilter(httpServletRequest, httpServletResponse);
             return;
         }
-        final String token = authorizationHeader.replace(SecurityConstants.TOKEN_PREFIX, "");
+        token = token.replace(SecurityConstants.TOKEN_PREFIX, "");
 
         UsernamePasswordAuthenticationToken authenticationToken = TokenUtil.getAuthentication(token);
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
