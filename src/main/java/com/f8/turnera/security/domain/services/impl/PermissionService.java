@@ -20,7 +20,7 @@ public class PermissionService implements IPermissionService {
     private IPermissionRepository repository;
 
     @Override
-    public List<PermissionDTO> findAll() {
+    public List<PermissionDTO> findAll() throws Exception {
         ModelMapper modelMapper = new ModelMapper();
 
         List<Permission> permissions = repository.findAll();
@@ -28,7 +28,7 @@ public class PermissionService implements IPermissionService {
     }
 
     @Override
-    public PermissionDTO findByCode(String code) {
+    public PermissionDTO findByCode(String code) throws Exception {
         Optional<Permission> permission = repository.findByCode(code);
         if (!permission.isPresent()) {
             return null;

@@ -30,7 +30,7 @@ public class ResourceTypeController {
     @PreAuthorize("hasAuthority('resourcesTypes.read')")
     public ResponseEntity<Page<ResourceTypeDTO>> findAllByFilter(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            ResourceTypeFilterDTO filter) {
+            ResourceTypeFilterDTO filter) throws Exception {
         Page<ResourceTypeDTO> result = service.findAllByFilter(token, filter);
 
         return ResponseEntity.ok().body(result);
@@ -40,7 +40,7 @@ public class ResourceTypeController {
     @PreAuthorize("hasAuthority('resourcesTypes.read')")
     public ResponseEntity<ResourceTypeDTO> getResourceType(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @PathVariable Long id) {
+            @PathVariable Long id) throws Exception {
         ResourceTypeDTO result = service.findById(token, id);
 
         return ResponseEntity.ok().body(result);
@@ -50,7 +50,7 @@ public class ResourceTypeController {
     @PreAuthorize("hasAuthority('resourcesTypes.write')")
     public ResponseEntity<ResourceTypeDTO> createResourceType(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @RequestBody ResourceTypeDTO resourceTypeDTO) {
+            @RequestBody ResourceTypeDTO resourceTypeDTO) throws Exception {
         ResourceTypeDTO result = service.create(token, resourceTypeDTO);
 
         return ResponseEntity.ok().body(result);
@@ -60,7 +60,7 @@ public class ResourceTypeController {
     @PreAuthorize("hasAuthority('resourcesTypes.write')")
     public ResponseEntity<ResourceTypeDTO> updateResourceType(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @RequestBody ResourceTypeDTO resourceTypeDTO) {
+            @RequestBody ResourceTypeDTO resourceTypeDTO) throws Exception {
         ResourceTypeDTO result = service.update(token, resourceTypeDTO);
 
         return ResponseEntity.ok().body(result);
@@ -70,7 +70,7 @@ public class ResourceTypeController {
     @PreAuthorize("hasAuthority('resourcesTypes.delete')")
     public ResponseEntity<Void> deleteResourceType(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @PathVariable Long id) {
+            @PathVariable Long id) throws Exception {
         service.deleteById(token, id);
 
         return ResponseEntity.ok().build();

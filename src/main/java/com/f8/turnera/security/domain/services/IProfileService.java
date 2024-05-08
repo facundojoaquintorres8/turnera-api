@@ -7,13 +7,13 @@ import com.f8.turnera.security.domain.dtos.ProfileFilterDTO;
 
 public interface IProfileService {
 
-    public Page<ProfileDTO> findAllByFilter(String token, ProfileFilterDTO filter);
+    Page<ProfileDTO> findAllByFilter(String token, ProfileFilterDTO filter) throws Exception;
 
-    public ProfileDTO findById(String token, Long id);
+    ProfileDTO findById(String token, Long id) throws Exception;
 
-    public ProfileDTO create(String token, ProfileDTO profileDTO);
+    ProfileDTO create(String token, ProfileDTO profileDTO) throws Exception;
 
-    public ProfileDTO update(String token, ProfileDTO profileDTO);
+    ProfileDTO update(String token, ProfileDTO profileDTO) throws Exception;
 
-    public void deleteById(String token, Long id);
+    void deleteById(String token, Long id) throws Exception;
 }

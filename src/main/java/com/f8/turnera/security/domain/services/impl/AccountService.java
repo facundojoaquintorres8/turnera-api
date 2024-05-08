@@ -10,6 +10,8 @@ import com.f8.turnera.config.TokenUtil;
 import com.f8.turnera.domain.entities.Organization;
 import com.f8.turnera.domain.repositories.IOrganizationRepository;
 import com.f8.turnera.domain.services.IEmailService;
+import com.f8.turnera.exception.BadRequestException;
+import com.f8.turnera.exception.NoContentException;
 import com.f8.turnera.security.domain.dtos.ActivateDTO;
 import com.f8.turnera.security.domain.dtos.PasswordChangeDTO;
 import com.f8.turnera.security.domain.dtos.PasswordResetDTO;
@@ -54,16 +56,14 @@ public class AccountService implements IAccountService {
     private IEmailService emailService;
 
     @Override
-    public UserDTO register(RegisterDTO registerDTO) {
+    public UserDTO register(RegisterDTO registerDTO) throws Exception {
         // TODO: hacer transactional por si falla
         Optional<User> existingUser = userRepository.findByUsername(registerDTO.getUsername());
         if (existingUser.isPresent()) {
-            throw new RuntimeException("El Correo Electrónico ingresado ya está registrado. Por favor ingrese otro.");
+            throw new BadRequestException("El Correo Electrónico ingresado ya está registrado. Por favor ingrese otro.");
         }
 
-        if (!EmailValidation.validateEmail(registerDTO.getUsername())) {
-            throw new RuntimeException("El Correo Electrónico es inválido.");
-        }
+        EmailValidation.validateEmail(registerDTO.getUsername());
 
         // create organization
         Organization organization = new Organization();
@@ -85,15 +85,9 @@ public class AccountService implements IAccountService {
         user.setPassword(RandomString.make(40));
 
         // save all
-        try {
-            organizationRepository.save(organization);
-            userRepository.save(user);
-        } catch (Exception e) {
-            userRepository.delete(user);
-            organizationRepository.delete(organization);
-
-            throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
-        }
+        // TODO: hacer transacción
+        organizationRepository.save(organization);
+        userRepository.save(user);
 
         emailService.sendOrganizationActivationEmail(user);
 
@@ -102,10 +96,10 @@ public class AccountService implements IAccountService {
     }
 
     @Override
-    public UserDTO activate(ActivateDTO activateDTO) {
+    public UserDTO activate(ActivateDTO activateDTO) throws Exception {
         Optional<User> user = userRepository.findByActivationKey(activateDTO.getActivationKey());
         if (!user.isPresent()) {
-            throw new RuntimeException("La clave de activación no está asociada a ningún Usuario.");
+            throw new BadRequestException("La clave de activación no está asociada a ningún Usuario.");
         }
 
         user.ifPresent(u -> {
@@ -118,13 +112,10 @@ public class AccountService implements IAccountService {
             u.setActive(true);
         });
 
-        try {
-            profileRepository.saveAll(user.get().getProfiles());
-            userRepository.save(user.get());
-            organizationRepository.save(user.get().getOrganization());
-        } catch (Exception e) {
-            throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
-        }
+        // TODO: hacer transaccion
+        profileRepository.saveAll(user.get().getProfiles());
+        userRepository.save(user.get());
+        organizationRepository.save(user.get().getOrganization());
         
         ModelMapper modelMapper = new ModelMapper();
         return modelMapper.map(user.get(), UserDTO.class);
@@ -139,26 +130,20 @@ public class AccountService implements IAccountService {
     }
 
     @Override
-    public UserDTO passwordResetRequest(PasswordResetRequestDTO passwordResetRequestDTO) {
+    public UserDTO passwordResetRequest(PasswordResetRequestDTO passwordResetRequestDTO) throws Exception {
         Optional<User> user = userRepository.findByUsername(passwordResetRequestDTO.getUsername());
         if (!user.isPresent()) {
-            throw new RuntimeException("Usuario no encontrado.");
+            throw new NoContentException("Usuario no encontrado.");
         }
 
-        if (!EmailValidation.validateEmail(passwordResetRequestDTO.getUsername())) {
-            throw new RuntimeException("El Correo Electrónico es inválido.");
-        }
+        EmailValidation.validateEmail(passwordResetRequestDTO.getUsername());
 
         user.ifPresent(u -> {
             u.setResetDate(LocalDateTime.now());
             u.setResetKey(RandomString.make(20));
         });
 
-        try {
-            userRepository.save(user.get());
-        } catch (Exception e) {
-            throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
-        }
+        userRepository.save(user.get());
 
         emailService.sendPasswordResetRequestEmail(user.get());
 
@@ -167,14 +152,14 @@ public class AccountService implements IAccountService {
     }
 
     @Override
-    public UserDTO passwordReset(PasswordResetDTO passwordResetDTO) {
+    public UserDTO passwordReset(PasswordResetDTO passwordResetDTO) throws Exception {
         Optional<User> user = userRepository.findByResetKey(passwordResetDTO.getResetKey());
         if (!user.isPresent()) {
-            throw new RuntimeException("La Clave de Reseteo no está asociada a ningún Usuario.");
+            throw new BadRequestException("La Clave de Reseteo no está asociada a ningún Usuario.");
         }
 
         if (user.get().getResetDate().isAfter(LocalDateTime.now().plusHours(3))) {
-            throw new RuntimeException("Su Clave de Reseteo ha expirado.");
+            throw new BadRequestException("Su Clave de Reseteo ha expirado.");
         }
 
         user.ifPresent(u -> {
@@ -183,35 +168,27 @@ public class AccountService implements IAccountService {
             u.setPassword(bCryptPasswordEncoder.encode(passwordResetDTO.getPassword()));
         });
 
-        try {
-            userRepository.save(user.get());
-        } catch (Exception e) {
-            throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
-        }
+        userRepository.save(user.get());
         
         ModelMapper modelMapper = new ModelMapper();
         return modelMapper.map(user.get(), UserDTO.class);
     }
 
     @Override
-    public UserDTO passwordChange(String token, PasswordChangeDTO passwordChangeDTO) {
+    public UserDTO passwordChange(String token, PasswordChangeDTO passwordChangeDTO) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<User> user = userRepository.findByUsernameAndOrganizationId(passwordChangeDTO.getUsername(), orgId);
         if (!user.isPresent()) {
-            throw new RuntimeException("Usuario no encontrado.");
+            throw new NoContentException("Usuario no encontrado.");
         }
 
         if (!bCryptPasswordEncoder.matches(passwordChangeDTO.getCurrentPassword(), user.get().getPassword())) {
-            throw new RuntimeException("Su Contraseña actual es inválida.");
+            throw new BadRequestException("Su Contraseña actual es inválida.");
         }
 
         user.get().setPassword(bCryptPasswordEncoder.encode(passwordChangeDTO.getPassword()));
 
-        try {
-            userRepository.save(user.get());
-        } catch (Exception e) {
-            throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
-        }
+        userRepository.save(user.get());
         
         ModelMapper modelMapper = new ModelMapper();
         return modelMapper.map(user.get(), UserDTO.class);

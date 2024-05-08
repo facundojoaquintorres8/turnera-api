@@ -2,6 +2,7 @@ package com.f8.turnera.exception;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import com.f8.turnera.domain.dtos.ResponseDTO;
 
+import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.ConstraintViolationException;
 
@@ -73,6 +75,54 @@ public class ErrorHandler {
                 return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
+        @ExceptionHandler(IllegalArgumentException.class)
+        public ResponseEntity<ResponseDTO> illegalArgumentException(HttpServletRequest request, IllegalArgumentException e) {
+                StringWriter errors = new StringWriter();
+                e.printStackTrace(new PrintWriter(errors));
+
+                StringBuilder errorMessage = new StringBuilder();
+                errorMessage.append("Message: ").append(e.getMessage()).append(" StackTrace: ")
+                                .append(errors.toString());
+
+                log.error(errorMessage.toString());
+
+                ResponseDTO response = new ResponseDTO(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                                "No se pudo realizar la operación. Intente más tarde.");
+                return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        @ExceptionHandler(DataIntegrityViolationException.class)
+        public ResponseEntity<ResponseDTO> dataIntegrityViolationException(HttpServletRequest request, DataIntegrityViolationException e) {
+                StringWriter errors = new StringWriter();
+                e.printStackTrace(new PrintWriter(errors));
+
+                StringBuilder errorMessage = new StringBuilder();
+                errorMessage.append("Message: ").append(e.getMessage()).append(" StackTrace: ")
+                                .append(errors.toString());
+
+                log.error(errorMessage.toString());
+
+                ResponseDTO response = new ResponseDTO(HttpStatus.BAD_REQUEST.value(),
+                                "No se puede eliminar una entidad con asociaciones. Elimine primero las asociaciones.");
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        @ExceptionHandler(MessagingException.class)
+        public ResponseEntity<ResponseDTO> messagingException(HttpServletRequest request, MessagingException e) {
+                StringWriter errors = new StringWriter();
+                e.printStackTrace(new PrintWriter(errors));
+
+                StringBuilder errorMessage = new StringBuilder();
+                errorMessage.append("Message: ").append(e.getMessage()).append(" StackTrace: ")
+                                .append(errors.toString());
+
+                log.error(errorMessage.toString());
+
+                ResponseDTO response = new ResponseDTO(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                                "No se pudo realizar la operación. Intente más tarde.");
+                return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
         @ExceptionHandler(ForbiddenException.class)
         public ResponseEntity<ResponseDTO> forbiddenException(HttpServletRequest request, ForbiddenException e) {
                 StringWriter errors = new StringWriter();
@@ -86,5 +136,34 @@ public class ErrorHandler {
 
                 ResponseDTO response = new ResponseDTO(HttpStatus.FORBIDDEN.value(), "Acceso no permitido.");
                 return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+        }
+
+        @ExceptionHandler(NoContentException.class)
+        public ResponseEntity<ResponseDTO> noContentException(HttpServletRequest request, NoContentException e) {
+                StringWriter errors = new StringWriter();
+                e.printStackTrace(new PrintWriter(errors));
+
+                StringBuilder errorMessage = new StringBuilder();
+                errorMessage.append("Message: ").append(e.getMessage());
+
+                log.error(errorMessage.toString());
+
+                ResponseDTO response = new ResponseDTO(HttpStatus.NO_CONTENT.value(),
+                                "No se pudo realizar la operación. Intente más tarde.");
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        @ExceptionHandler(BadRequestException.class)
+        public ResponseEntity<ResponseDTO> badRequestException(HttpServletRequest request, BadRequestException e) {
+                StringWriter errors = new StringWriter();
+                e.printStackTrace(new PrintWriter(errors));
+
+                StringBuilder errorMessage = new StringBuilder();
+                errorMessage.append("Message: ").append(e.getMessage());
+
+                log.error(errorMessage.toString());
+
+                ResponseDTO response = new ResponseDTO(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
 }

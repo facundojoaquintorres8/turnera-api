@@ -19,7 +19,7 @@ public class AuthenticateController {
   private IAuthService authService;
 
   @PostMapping("/authenticate")
-  public ResponseEntity<SessionUserDTO> authenticate(@RequestBody LoginDTO login) {
+  public ResponseEntity<SessionUserDTO> authenticate(@RequestBody LoginDTO login) throws Exception {
     SessionUserDTO result = authService.login(login);
     return ResponseEntity.ok().body(result);
   }

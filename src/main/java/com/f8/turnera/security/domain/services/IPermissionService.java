@@ -6,7 +6,7 @@ import com.f8.turnera.security.domain.dtos.PermissionDTO;
 
 public interface IPermissionService {
 
-    public List<PermissionDTO> findAll();
+    List<PermissionDTO> findAll() throws Exception;
 
-    public PermissionDTO findByCode(String code);
+    PermissionDTO findByCode(String code) throws Exception;
 }

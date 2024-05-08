@@ -4,11 +4,16 @@ import com.f8.turnera.domain.entities.Appointment;
 import com.f8.turnera.security.domain.entities.User;
 
 public interface IEmailService {
-	public void sendOrganizationActivationEmail(User user);
-	public void sendAccountActivationEmail(User user);
-	public void sendPasswordResetRequestEmail(User user);
+	// TODO: transaccionar en caso de que falle el envío de email
+	void sendOrganizationActivationEmail(User user) throws Exception;
 
-	public void sendBookedAppointmentEmail(Appointment appointment);
-	public void sendCanceledAppointmentEmail(Appointment appointment);
-	public void sendFinalizeAppointmentEmail(Appointment appointment);
+	void sendAccountActivationEmail(User user) throws Exception;
+
+	void sendPasswordResetRequestEmail(User user) throws Exception;
+
+	void sendBookedAppointmentEmail(Appointment appointment) throws Exception;
+
+	void sendCanceledAppointmentEmail(Appointment appointment) throws Exception;
+
+	void sendFinalizeAppointmentEmail(Appointment appointment) throws Exception;
 }

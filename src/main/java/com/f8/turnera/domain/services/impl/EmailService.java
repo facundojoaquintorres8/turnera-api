@@ -6,7 +6,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 
 import java.time.format.DateTimeFormatter;
 
-import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import com.f8.turnera.domain.entities.Appointment;
@@ -33,22 +32,19 @@ public class EmailService implements IEmailService {
 	@Autowired
 	private TemplateEngine templateEngine;
 
-	private void sendEmail(String emailContent, String subject, Organization organization, String to) {
+	private void sendEmail(String emailContent, String subject, Organization organization, String to) throws Exception {
 		MimeMessage message = sender.createMimeMessage();
 		MimeMessageHelper helper = new MimeMessageHelper(message);
-		try {
-			helper.setFrom("Turnera <" + organization.getDefaultEmail() +  ">");
-			helper.setTo(to);
-			helper.setText(emailContent, true);
-			helper.setSubject(subject);
-			sender.send(message);
-		} catch (MessagingException e) {
-			throw new RuntimeException(e);
-		}
+
+		helper.setFrom("Turnera <" + organization.getDefaultEmail() +  ">");
+		helper.setTo(to);
+		helper.setText(emailContent, true);
+		helper.setSubject(subject);
+		sender.send(message);
 	}
 
 	@Override
-	public void sendOrganizationActivationEmail(User user) {
+	public void sendOrganizationActivationEmail(User user) throws Exception {
 		Context context = new Context();
 		context.setVariable("firstName", user.getFirstName());
 		context.setVariable("link", baseUrl + "account/" + user.getActivationKey() + "/activate");
@@ -57,7 +53,7 @@ public class EmailService implements IEmailService {
 	}
 
 	@Override
-	public void sendAccountActivationEmail(User user) {
+	public void sendAccountActivationEmail(User user) throws Exception {
 		Context context = new Context();
 		context.setVariable("firstName", user.getFirstName());
 		context.setVariable("organization", user.getOrganization().getBusinessName());
@@ -67,7 +63,7 @@ public class EmailService implements IEmailService {
 	}
 
 	@Override
-	public void sendPasswordResetRequestEmail(User user) {
+	public void sendPasswordResetRequestEmail(User user) throws Exception {
 		Context context = new Context();
 		context.setVariable("firstName", user.getFirstName());
 		context.setVariable("link", baseUrl + "account/" + user.getResetKey() + "/password-reset");
@@ -76,7 +72,7 @@ public class EmailService implements IEmailService {
 	}
 
 	@Override
-	public void sendBookedAppointmentEmail(Appointment appointment) {
+	public void sendBookedAppointmentEmail(Appointment appointment) throws Exception {
 		Context context = new Context();
 		context.setVariable("businessName", appointment.getCustomer().getBusinessName());
 		context.setVariable("resource", appointment.getAgenda().getResource().getDescription());
@@ -87,7 +83,7 @@ public class EmailService implements IEmailService {
 	}
 
 	@Override
-	public void sendCanceledAppointmentEmail(Appointment appointment) {
+	public void sendCanceledAppointmentEmail(Appointment appointment) throws Exception {
 		Context context = new Context();
 		context.setVariable("businessName", appointment.getCustomer().getBusinessName());
 		context.setVariable("resource", appointment.getAgenda().getResource().getDescription());
@@ -98,7 +94,7 @@ public class EmailService implements IEmailService {
 	}
 
 	@Override
-	public void sendFinalizeAppointmentEmail(Appointment appointment) {
+	public void sendFinalizeAppointmentEmail(Appointment appointment) throws Exception {
 		Context context = new Context();
 		context.setVariable("businessName", appointment.getCustomer().getBusinessName());
 		context.setVariable("resource", appointment.getAgenda().getResource().getDescription());

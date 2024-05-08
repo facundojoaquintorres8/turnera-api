@@ -2,13 +2,15 @@ package com.f8.turnera.util;
 
 import org.springframework.util.StringUtils;
 
+import com.f8.turnera.exception.BadRequestException;
+
 public class EmailValidation {
 
-    public static Boolean validateEmail(String email) {
+    public static void validateEmail(String email) {
         var validCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_%";
         String[] parts = email.split("@");
         if (parts.length != 2) {
-            return false;
+            throw new BadRequestException("El Correo Electrónico es inválido.");
         }
         String username = parts[0];
         String domain = parts[1];
@@ -40,6 +42,8 @@ public class EmailValidation {
             result = false;
         }
 
-        return result;
+        if (!result) {
+            throw new BadRequestException("El Correo Electrónico es inválido.");
+        }
     }
 }

@@ -23,12 +23,12 @@ import com.f8.turnera.domain.entities.Organization;
 import com.f8.turnera.domain.repositories.ICustomerRepository;
 import com.f8.turnera.domain.services.ICustomerService;
 import com.f8.turnera.domain.services.IOrganizationService;
+import com.f8.turnera.exception.NoContentException;
 import com.f8.turnera.util.Constants;
 import com.f8.turnera.util.EmailValidation;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -48,7 +48,7 @@ public class CustomerService implements ICustomerService {
     private EntityManager em;
 
     @Override
-    public Page<CustomerDTO> findAllByFilter(String token, CustomerFilterDTO filter) {
+    public Page<CustomerDTO> findAllByFilter(String token, CustomerFilterDTO filter) throws Exception {
         ModelMapper modelMapper = new ModelMapper();
 
         filter.setOrganizationId(Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
@@ -141,11 +141,11 @@ public class CustomerService implements ICustomerService {
     }
 
     @Override
-    public CustomerDTO findById(String token, Long id) {
+    public CustomerDTO findById(String token, Long id) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Customer> customer = customerRepository.findByIdAndOrganizationId(id, orgId);
         if (!customer.isPresent()) {
-            throw new RuntimeException("Cliente no encontrado - " + id);
+            throw new NoContentException("Cliente no encontrado - " + id);
         }
 
         ModelMapper modelMapper = new ModelMapper();
@@ -154,33 +154,26 @@ public class CustomerService implements ICustomerService {
     }
 
     @Override
-    public CustomerDTO create(String token, CustomerDTO customerDTO) {
+    public CustomerDTO create(String token, CustomerDTO customerDTO) throws Exception {
         ModelMapper modelMapper = new ModelMapper();
 
         OrganizationDTO organization = organizationService.findById(token);
 
-        if (!EmailValidation.validateEmail(customerDTO.getEmail())) {
-            throw new RuntimeException("El Correo Electrónico es inválido.");
-        }
+        EmailValidation.validateEmail(customerDTO.getEmail());
 
         Customer customer = modelMapper.map(customerDTO, Customer.class);
         customer.setCreatedDate(LocalDateTime.now());
         customer.setActive(true);
         customer.setOrganization(modelMapper.map(organization, Organization.class));
 
-        try {
-            customerRepository.save(customer);
-        } catch (Exception e) {
-            throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
-        }
+        customerRepository.save(customer);
+
         return modelMapper.map(customer, CustomerDTO.class);
     }
 
     @Override
-    public CustomerDTO createQuick(CustomerDTO customerDTO, OrganizationDTO organizationDTO) {
-        if (!EmailValidation.validateEmail(customerDTO.getEmail())) {
-            throw new RuntimeException("El Correo Electrónico es inválido.");
-        }
+    public CustomerDTO createQuick(CustomerDTO customerDTO, OrganizationDTO organizationDTO) throws Exception {
+        EmailValidation.validateEmail(customerDTO.getEmail());
 
         ModelMapper modelMapper = new ModelMapper();
 
@@ -189,62 +182,47 @@ public class CustomerService implements ICustomerService {
         customer.setActive(true);
         customer.setOrganization(modelMapper.map(organizationDTO, Organization.class));
 
-        try {
-            customerRepository.save(customer);
-        } catch (Exception e) {
-            throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
-        }
+        customerRepository.save(customer);
+
         return modelMapper.map(customer, CustomerDTO.class);
     }
 
     @Override
-    public CustomerDTO update(String token, CustomerDTO customerDTO) {
+    public CustomerDTO update(String token, CustomerDTO customerDTO) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Customer> customer = customerRepository.findByIdAndOrganizationId(customerDTO.getId(), orgId);
         if (!customer.isPresent()) {
-            throw new RuntimeException("Cliente no encontrado - " + customerDTO.getId());
+            throw new NoContentException("Cliente no encontrado - " + customerDTO.getId());
         }
 
-        if (!EmailValidation.validateEmail(customerDTO.getEmail())) {
-            throw new RuntimeException("El Correo Electrónico es inválido.");
-        }
+        EmailValidation.validateEmail(customerDTO.getEmail());
 
         ModelMapper modelMapper = new ModelMapper();
 
-        try {
-            customer.ifPresent(c -> {
-                c.setActive(customerDTO.getActive());
-                c.setBusinessName(customerDTO.getBusinessName());
-                c.setBrandName(customerDTO.getBrandName());
-                c.setCuit(customerDTO.getCuit());
-                c.setAddress(customerDTO.getAddress());
-                c.setPhone1(customerDTO.getPhone1());
-                c.setPhone2(customerDTO.getPhone2());
-                c.setEmail(customerDTO.getEmail());
+        customer.ifPresent(c -> {
+            c.setActive(customerDTO.getActive());
+            c.setBusinessName(customerDTO.getBusinessName());
+            c.setBrandName(customerDTO.getBrandName());
+            c.setCuit(customerDTO.getCuit());
+            c.setAddress(customerDTO.getAddress());
+            c.setPhone1(customerDTO.getPhone1());
+            c.setPhone2(customerDTO.getPhone2());
+            c.setEmail(customerDTO.getEmail());
 
-                customerRepository.save(c);
-            });
+            customerRepository.save(c);
+        });
 
-        } catch (Exception e) {
-            throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
-        }
         return modelMapper.map(customer.get(), CustomerDTO.class);
     }
 
     @Override
-    public void deleteById(String token, Long id) {
+    public void deleteById(String token, Long id) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Customer> customer = customerRepository.findByIdAndOrganizationId(id, orgId);
         if (!customer.isPresent()) {
-            throw new RuntimeException("Cliente no encontrado - " + id);
+            throw new NoContentException("Cliente no encontrado - " + id);
         }
 
-        try {
-            customerRepository.delete(customer.get());
-        } catch (DataIntegrityViolationException dive) {
-            throw new RuntimeException("No se puede eliminar el Cliente porque tiene Turnos asociados.");
-        } catch (Exception e) {
-            throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
-        }
+        customerRepository.delete(customer.get());
     }
 }

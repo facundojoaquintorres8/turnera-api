@@ -10,16 +10,16 @@ import com.f8.turnera.domain.dtos.HolidayFilterDTO;
 
 public interface IHolidayService {
 
-    public Page<HolidayDTO> findAllByFilter(String token, HolidayFilterDTO filter);
+    Page<HolidayDTO> findAllByFilter(String token, HolidayFilterDTO filter) throws Exception;
 
-    public HolidayDTO findById(String token, Long id);
+    HolidayDTO findById(String token, Long id) throws Exception;
 
-    public HolidayDTO create(String token, HolidayDTO holidayDTO);
+    HolidayDTO create(String token, HolidayDTO holidayDTO) throws Exception;
 
-    public HolidayDTO update(String token, HolidayDTO holidayDTO);
+    HolidayDTO update(String token, HolidayDTO holidayDTO) throws Exception;
 
-    public void deleteById(String token, Long id);
+    void deleteById(String token, Long id) throws Exception;
 
-    public List<LocalDate> findAllDatesToAgenda(String token);
+    List<LocalDate> findAllDatesToAgenda(String token) throws Exception;
 
 }

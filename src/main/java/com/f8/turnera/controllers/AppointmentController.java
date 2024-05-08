@@ -26,7 +26,7 @@ public class AppointmentController {
     @PreAuthorize("hasAuthority('appointments.book')")
     public ResponseEntity<AppointmentDTO> book(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @RequestBody AppointmentSaveDTO appointmentSaveDTO) {
+            @RequestBody AppointmentSaveDTO appointmentSaveDTO) throws Exception {
         AppointmentDTO result = appointmentService.book(token, appointmentSaveDTO);
 
         return ResponseEntity.ok().body(result);
@@ -36,7 +36,7 @@ public class AppointmentController {
     @PreAuthorize("hasAuthority('appointments.absent')")
     public ResponseEntity<AppointmentDTO> absent(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @RequestBody AppointmentChangeStatusDTO appointmentChangeStatusDTO) {
+            @RequestBody AppointmentChangeStatusDTO appointmentChangeStatusDTO) throws Exception {
         AppointmentDTO result = appointmentService.absent(token, appointmentChangeStatusDTO);
 
         return ResponseEntity.ok().body(result);
@@ -46,7 +46,7 @@ public class AppointmentController {
     @PreAuthorize("hasAuthority('appointments.cancel')")
     public ResponseEntity<AppointmentDTO> cancel(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @RequestBody AppointmentChangeStatusDTO appointmentChangeStatusDTO) {
+            @RequestBody AppointmentChangeStatusDTO appointmentChangeStatusDTO) throws Exception {
         AppointmentDTO result = appointmentService.cancel(token, appointmentChangeStatusDTO);
 
         return ResponseEntity.ok().body(result);
@@ -56,7 +56,7 @@ public class AppointmentController {
     @PreAuthorize("hasAuthority('appointments.attend')")
     public ResponseEntity<AppointmentDTO> attend(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @RequestBody AppointmentChangeStatusDTO appointmentChangeStatusDTO) {
+            @RequestBody AppointmentChangeStatusDTO appointmentChangeStatusDTO) throws Exception {
         AppointmentDTO result = appointmentService.attend(token, appointmentChangeStatusDTO);
 
         return ResponseEntity.ok().body(result);
@@ -66,7 +66,7 @@ public class AppointmentController {
     @PreAuthorize("hasAuthority('appointments.finalize')")
     public ResponseEntity<AppointmentDTO> finalize(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @RequestBody AppointmentChangeStatusDTO appointmentChangeStatusDTO) {
+            @RequestBody AppointmentChangeStatusDTO appointmentChangeStatusDTO) throws Exception {
         AppointmentDTO result = appointmentService.finalize(token, appointmentChangeStatusDTO);
 
         return ResponseEntity.ok().body(result);

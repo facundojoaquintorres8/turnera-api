@@ -30,7 +30,7 @@ public class ResourceController {
     @PreAuthorize("hasAuthority('resources.read')")
     public ResponseEntity<Page<ResourceDTO>> findAllByFilter(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            ResourceFilterDTO filter) {
+            ResourceFilterDTO filter) throws Exception {
         Page<ResourceDTO> result = service.findAllByFilter(token, filter);
 
         return ResponseEntity.ok().body(result);
@@ -40,7 +40,7 @@ public class ResourceController {
     @PreAuthorize("hasAuthority('resources.read')")
     public ResponseEntity<ResourceDTO> getResource(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @PathVariable Long id) {
+            @PathVariable Long id) throws Exception {
         ResourceDTO result = service.findById(token, id);
 
         return ResponseEntity.ok().body(result);
@@ -50,7 +50,7 @@ public class ResourceController {
     @PreAuthorize("hasAuthority('resources.write')")
     public ResponseEntity<ResourceDTO> createResource(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @RequestBody ResourceDTO resourceDTO) {
+            @RequestBody ResourceDTO resourceDTO) throws Exception {
         ResourceDTO result = service.create(token, resourceDTO);
 
         return ResponseEntity.ok().body(result);
@@ -60,7 +60,7 @@ public class ResourceController {
     @PreAuthorize("hasAuthority('resources.write')")
     public ResponseEntity<ResourceDTO> updateResource(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @RequestBody ResourceDTO resourceDTO) {
+            @RequestBody ResourceDTO resourceDTO) throws Exception {
         ResourceDTO result = service.update(token, resourceDTO);
 
         return ResponseEntity.ok().body(result);
@@ -70,7 +70,7 @@ public class ResourceController {
     @PreAuthorize("hasAuthority('resources.delete')")
     public ResponseEntity<Void> deleteResource(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @PathVariable Long id) {
+            @PathVariable Long id) throws Exception {
         service.deleteById(token, id);
 
         return ResponseEntity.ok().build();

@@ -56,7 +56,7 @@ public class ResourceServiceTest {
 
     @Nested
     @DisplayName("findByIdTests")
-    class findByIdTests {
+    class FindByIdTests {
 
         @Test
         @DisplayName("Find by id OK")

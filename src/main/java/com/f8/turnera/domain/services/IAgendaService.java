@@ -8,15 +8,15 @@ import com.f8.turnera.domain.dtos.AppointmentFilterDTO;
 
 public interface IAgendaService {
 
-    public Page<AgendaDTO> findAllByFilter(String token, AppointmentFilterDTO filter);
+    Page<AgendaDTO> findAllByFilter(String token, AppointmentFilterDTO filter) throws Exception;
 
-    public AgendaDTO findById(String token, Long id);
+    AgendaDTO findById(String token, Long id) throws Exception;
 
-    public Boolean create(String token, AgendaSaveDTO agendaDTO);
+    Boolean create(String token, AgendaSaveDTO agendaDTO) throws Exception;
 
-    public AgendaDTO update(String token, AgendaDTO agendaDTO);
+    AgendaDTO update(String token, AgendaDTO agendaDTO) throws Exception;
 
-    public void deleteById(String token, Long id);
+    void deleteById(String token, Long id) throws Exception;
 
-    public AgendaDTO desactivate(String token, Long id);
+    AgendaDTO desactivate(String token, Long id) throws Exception;
 }

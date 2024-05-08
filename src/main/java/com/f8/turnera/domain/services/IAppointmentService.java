@@ -6,13 +6,13 @@ import com.f8.turnera.domain.dtos.AppointmentSaveDTO;
 
 public interface IAppointmentService {
 
-    public AppointmentDTO book(String token, AppointmentSaveDTO appointmentSaveDTO);
+    AppointmentDTO book(String token, AppointmentSaveDTO appointmentSaveDTO) throws Exception;
 
-    public AppointmentDTO absent(String token, AppointmentChangeStatusDTO appointmentChangeStatusDTO);
+    AppointmentDTO absent(String token, AppointmentChangeStatusDTO appointmentChangeStatusDTO) throws Exception;
 
-    public AppointmentDTO cancel(String token, AppointmentChangeStatusDTO appointmentChangeStatusDTO);
+    AppointmentDTO cancel(String token, AppointmentChangeStatusDTO appointmentChangeStatusDTO) throws Exception;
 
-    public AppointmentDTO attend(String token, AppointmentChangeStatusDTO appointmentChangeStatusDTO);
+    AppointmentDTO attend(String token, AppointmentChangeStatusDTO appointmentChangeStatusDTO) throws Exception;
 
-    public AppointmentDTO finalize(String token, AppointmentChangeStatusDTO appointmentChangeStatusDTO);
+    AppointmentDTO finalize(String token, AppointmentChangeStatusDTO appointmentChangeStatusDTO) throws Exception;
 }

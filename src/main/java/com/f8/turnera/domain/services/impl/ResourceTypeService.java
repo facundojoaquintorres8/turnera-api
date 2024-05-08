@@ -23,11 +23,11 @@ import com.f8.turnera.domain.entities.ResourceType;
 import com.f8.turnera.domain.repositories.IResourceTypeRepository;
 import com.f8.turnera.domain.services.IOrganizationService;
 import com.f8.turnera.domain.services.IResourceTypeService;
+import com.f8.turnera.exception.NoContentException;
 import com.f8.turnera.util.Constants;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -47,7 +47,7 @@ public class ResourceTypeService implements IResourceTypeService {
     private EntityManager em;
 
     @Override
-    public Page<ResourceTypeDTO> findAllByFilter(String token, ResourceTypeFilterDTO filter) {
+    public Page<ResourceTypeDTO> findAllByFilter(String token, ResourceTypeFilterDTO filter) throws Exception {
         ModelMapper modelMapper = new ModelMapper();
 
         filter.setOrganizationId(Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
@@ -105,11 +105,11 @@ public class ResourceTypeService implements IResourceTypeService {
     }
 
     @Override
-    public ResourceTypeDTO findById(String token, Long id) {
+    public ResourceTypeDTO findById(String token, Long id) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<ResourceType> resourceType = resourceTypeRepository.findByIdAndOrganizationId(id, orgId);
         if (!resourceType.isPresent()) {
-            throw new RuntimeException("Tipo de Recurso no encontrado - " + id);
+            throw new NoContentException("Tipo de Recurso no encontrado - " + id);
         }
 
         ModelMapper modelMapper = new ModelMapper();
@@ -118,7 +118,7 @@ public class ResourceTypeService implements IResourceTypeService {
     }
 
     @Override
-    public ResourceTypeDTO create(String token, ResourceTypeDTO resourceTypeDTO) {
+    public ResourceTypeDTO create(String token, ResourceTypeDTO resourceTypeDTO) throws Exception {
         ModelMapper modelMapper = new ModelMapper();
 
         OrganizationDTO organization = organizationService.findById(token);
@@ -128,20 +128,17 @@ public class ResourceTypeService implements IResourceTypeService {
         resourceType.setActive(true);
         resourceType.setOrganization(modelMapper.map(organization, Organization.class));
 
-        try {
-            resourceTypeRepository.save(resourceType);
-        } catch (Exception e) {
-            throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
-        }
+        resourceTypeRepository.save(resourceType);
+
         return modelMapper.map(resourceType, ResourceTypeDTO.class);
     }
 
     @Override
-    public ResourceTypeDTO update(String token, ResourceTypeDTO resourceTypeDTO) {
+    public ResourceTypeDTO update(String token, ResourceTypeDTO resourceTypeDTO) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<ResourceType> resourceType = resourceTypeRepository.findByIdAndOrganizationId(resourceTypeDTO.getId(), orgId);
         if (!resourceType.isPresent()) {
-            throw new RuntimeException("Tipo de Recurso no encontrado - " + resourceTypeDTO.getId());
+            throw new NoContentException("Tipo de Recurso no encontrado - " + resourceTypeDTO.getId());
         }
 
         if (resourceType.get().getActive() && !resourceTypeDTO.getActive()
@@ -152,34 +149,24 @@ public class ResourceTypeService implements IResourceTypeService {
 
         ModelMapper modelMapper = new ModelMapper();
 
-        try {
-            resourceType.ifPresent(rt -> {
-                rt.setActive(resourceTypeDTO.getActive());
-                rt.setDescription(resourceTypeDTO.getDescription());
+        resourceType.ifPresent(rt -> {
+            rt.setActive(resourceTypeDTO.getActive());
+            rt.setDescription(resourceTypeDTO.getDescription());
 
-                resourceTypeRepository.save(rt);
-            });
+            resourceTypeRepository.save(rt);
+        });
 
-        } catch (Exception e) {
-            throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
-        }
         return modelMapper.map(resourceType.get(), ResourceTypeDTO.class);
     }
 
     @Override
-    public void deleteById(String token, Long id) {
+    public void deleteById(String token, Long id) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<ResourceType> resourceType = resourceTypeRepository.findByIdAndOrganizationId(id, orgId);
         if (!resourceType.isPresent()) {
-            throw new RuntimeException("Tipo de Recurso no encontrado - " + id);
+            throw new NoContentException("Tipo de Recurso no encontrado - " + id);
         }
 
-        try {
-            resourceTypeRepository.delete(resourceType.get());
-        } catch (DataIntegrityViolationException dive) {
-            throw new RuntimeException("No se puede eliminar el Tipo de Recurso porque tiene Recursos asociados.");
-        } catch (Exception e) {
-            throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
-        }
+        resourceTypeRepository.delete(resourceType.get());
     }
 }

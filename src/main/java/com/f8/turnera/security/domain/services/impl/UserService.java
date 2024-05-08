@@ -21,6 +21,8 @@ import com.f8.turnera.domain.dtos.OrganizationDTO;
 import com.f8.turnera.domain.entities.Organization;
 import com.f8.turnera.domain.services.IEmailService;
 import com.f8.turnera.domain.services.IOrganizationService;
+import com.f8.turnera.exception.BadRequestException;
+import com.f8.turnera.exception.NoContentException;
 import com.f8.turnera.security.domain.dtos.ProfileDTO;
 import com.f8.turnera.security.domain.dtos.UserDTO;
 import com.f8.turnera.security.domain.dtos.UserFilterDTO;
@@ -57,10 +59,11 @@ public class UserService implements IUserService {
     private EntityManager em;
 
     @Override
-    public Page<UserDTO> findAllByFilter(String token, UserFilterDTO filter) {
+    public Page<UserDTO> findAllByFilter(String token, UserFilterDTO filter) throws Exception {
         ModelMapper modelMapper = new ModelMapper();
 
-        filter.setOrganizationId(Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
+        filter.setOrganizationId(
+                Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
 
         Page<User> users = findByCriteria(filter);
         return users.map(user -> modelMapper.map(user, UserDTO.class));
@@ -100,31 +103,31 @@ public class UserService implements IUserService {
         if (filter.getSort() != null) {
             if (filter.getSort().get(0).equals("ASC")) {
                 switch (filter.getSort().get(1)) {
-                case "firstName":
-                    result.sort(Comparator.comparing(User::getFirstName, String::compareToIgnoreCase));
-                    break;
-                case "lastName":
-                    result.sort(Comparator.comparing(User::getLastName, String::compareToIgnoreCase));
-                    break;
-                case "username":
-                    result.sort(Comparator.comparing(User::getUsername, String::compareToIgnoreCase));
-                    break;
-                default:
-                    break;
+                    case "firstName":
+                        result.sort(Comparator.comparing(User::getFirstName, String::compareToIgnoreCase));
+                        break;
+                    case "lastName":
+                        result.sort(Comparator.comparing(User::getLastName, String::compareToIgnoreCase));
+                        break;
+                    case "username":
+                        result.sort(Comparator.comparing(User::getUsername, String::compareToIgnoreCase));
+                        break;
+                    default:
+                        break;
                 }
             } else if (filter.getSort().get(0).equals("DESC")) {
                 switch (filter.getSort().get(1)) {
-                case "firstName":
-                    result.sort(Comparator.comparing(User::getFirstName, String::compareToIgnoreCase).reversed());
-                    break;
-                case "lastName":
-                    result.sort(Comparator.comparing(User::getLastName, String::compareToIgnoreCase).reversed());
-                    break;
-                case "username":
-                    result.sort(Comparator.comparing(User::getUsername, String::compareToIgnoreCase).reversed());
-                    break;
-                default:
-                    break;
+                    case "firstName":
+                        result.sort(Comparator.comparing(User::getFirstName, String::compareToIgnoreCase).reversed());
+                        break;
+                    case "lastName":
+                        result.sort(Comparator.comparing(User::getLastName, String::compareToIgnoreCase).reversed());
+                        break;
+                    case "username":
+                        result.sort(Comparator.comparing(User::getUsername, String::compareToIgnoreCase).reversed());
+                        break;
+                    default:
+                        break;
                 }
             }
         }
@@ -136,11 +139,11 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public UserDTO findById(String token, Long id) {
+    public UserDTO findById(String token, Long id) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<User> user = userRepository.findByIdAndOrganizationId(id, orgId);
         if (!user.isPresent()) {
-            throw new RuntimeException("Usuario no encontrado - " + id);
+            throw new NoContentException("Usuario no encontrado - " + id);
         }
 
         ModelMapper modelMapper = new ModelMapper();
@@ -149,19 +152,18 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public UserDTO create(String token, UserDTO userDTO) {
+    public UserDTO create(String token, UserDTO userDTO) throws Exception {
         ModelMapper modelMapper = new ModelMapper();
 
         OrganizationDTO organization = organizationService.findById(token);
 
         Optional<User> existingUser = userRepository.findByUsername(userDTO.getUsername());
         if (existingUser.isPresent()) {
-            throw new RuntimeException("El Correo Electrónico ingresado ya está registrado. Por favor ingrese otro.");
+            throw new BadRequestException(
+                    "El Correo Electrónico ingresado ya está registrado. Por favor ingrese otro.");
         }
 
-        if (!EmailValidation.validateEmail(userDTO.getUsername())) {
-            throw new RuntimeException("El Correo Electrónico es inválido.");
-        }
+        EmailValidation.validateEmail(userDTO.getUsername());
 
         User user = modelMapper.map(userDTO, User.class);
         user.setCreatedDate(LocalDateTime.now());
@@ -171,47 +173,39 @@ public class UserService implements IUserService {
 
         emailService.sendAccountActivationEmail(user);
 
-        try {
-            userRepository.save(user);
-        } catch (Exception e) {
-            throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
-        }
+        userRepository.save(user);
+
         return modelMapper.map(user, UserDTO.class);
     }
 
     @Override
-    public UserDTO update(String token, UserDTO userDTO) {
+    public UserDTO update(String token, UserDTO userDTO) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<User> user = userRepository.findByIdAndOrganizationId(userDTO.getId(), orgId);
         if (!user.isPresent()) {
-            throw new RuntimeException("Usuario no encontrado - " + userDTO.getId());
+            throw new NoContentException("Usuario no encontrado - " + userDTO.getId());
         }
 
         Optional<User> existingUser = userRepository.findByUsername(userDTO.getUsername());
         if (existingUser.isPresent() && !existingUser.get().getId().equals(userDTO.getId())) {
-            throw new RuntimeException("El Correo Electrónico ingresado ya está registrado. Por favor ingrese otro.");
+            throw new BadRequestException(
+                    "El Correo Electrónico ingresado ya está registrado. Por favor ingrese otro.");
         }
 
-        if (!EmailValidation.validateEmail(userDTO.getUsername())) {
-            throw new RuntimeException("El Correo Electrónico es inválido.");
-        }
+        EmailValidation.validateEmail(userDTO.getUsername());
 
         ModelMapper modelMapper = new ModelMapper();
 
-        try {
-            user.ifPresent(u -> {
-                u.setUsername(userDTO.getUsername());
-                u.setActive(userDTO.getActive());
-                u.setFirstName(userDTO.getFirstName());
-                u.setLastName(userDTO.getLastName());
-                u.setProfiles(addPermissions(userDTO, modelMapper));
+        user.ifPresent(u -> {
+            u.setUsername(userDTO.getUsername());
+            u.setActive(userDTO.getActive());
+            u.setFirstName(userDTO.getFirstName());
+            u.setLastName(userDTO.getLastName());
+            u.setProfiles(addPermissions(userDTO, modelMapper));
 
-                userRepository.save(u);
-            });
+            userRepository.save(u);
+        });
 
-        } catch (Exception e) {
-            throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
-        }
         return modelMapper.map(user.get(), UserDTO.class);
     }
 
@@ -224,21 +218,17 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public void deleteById(String token, Long id) {
+    public void deleteById(String token, Long id) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<User> user = userRepository.findByIdAndOrganizationId(id, orgId);
         if (!user.isPresent()) {
-            throw new RuntimeException("Usuario no encontrado - " + id);
+            throw new NoContentException("Usuario no encontrado - " + id);
         }
 
         if (TokenUtil.getUsernameWithoutToken().equals(user.get().getUsername())) {
-            throw new RuntimeException("No puede eliminar su propio Usuario.");
+            throw new BadRequestException("No puede eliminar su propio Usuario.");
         }
 
-        try {
-            userRepository.delete(user.get());
-        } catch (Exception e) {
-            throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
-        }
+        userRepository.delete(user.get());
     }
 }

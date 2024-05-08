@@ -20,6 +20,8 @@ import com.f8.turnera.config.TokenUtil;
 import com.f8.turnera.domain.dtos.OrganizationDTO;
 import com.f8.turnera.domain.entities.Organization;
 import com.f8.turnera.domain.services.IOrganizationService;
+import com.f8.turnera.exception.BadRequestException;
+import com.f8.turnera.exception.NoContentException;
 import com.f8.turnera.security.domain.dtos.PermissionDTO;
 import com.f8.turnera.security.domain.dtos.ProfileDTO;
 import com.f8.turnera.security.domain.dtos.ProfileFilterDTO;
@@ -33,7 +35,6 @@ import com.f8.turnera.util.Constants;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -56,7 +57,7 @@ public class ProfileService implements IProfileService {
     private EntityManager em;
 
     @Override
-    public Page<ProfileDTO> findAllByFilter(String token, ProfileFilterDTO filter) {
+    public Page<ProfileDTO> findAllByFilter(String token, ProfileFilterDTO filter) throws Exception {
         ModelMapper modelMapper = new ModelMapper();
 
         filter.setOrganizationId(Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
@@ -113,11 +114,11 @@ public class ProfileService implements IProfileService {
     }
 
     @Override
-    public ProfileDTO findById(String token, Long id) {
+    public ProfileDTO findById(String token, Long id) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Profile> profile = profileRepository.findByIdAndOrganizationId(id, orgId);
         if (!profile.isPresent()) {
-            throw new RuntimeException("Perfil no encontrado - " + id);
+            throw new NoContentException("Perfil no encontrado - " + id);
         }
 
         ModelMapper modelMapper = new ModelMapper();
@@ -126,7 +127,7 @@ public class ProfileService implements IProfileService {
     }
 
     @Override
-    public ProfileDTO create(String token, ProfileDTO profileDTO) {
+    public ProfileDTO create(String token, ProfileDTO profileDTO) throws Exception {
         ModelMapper modelMapper = new ModelMapper();
 
         OrganizationDTO organization = organizationService.findById(token);
@@ -137,46 +138,41 @@ public class ProfileService implements IProfileService {
         profile.setOrganization(modelMapper.map(organization, Organization.class));
         profile.setPermissions(addPermissions(profileDTO, modelMapper));
 
-        try {
-            profileRepository.save(profile);
-        } catch (Exception e) {
-            throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
-        }
+        profileRepository.save(profile);
+
         return modelMapper.map(profile, ProfileDTO.class);
     }
 
     @Override
-    public ProfileDTO update(String token, ProfileDTO profileDTO) {
+    public ProfileDTO update(String token, ProfileDTO profileDTO) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Profile> profile = profileRepository.findByIdAndOrganizationId(profileDTO.getId(), orgId);
         if (!profile.isPresent()) {
-            throw new RuntimeException("Perfil no encontrado - " + profileDTO.getId());
+            throw new NoContentException("Perfil no encontrado - " + profileDTO.getId());
         }
 
         if (profile.get().getActive() && !profileDTO.getActive()
                 && profile.get().getUsers().stream().filter(User::getActive).count() > 0) {
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "Existen Usuarios activos con este Perfil asociado. Primero debe modificar los Usuarios para continuar.");
         }
 
         ModelMapper modelMapper = new ModelMapper();
 
-        try {
-            profile.ifPresent(p -> {
-                p.setActive(profileDTO.getActive());
-                p.setDescription(profileDTO.getDescription());
-                p.setPermissions(addPermissions(profileDTO, modelMapper));
+        Set<Permission> newPermissions = addPermissions(profileDTO, modelMapper);
 
-                profileRepository.save(p);
-            });
+        profile.ifPresent(p -> {
+            p.setActive(profileDTO.getActive());
+            p.setDescription(profileDTO.getDescription());
+            p.setPermissions(newPermissions);
 
-        } catch (Exception e) {
-            throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
-        }
+            profileRepository.save(p);
+        });
+
         return modelMapper.map(profile.get(), ProfileDTO.class);
     }
 
-    private Set<Permission> addPermissions(ProfileDTO profileDTO, ModelMapper modelMapper) {
+    private Set<Permission> addPermissions(ProfileDTO profileDTO, ModelMapper modelMapper) throws Exception {
         if (profileDTO.getPermissions().stream().filter(x -> x.getCode().equals("home.index")).count() == 0) {
             PermissionDTO permissionHomeIndex = permissionService.findByCode("home.index");
             profileDTO.getPermissions().add(permissionHomeIndex);
@@ -190,19 +186,13 @@ public class ProfileService implements IProfileService {
     }
 
     @Override
-    public void deleteById(String token, Long id) {
+    public void deleteById(String token, Long id) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Profile> profile = profileRepository.findByIdAndOrganizationId(id, orgId);
         if (!profile.isPresent()) {
-            throw new RuntimeException("Perfil no encontrado - " + id);
+            throw new NoContentException("Perfil no encontrado - " + id);
         }
 
-        try {
-            profileRepository.delete(profile.get());
-        } catch (DataIntegrityViolationException dive) {
-            throw new RuntimeException("No se puede eliminar el Perfil porque tiene Usuarios asociados.");
-        } catch (Exception e) {
-            throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
-        }
+        profileRepository.delete(profile.get());
     }
 }

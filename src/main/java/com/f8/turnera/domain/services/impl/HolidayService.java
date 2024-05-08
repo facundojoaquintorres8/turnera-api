@@ -25,6 +25,8 @@ import com.f8.turnera.domain.entities.Organization;
 import com.f8.turnera.domain.repositories.IHolidayRepository;
 import com.f8.turnera.domain.services.IHolidayService;
 import com.f8.turnera.domain.services.IOrganizationService;
+import com.f8.turnera.exception.BadRequestException;
+import com.f8.turnera.exception.NoContentException;
 import com.f8.turnera.util.Constants;
 
 import org.modelmapper.ModelMapper;
@@ -48,7 +50,7 @@ public class HolidayService implements IHolidayService {
     private EntityManager em;
 
     @Override
-    public Page<HolidayDTO> findAllByFilter(String token, HolidayFilterDTO filter) {
+    public Page<HolidayDTO> findAllByFilter(String token, HolidayFilterDTO filter) throws Exception {
         ModelMapper modelMapper = new ModelMapper();
 
         filter.setOrganizationId(Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
@@ -130,11 +132,11 @@ public class HolidayService implements IHolidayService {
     }
 
     @Override
-    public HolidayDTO findById(String token, Long id) {
+    public HolidayDTO findById(String token, Long id) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Holiday> holiday = holidayRepository.findByIdAndOrganizationId(id, orgId);
         if (!holiday.isPresent()) {
-            throw new RuntimeException("Feriado no encontrado - " + id);
+            throw new NoContentException("Feriado no encontrado - " + id);
         }
 
         ModelMapper modelMapper = new ModelMapper();
@@ -143,14 +145,14 @@ public class HolidayService implements IHolidayService {
     }
 
     @Override
-    public HolidayDTO create(String token, HolidayDTO holidayDTO) {
+    public HolidayDTO create(String token, HolidayDTO holidayDTO) throws Exception {
         ModelMapper modelMapper = new ModelMapper();
 
         OrganizationDTO organization = organizationService.findById(token);
 
         Optional<Holiday> existingHoliday = holidayRepository.findByDateAndOrganizationId(holidayDTO.getDate(), organization.getId());
         if (existingHoliday.isPresent()) {
-            throw new RuntimeException("El feriado ingresado ya está registrado.");
+            throw new BadRequestException("El feriado ingresado ya está registrado.");
         }
 
         Holiday holiday = modelMapper.map(holidayDTO, Holiday.class);
@@ -158,62 +160,51 @@ public class HolidayService implements IHolidayService {
         holiday.setActive(true);
         holiday.setOrganization(modelMapper.map(organization, Organization.class));
 
-        try {
-            holidayRepository.save(holiday);
-        } catch (Exception e) {
-            throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
-        }
+        holidayRepository.save(holiday);
+
         return modelMapper.map(holiday, HolidayDTO.class);
     }
 
     @Override
-    public HolidayDTO update(String token, HolidayDTO holidayDTO) {
+    public HolidayDTO update(String token, HolidayDTO holidayDTO) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Holiday> holiday = holidayRepository.findByIdAndOrganizationId(holidayDTO.getId(), orgId);
         if (!holiday.isPresent()) {
-            throw new RuntimeException("Feriado no encontrado - " + holidayDTO.getId());
+            throw new NoContentException("Feriado no encontrado - " + holidayDTO.getId());
         }
 
         Optional<Holiday> existingHoliday = holidayRepository.findByDateAndOrganizationId(holidayDTO.getDate(), orgId);
         if (existingHoliday.isPresent() && !existingHoliday.get().getId().equals(holidayDTO.getId())) {
-            throw new RuntimeException("El feriado ingresado ya está registrado.");
+            throw new BadRequestException("El feriado ingresado ya está registrado.");
         }
 
         ModelMapper modelMapper = new ModelMapper();
 
-        try {
-            holiday.ifPresent(r -> {
-                r.setActive(holidayDTO.getActive());
-                r.setDate(holidayDTO.getDate());
-                r.setDescription(holidayDTO.getDescription());
-                r.setUseInAgenda(holidayDTO.getUseInAgenda());
+        holiday.ifPresent(r -> {
+            r.setActive(holidayDTO.getActive());
+            r.setDate(holidayDTO.getDate());
+            r.setDescription(holidayDTO.getDescription());
+            r.setUseInAgenda(holidayDTO.getUseInAgenda());
 
-                holidayRepository.save(r);
-            });
+            holidayRepository.save(r);
+        });
 
-        } catch (Exception e) {
-            throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
-        }
         return modelMapper.map(holiday.get(), HolidayDTO.class);
     }
 
     @Override
-    public void deleteById(String token, Long id) {
+    public void deleteById(String token, Long id) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Holiday> holiday = holidayRepository.findByIdAndOrganizationId(id, orgId);
         if (!holiday.isPresent()) {
-            throw new RuntimeException("Feriado no encontrado - " + id);
+            throw new NoContentException("Feriado no encontrado - " + id);
         }
 
-        try {
-            holidayRepository.delete(holiday.get());
-        } catch (Exception e) {
-            throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
-        }
+        holidayRepository.delete(holiday.get());
     }
 
     @Override
-    public List<LocalDate> findAllDatesToAgenda(String token) {
+    public List<LocalDate> findAllDatesToAgenda(String token) throws Exception {
         HolidayFilterDTO filter = new HolidayFilterDTO();
         filter.setActive(true);
         filter.setUseInAgenda(true);

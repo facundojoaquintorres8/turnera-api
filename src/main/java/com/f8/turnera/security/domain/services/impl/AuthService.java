@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 import java.util.HashMap;
 
 import com.f8.turnera.config.SecurityConstants;
+import com.f8.turnera.exception.BadRequestException;
 import com.f8.turnera.security.domain.dtos.LoginDTO;
 import com.f8.turnera.security.domain.dtos.SessionUserDTO;
 import com.f8.turnera.security.domain.dtos.UserDTO;
@@ -40,23 +41,21 @@ public class AuthService implements IAuthService {
     private String secretKey;
 
     @Override
-    public SessionUserDTO login(LoginDTO authDTO) {
+    public SessionUserDTO login(LoginDTO authDTO) throws Exception {
 
         SessionUserDTO result = new SessionUserDTO();
 
         Optional<User> user = userRepository.findByUsername(authDTO.getUsername());
 
         if (user.isPresent() && !user.get().getActive()) {
-            throw new RuntimeException("El Usuario no está activado, revise sus Correo Electrónico para activarlo.");
+            throw new BadRequestException("El Usuario no está activado, revise sus Correo Electrónico para activarlo.");
         }
 
         if (!user.isPresent() || !bCryptPasswordEncoder.matches(authDTO.getPassword(), user.get().getPassword())) {
-            throw new RuntimeException("Revise sus credenciales. Usuario o contraseña inválido.");
+            throw new BadRequestException("Revise sus credenciales. Usuario o contraseña inválido.");
         }
 
-        if (!EmailValidation.validateEmail(authDTO.getUsername())) {
-            throw new RuntimeException("El Correo Electrónico es inválido.");
-        }
+        EmailValidation.validateEmail(authDTO.getUsername());
 
         ModelMapper modelMapper = new ModelMapper();
         result.setUser(modelMapper.map(user.get(), UserDTO.class));

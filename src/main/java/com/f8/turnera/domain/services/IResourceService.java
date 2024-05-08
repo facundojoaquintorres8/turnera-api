@@ -7,13 +7,13 @@ import com.f8.turnera.domain.dtos.ResourceFilterDTO;
 
 public interface IResourceService {
 
-    public Page<ResourceDTO> findAllByFilter(String token, ResourceFilterDTO filter);
+    Page<ResourceDTO> findAllByFilter(String token, ResourceFilterDTO filter) throws Exception;
 
-    public ResourceDTO findById(String token, Long id);
+    ResourceDTO findById(String token, Long id) throws Exception;
 
-    public ResourceDTO create(String token, ResourceDTO resourceDTO);
+    ResourceDTO create(String token, ResourceDTO resourceDTO) throws Exception;
 
-    public ResourceDTO update(String token, ResourceDTO resourceDTO);
+    ResourceDTO update(String token, ResourceDTO resourceDTO) throws Exception;
 
-    public void deleteById(String token, Long id);
+    void deleteById(String token, Long id) throws Exception;
 }

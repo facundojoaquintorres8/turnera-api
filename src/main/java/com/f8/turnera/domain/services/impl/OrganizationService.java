@@ -8,6 +8,7 @@ import com.f8.turnera.domain.dtos.OrganizationDTO;
 import com.f8.turnera.domain.entities.Organization;
 import com.f8.turnera.domain.repositories.IOrganizationRepository;
 import com.f8.turnera.domain.services.IOrganizationService;
+import com.f8.turnera.exception.NoContentException;
 import com.f8.turnera.util.EmailValidation;
 
 import org.modelmapper.ModelMapper;
@@ -21,11 +22,11 @@ public class OrganizationService implements IOrganizationService {
     private IOrganizationRepository organizationRepository;
 
     @Override
-    public OrganizationDTO findById(String token) {
+    public OrganizationDTO findById(String token) throws Exception {
         Long organizationId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Organization> organization = organizationRepository.findById(organizationId);
         if (!organization.isPresent()) {
-            throw new RuntimeException("Organización no encontrada - " + organizationId);
+            throw new NoContentException("Organización no encontrada - " + organizationId);
         }
 
         ModelMapper modelMapper = new ModelMapper();
@@ -34,35 +35,29 @@ public class OrganizationService implements IOrganizationService {
     }
 
     @Override
-    public OrganizationDTO update(String token, OrganizationDTO organizationDTO) {
+    public OrganizationDTO update(String token, OrganizationDTO organizationDTO) throws Exception {
         Long organizationId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Organization> organization = organizationRepository.findById(organizationId);
         if (!organization.isPresent()) {
-            throw new RuntimeException("Organización no encontrada - " + organizationId);
+            throw new NoContentException("Organización no encontrada - " + organizationId);
         }
 
-        if (!EmailValidation.validateEmail(organizationDTO.getDefaultEmail())) {
-            throw new RuntimeException("El Correo Electrónico es inválido.");
-        }
+        EmailValidation.validateEmail(organizationDTO.getDefaultEmail());
 
         ModelMapper modelMapper = new ModelMapper();
 
-        try {
-            organization.ifPresent(o -> {
-                o.setBusinessName(organizationDTO.getBusinessName());
-                o.setBrandName(organizationDTO.getBrandName());
-                o.setCuit(organizationDTO.getCuit());
-                o.setAddress(organizationDTO.getAddress());
-                o.setPhone1(organizationDTO.getPhone1());
-                o.setPhone2(organizationDTO.getPhone2());
-                o.setDefaultEmail(organizationDTO.getDefaultEmail());
+        organization.ifPresent(o -> {
+            o.setBusinessName(organizationDTO.getBusinessName());
+            o.setBrandName(organizationDTO.getBrandName());
+            o.setCuit(organizationDTO.getCuit());
+            o.setAddress(organizationDTO.getAddress());
+            o.setPhone1(organizationDTO.getPhone1());
+            o.setPhone2(organizationDTO.getPhone2());
+            o.setDefaultEmail(organizationDTO.getDefaultEmail());
 
-                organizationRepository.save(o);
-            });
-
-        } catch (Exception e) {
-            throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
-        }
+            organizationRepository.save(o);
+        });
+        
         return modelMapper.map(organization.get(), OrganizationDTO.class);
     }
 

@@ -30,7 +30,7 @@ public class ProfileController {
     @PreAuthorize("hasAuthority('profiles.read')")
     public ResponseEntity<Page<ProfileDTO>> findAllByFilter(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            ProfileFilterDTO filter) {
+            ProfileFilterDTO filter) throws Exception {
         Page<ProfileDTO> result = service.findAllByFilter(token, filter);
 
         return ResponseEntity.ok().body(result);
@@ -40,7 +40,7 @@ public class ProfileController {
     @PreAuthorize("hasAuthority('profiles.read')")
     public ResponseEntity<ProfileDTO> getProfile(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @PathVariable Long id) {
+            @PathVariable Long id) throws Exception {
         ProfileDTO result = service.findById(token, id);
 
         return ResponseEntity.ok().body(result);
@@ -50,7 +50,7 @@ public class ProfileController {
     @PreAuthorize("hasAuthority('profiles.write')")
     public ResponseEntity<ProfileDTO> createProfile(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @RequestBody ProfileDTO profileDTO) {
+            @RequestBody ProfileDTO profileDTO) throws Exception {
         ProfileDTO result = service.create(token, profileDTO);
 
         return ResponseEntity.ok().body(result);
@@ -60,7 +60,7 @@ public class ProfileController {
     @PreAuthorize("hasAuthority('profiles.write')")
     public ResponseEntity<ProfileDTO> updateProfile(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @RequestBody ProfileDTO profileDTO) {
+            @RequestBody ProfileDTO profileDTO) throws Exception {
         ProfileDTO result = service.update(token, profileDTO);
 
         return ResponseEntity.ok().body(result);
@@ -70,7 +70,7 @@ public class ProfileController {
     @PreAuthorize("hasAuthority('profiles.delete')")
     public ResponseEntity<Void> deleteProfile(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @PathVariable Long id) {
+            @PathVariable Long id) throws Exception {
         service.deleteById(token, id);
 
         return ResponseEntity.ok().build();

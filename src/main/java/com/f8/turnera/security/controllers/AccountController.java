@@ -25,25 +25,25 @@ public class AccountController {
     private IAccountService service;
 
     @PostMapping("/account/register")
-    public ResponseEntity<UserDTO> register(@RequestBody RegisterDTO registerDTO) {
+    public ResponseEntity<UserDTO> register(@RequestBody RegisterDTO registerDTO) throws Exception {
         UserDTO result = service.register(registerDTO);
         return ResponseEntity.ok().body(result);
     }
 
     @PostMapping("/account/activate")
-    public ResponseEntity<UserDTO> activate(@RequestBody ActivateDTO activateDTO) {
+    public ResponseEntity<UserDTO> activate(@RequestBody ActivateDTO activateDTO) throws Exception {
         UserDTO result = service.activate(activateDTO);
         return ResponseEntity.ok().body(result);
     }
 
     @PostMapping("/account/password-reset/request")
-    public ResponseEntity<UserDTO> passwordResetRequest(@RequestBody PasswordResetRequestDTO passwordResetRequestDTO) {
+    public ResponseEntity<UserDTO> passwordResetRequest(@RequestBody PasswordResetRequestDTO passwordResetRequestDTO) throws Exception {
         UserDTO result = service.passwordResetRequest(passwordResetRequestDTO);
         return ResponseEntity.ok().body(result);
     }
 
     @PostMapping("/account/password-reset")
-    public ResponseEntity<UserDTO> passwordReset(@RequestBody PasswordResetDTO passwordResetDTO) {
+    public ResponseEntity<UserDTO> passwordReset(@RequestBody PasswordResetDTO passwordResetDTO) throws Exception {
         UserDTO result = service.passwordReset(passwordResetDTO);
         return ResponseEntity.ok().body(result);
     }
@@ -51,7 +51,7 @@ public class AccountController {
     @PostMapping("/account/password-change")
     public ResponseEntity<UserDTO> passwordChange(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @RequestBody PasswordChangeDTO passwordChangeDTO) {
+            @RequestBody PasswordChangeDTO passwordChangeDTO) throws Exception {
         UserDTO result = service.passwordChange(token, passwordChangeDTO);
         return ResponseEntity.ok().body(result);
     }

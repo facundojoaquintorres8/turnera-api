@@ -24,7 +24,7 @@ public class OrganizationController {
     @GetMapping("/organizations")
     @PreAuthorize("hasAuthority('organizations.read')")
     public ResponseEntity<OrganizationDTO> getOrganization(
-            @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token) {
+            @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token) throws Exception {
         OrganizationDTO result = service.findById(token);
 
         return ResponseEntity.ok().body(result);
@@ -34,7 +34,7 @@ public class OrganizationController {
     @PreAuthorize("hasAuthority('organizations.write')")
     public ResponseEntity<OrganizationDTO> updateOrganization(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @RequestBody OrganizationDTO organizationDTO) {
+            @RequestBody OrganizationDTO organizationDTO) throws Exception {
         OrganizationDTO result = service.update(token, organizationDTO);
 
         return ResponseEntity.ok().body(result);

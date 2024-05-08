@@ -20,7 +20,7 @@ public class PermissionController {
 
     @GetMapping("/permissions")
     @PreAuthorize("hasAuthority('profiles.write')")
-    public List<PermissionDTO> findAll() {
+    public List<PermissionDTO> findAll() throws Exception {
         return service.findAll();
     }
 }

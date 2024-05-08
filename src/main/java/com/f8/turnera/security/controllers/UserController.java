@@ -30,7 +30,7 @@ public class UserController {
     @PreAuthorize("hasAuthority('users.read')")
     public ResponseEntity<Page<UserDTO>> findAllByFilter(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            UserFilterDTO filter) {
+            UserFilterDTO filter) throws Exception {
         Page<UserDTO> result = service.findAllByFilter(token, filter);
 
         return ResponseEntity.ok().body(result);
@@ -40,7 +40,7 @@ public class UserController {
     @PreAuthorize("hasAuthority('users.read')")
     public ResponseEntity<UserDTO> getUser(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @PathVariable Long id) {
+            @PathVariable Long id) throws Exception {
         UserDTO result = service.findById(token, id);
 
         return ResponseEntity.ok().body(result);
@@ -50,7 +50,7 @@ public class UserController {
     @PreAuthorize("hasAuthority('users.write')")
     public ResponseEntity<UserDTO> createUser(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @RequestBody UserDTO userDTO) {
+            @RequestBody UserDTO userDTO) throws Exception {
         UserDTO result = service.create(token, userDTO);
 
         return ResponseEntity.ok().body(result);
@@ -60,7 +60,7 @@ public class UserController {
     @PreAuthorize("hasAuthority('users.write')")
     public ResponseEntity<UserDTO> updateUser(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @RequestBody UserDTO userDTO) {
+            @RequestBody UserDTO userDTO) throws Exception {
         UserDTO result = service.update(token, userDTO);
 
         return ResponseEntity.ok().body(result);
@@ -70,7 +70,7 @@ public class UserController {
     @PreAuthorize("hasAuthority('users.delete')")
     public ResponseEntity<Void> deleteUser(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @PathVariable Long id) {
+            @PathVariable Long id) throws Exception {
         service.deleteById(token, id);
 
         return ResponseEntity.ok().build();

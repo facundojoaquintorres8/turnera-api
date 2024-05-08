@@ -31,7 +31,7 @@ public class AgendaController {
     @PreAuthorize("hasAuthority('agendas.read')")
     public ResponseEntity<Page<AgendaDTO>> findAllByFilter(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            AppointmentFilterDTO filter) {
+            AppointmentFilterDTO filter) throws Exception {
         Page<AgendaDTO> result = agendaService.findAllByFilter(token, filter);
         return ResponseEntity.ok().body(result);
     }
@@ -40,7 +40,7 @@ public class AgendaController {
     @PreAuthorize("hasAuthority('agendas.write')")
     public ResponseEntity<Boolean> createAgenda(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @RequestBody AgendaSaveDTO agendaDTO) {
+            @RequestBody AgendaSaveDTO agendaDTO) throws Exception {
         Boolean result = agendaService.create(token, agendaDTO);
 
         if (!result) {
@@ -54,7 +54,7 @@ public class AgendaController {
     @PreAuthorize("hasAuthority('agendas.delete')")
     public ResponseEntity<Void> deleteAgenda(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @PathVariable Long id) {
+            @PathVariable Long id) throws Exception {
         agendaService.deleteById(token, id);
 
         return ResponseEntity.ok().build();
@@ -64,7 +64,7 @@ public class AgendaController {
     @PreAuthorize("hasAuthority('agendas.read')")
     public ResponseEntity<AgendaDTO> desactivateAgenda(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @PathVariable Long id) {
+            @PathVariable Long id) throws Exception {
         AgendaDTO result = agendaService.desactivate(token, id);
 
         return ResponseEntity.ok().body(result);

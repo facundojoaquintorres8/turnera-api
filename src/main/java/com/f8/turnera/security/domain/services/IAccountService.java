@@ -9,13 +9,13 @@ import com.f8.turnera.security.domain.dtos.UserDTO;
 
 public interface IAccountService {
 
-	UserDTO register(RegisterDTO registerDTO);
+	UserDTO register(RegisterDTO registerDTO) throws Exception;
 
-	UserDTO activate(ActivateDTO activateDTO);
+	UserDTO activate(ActivateDTO activateDTO) throws Exception;
 
-	UserDTO passwordResetRequest(PasswordResetRequestDTO passwordResetRequestDTO);
+	UserDTO passwordResetRequest(PasswordResetRequestDTO passwordResetRequestDTO) throws Exception;
 
-	UserDTO passwordReset(PasswordResetDTO passwordResetDTO);
+	UserDTO passwordReset(PasswordResetDTO passwordResetDTO) throws Exception;
 
-	UserDTO passwordChange(String token, PasswordChangeDTO passwordChangeDTO);    
+	UserDTO passwordChange(String token, PasswordChangeDTO passwordChangeDTO) throws Exception;    
 }

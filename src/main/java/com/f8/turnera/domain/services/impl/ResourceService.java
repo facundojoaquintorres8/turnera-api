@@ -29,7 +29,6 @@ import com.f8.turnera.util.Constants;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -49,7 +48,7 @@ public class ResourceService implements IResourceService {
     private EntityManager em;
 
     @Override
-    public Page<ResourceDTO> findAllByFilter(String token, ResourceFilterDTO filter) {
+    public Page<ResourceDTO> findAllByFilter(String token, ResourceFilterDTO filter) throws Exception {
         ModelMapper modelMapper = new ModelMapper();
 
         filter.setOrganizationId(Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
@@ -136,7 +135,7 @@ public class ResourceService implements IResourceService {
     }
 
     @Override
-    public ResourceDTO findById(String token, Long id) {
+    public ResourceDTO findById(String token, Long id) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Resource> resource = resourceRepository.findByIdAndOrganizationId(id, orgId);
         if (!resource.isPresent()) {
@@ -149,7 +148,7 @@ public class ResourceService implements IResourceService {
     }
 
     @Override
-    public ResourceDTO create(String token, ResourceDTO resourceDTO) {
+    public ResourceDTO create(String token, ResourceDTO resourceDTO) throws Exception {
         ModelMapper modelMapper = new ModelMapper();
 
         OrganizationDTO organization = organizationService.findById(token);
@@ -160,54 +159,41 @@ public class ResourceService implements IResourceService {
         resource.setOrganization(modelMapper.map(organization, Organization.class));
         resource.setResourceType(modelMapper.map(resourceDTO.getResourceType(), ResourceType.class));
 
-        try {
-            resourceRepository.save(resource);
-        } catch (Exception e) {
-            throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
-        }
+        resourceRepository.save(resource);
+
         return modelMapper.map(resource, ResourceDTO.class);
     }
 
     @Override
-    public ResourceDTO update(String token, ResourceDTO resourceDTO) {
+    public ResourceDTO update(String token, ResourceDTO resourceDTO) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Resource> resource = resourceRepository.findByIdAndOrganizationId(resourceDTO.getId(), orgId);
         if (!resource.isPresent()) {
-            throw new RuntimeException("Recurso no encontrado - " + resourceDTO.getId());
+            throw new NoContentException("Recurso no encontrado - " + resourceDTO.getId());
         }
 
         ModelMapper modelMapper = new ModelMapper();
 
-        try {
-            resource.ifPresent(r -> {
-                r.setActive(resourceDTO.getActive());
-                r.setDescription(resourceDTO.getDescription());
-                r.setCode(resourceDTO.getCode());
-                r.setResourceType(modelMapper.map(resourceDTO.getResourceType(), ResourceType.class));
+        resource.ifPresent(r -> {
+            r.setActive(resourceDTO.getActive());
+            r.setDescription(resourceDTO.getDescription());
+            r.setCode(resourceDTO.getCode());
+            r.setResourceType(modelMapper.map(resourceDTO.getResourceType(), ResourceType.class));
 
-                resourceRepository.save(r);
-            });
+            resourceRepository.save(r);
+        });
 
-        } catch (Exception e) {
-            throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
-        }
         return modelMapper.map(resource.get(), ResourceDTO.class);
     }
 
     @Override
-    public void deleteById(String token, Long id) {
+    public void deleteById(String token, Long id) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Resource> resource = resourceRepository.findByIdAndOrganizationId(id, orgId);
         if (!resource.isPresent()) {
-            throw new RuntimeException("Recurso no encontrado - " + id);
+            throw new NoContentException("Recurso no encontrado - " + id);
         }
 
-        try {
-            resourceRepository.delete(resource.get());
-        } catch (DataIntegrityViolationException dive) {
-            throw new RuntimeException("No se puede eliminar el Recurso porque tiene Disponibilidades asociadas.");
-        } catch (Exception e) {
-            throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
-        }
+        resourceRepository.delete(resource.get());
     }
 }
