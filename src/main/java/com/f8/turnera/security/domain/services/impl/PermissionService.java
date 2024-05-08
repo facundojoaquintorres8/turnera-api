@@ -8,8 +8,8 @@ import com.f8.turnera.security.domain.dtos.PermissionDTO;
 import com.f8.turnera.security.domain.entities.Permission;
 import com.f8.turnera.security.domain.repositories.IPermissionRepository;
 import com.f8.turnera.security.domain.services.IPermissionService;
+import com.f8.turnera.util.MapperHelper;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,10 +21,8 @@ public class PermissionService implements IPermissionService {
 
     @Override
     public List<PermissionDTO> findAll() throws Exception {
-        ModelMapper modelMapper = new ModelMapper();
-
         List<Permission> permissions = repository.findAll();
-        return permissions.stream().map(permission -> modelMapper.map(permission, PermissionDTO.class)).collect(Collectors.toList());
+        return permissions.stream().map(permission -> MapperHelper.modelMapper().map(permission, PermissionDTO.class)).collect(Collectors.toList());
     }
 
     @Override
@@ -34,8 +32,6 @@ public class PermissionService implements IPermissionService {
             return null;
         }
 
-        ModelMapper modelMapper = new ModelMapper();
-
-        return modelMapper.map(permission.get(), PermissionDTO.class);
+        return MapperHelper.modelMapper().map(permission.get(), PermissionDTO.class);
     }
 }

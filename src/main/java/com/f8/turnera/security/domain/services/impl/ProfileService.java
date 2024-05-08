@@ -32,8 +32,8 @@ import com.f8.turnera.security.domain.repositories.IProfileRepository;
 import com.f8.turnera.security.domain.services.IPermissionService;
 import com.f8.turnera.security.domain.services.IProfileService;
 import com.f8.turnera.util.Constants;
+import com.f8.turnera.util.MapperHelper;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -58,12 +58,10 @@ public class ProfileService implements IProfileService {
 
     @Override
     public Page<ProfileDTO> findAllByFilter(String token, ProfileFilterDTO filter) throws Exception {
-        ModelMapper modelMapper = new ModelMapper();
-
         filter.setOrganizationId(Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
 
         Page<Profile> profiles = findByCriteria(filter);
-        return profiles.map(profile -> modelMapper.map(profile, ProfileDTO.class));
+        return profiles.map(profile -> MapperHelper.modelMapper().map(profile, ProfileDTO.class));
     }
 
     private Page<Profile> findByCriteria(ProfileFilterDTO filter) {
@@ -121,26 +119,22 @@ public class ProfileService implements IProfileService {
             throw new NoContentException("Perfil no encontrado - " + id);
         }
 
-        ModelMapper modelMapper = new ModelMapper();
-
-        return modelMapper.map(profile.get(), ProfileDTO.class);
+        return MapperHelper.modelMapper().map(profile.get(), ProfileDTO.class);
     }
 
     @Override
     public ProfileDTO create(String token, ProfileDTO profileDTO) throws Exception {
-        ModelMapper modelMapper = new ModelMapper();
-
         OrganizationDTO organization = organizationService.findById(token);
 
-        Profile profile = modelMapper.map(profileDTO, Profile.class);
+        Profile profile = MapperHelper.modelMapper().map(profileDTO, Profile.class);
         profile.setCreatedDate(LocalDateTime.now());
         profile.setActive(true);
-        profile.setOrganization(modelMapper.map(organization, Organization.class));
-        profile.setPermissions(addPermissions(profileDTO, modelMapper));
+        profile.setOrganization(MapperHelper.modelMapper().map(organization, Organization.class));
+        profile.setPermissions(addPermissions(profileDTO));
 
         profileRepository.save(profile);
 
-        return modelMapper.map(profile, ProfileDTO.class);
+        return MapperHelper.modelMapper().map(profile, ProfileDTO.class);
     }
 
     @Override
@@ -157,9 +151,7 @@ public class ProfileService implements IProfileService {
                     "Existen Usuarios activos con este Perfil asociado. Primero debe modificar los Usuarios para continuar.");
         }
 
-        ModelMapper modelMapper = new ModelMapper();
-
-        Set<Permission> newPermissions = addPermissions(profileDTO, modelMapper);
+        Set<Permission> newPermissions = addPermissions(profileDTO);
 
         profile.ifPresent(p -> {
             p.setActive(profileDTO.getActive());
@@ -169,10 +161,10 @@ public class ProfileService implements IProfileService {
             profileRepository.save(p);
         });
 
-        return modelMapper.map(profile.get(), ProfileDTO.class);
+        return MapperHelper.modelMapper().map(profile.get(), ProfileDTO.class);
     }
 
-    private Set<Permission> addPermissions(ProfileDTO profileDTO, ModelMapper modelMapper) throws Exception {
+    private Set<Permission> addPermissions(ProfileDTO profileDTO) throws Exception {
         if (profileDTO.getPermissions().stream().filter(x -> x.getCode().equals("home.index")).count() == 0) {
             PermissionDTO permissionHomeIndex = permissionService.findByCode("home.index");
             profileDTO.getPermissions().add(permissionHomeIndex);
@@ -180,7 +172,7 @@ public class ProfileService implements IProfileService {
 
         Set<Permission> newPermissions = new HashSet<>();
         for (PermissionDTO permission : profileDTO.getPermissions()) {
-            newPermissions.add(modelMapper.map(permission, Permission.class));
+            newPermissions.add(MapperHelper.modelMapper().map(permission, Permission.class));
         }
         return newPermissions;
     }

@@ -22,8 +22,8 @@ import com.f8.turnera.domain.services.ICustomerService;
 import com.f8.turnera.domain.services.IEmailService;
 import com.f8.turnera.domain.services.IOrganizationService;
 import com.f8.turnera.exception.NoContentException;
+import com.f8.turnera.util.MapperHelper;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -50,29 +50,27 @@ public class AppointmentService implements IAppointmentService {
         OrganizationDTO organization = organizationService.findById(token);
         AgendaDTO agenda = agendaService.findById(token, appointmentSaveDTO.getAgenda().getId());
 
-        ModelMapper modelMapper = new ModelMapper();
-
         Customer customer = null;
         if (appointmentSaveDTO.getCustomer().getId() != null) {
-            customer = modelMapper.map(appointmentSaveDTO.getCustomer(), Customer.class);
+            customer = MapperHelper.modelMapper().map(appointmentSaveDTO.getCustomer(), Customer.class);
         } else {
-            customer = modelMapper.map(
+            customer = MapperHelper.modelMapper().map(
                     customerService.createQuick(appointmentSaveDTO.getCustomer(), organization), Customer.class);
         }
 
         Appointment appointment = new Appointment(LocalDateTime.now(),
-                modelMapper.map(organization, Organization.class),
-                modelMapper.map(agenda, Agenda.class), customer);
+                MapperHelper.modelMapper().map(organization, Organization.class),
+                MapperHelper.modelMapper().map(agenda, Agenda.class), customer);
         appointment.addStatus(AppointmentStatusEnum.BOOKED, null);
 
         appointmentRepository.save(appointment);
-        AppointmentDTO appointmentDTO = modelMapper.map(appointment, AppointmentDTO.class);
+        AppointmentDTO appointmentDTO = MapperHelper.modelMapper().map(appointment, AppointmentDTO.class);
         agenda.setLastAppointment(appointmentDTO);
         agendaService.update(token, agenda);
 
         emailService.sendBookedAppointmentEmail(appointment);
 
-        return modelMapper.map(appointment, AppointmentDTO.class);
+        return MapperHelper.modelMapper().map(appointment, AppointmentDTO.class);
     }
 
     @Override
@@ -87,8 +85,7 @@ public class AppointmentService implements IAppointmentService {
 
         appointmentRepository.save(appointment.get());
 
-        ModelMapper modelMapper = new ModelMapper();
-        return modelMapper.map(appointment.get(), AppointmentDTO.class);
+        return MapperHelper.modelMapper().map(appointment.get(), AppointmentDTO.class);
     }
 
     @Override
@@ -105,8 +102,7 @@ public class AppointmentService implements IAppointmentService {
 
         appointmentRepository.save(appointment.get());
 
-        ModelMapper modelMapper = new ModelMapper();
-        return modelMapper.map(appointment.get(), AppointmentDTO.class);
+        return MapperHelper.modelMapper().map(appointment.get(), AppointmentDTO.class);
     }
 
     @Override
@@ -121,8 +117,7 @@ public class AppointmentService implements IAppointmentService {
 
         appointmentRepository.save(appointment.get());
 
-        ModelMapper modelMapper = new ModelMapper();
-        return modelMapper.map(appointment.get(), AppointmentDTO.class);
+        return MapperHelper.modelMapper().map(appointment.get(), AppointmentDTO.class);
     }
 
     @Override
@@ -139,7 +134,6 @@ public class AppointmentService implements IAppointmentService {
 
         appointmentRepository.save(appointment.get());
 
-        ModelMapper modelMapper = new ModelMapper();
-        return modelMapper.map(appointment.get(), AppointmentDTO.class);
+        return MapperHelper.modelMapper().map(appointment.get(), AppointmentDTO.class);
     }
 }

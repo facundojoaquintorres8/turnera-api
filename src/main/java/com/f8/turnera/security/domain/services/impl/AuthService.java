@@ -18,8 +18,8 @@ import com.f8.turnera.security.domain.entities.User;
 import com.f8.turnera.security.domain.repositories.IUserRepository;
 import com.f8.turnera.security.domain.services.IAuthService;
 import com.f8.turnera.util.EmailValidation;
+import com.f8.turnera.util.MapperHelper;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -57,8 +57,7 @@ public class AuthService implements IAuthService {
 
         EmailValidation.validateEmail(authDTO.getUsername());
 
-        ModelMapper modelMapper = new ModelMapper();
-        result.setUser(modelMapper.map(user.get(), UserDTO.class));
+        result.setUser(MapperHelper.modelMapper().map(user.get(), UserDTO.class));
 
         // get permissions
         Set<Set<Permission>> setPermissions = user.get().getProfiles().stream().map(Profile::getPermissions)

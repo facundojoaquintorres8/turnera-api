@@ -40,8 +40,8 @@ import com.f8.turnera.domain.services.IResourceService;
 import com.f8.turnera.exception.BadRequestException;
 import com.f8.turnera.exception.NoContentException;
 import com.f8.turnera.util.Constants;
+import com.f8.turnera.util.MapperHelper;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -69,13 +69,11 @@ public class AgendaService implements IAgendaService {
 
     @Override
     public Page<AgendaDTO> findAllByFilter(String token, AppointmentFilterDTO filter) throws Exception {
-        ModelMapper modelMapper = new ModelMapper();
-
         filter.setOrganizationId(
                 Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
 
         Page<Agenda> agendas = findByCriteria(filter);
-        return agendas.map(agenda -> modelMapper.map(agenda, AgendaDTO.class));
+        return agendas.map(agenda -> MapperHelper.modelMapper().map(agenda, AgendaDTO.class));
     }
 
     private Page<Agenda> findByCriteria(AppointmentFilterDTO filter) {
@@ -196,19 +194,16 @@ public class AgendaService implements IAgendaService {
             throw new NoContentException("Disponibilidad no encontrada - " + id);
         }
 
-        ModelMapper modelMapper = new ModelMapper();
-
-        return modelMapper.map(agenda.get(), AgendaDTO.class);
+        return MapperHelper.modelMapper().map(agenda.get(), AgendaDTO.class);
     }
 
     @Override
     public Boolean create(String token, AgendaSaveDTO agendaSaveDTO) throws Exception {
-        ModelMapper modelMapper = new ModelMapper();
         // validations
         OrganizationDTO organizationDTO = organizationService.findById(token);
-        Organization organization = modelMapper.map(organizationDTO, Organization.class);
+        Organization organization = MapperHelper.modelMapper().map(organizationDTO, Organization.class);
         ResourceDTO resourceDTO = resourceService.findById(token, agendaSaveDTO.getResource().getId());
-        Resource resource = modelMapper.map(resourceDTO, Resource.class);
+        Resource resource = MapperHelper.modelMapper().map(resourceDTO, Resource.class);
 
         if (agendaSaveDTO.getStartDate().isAfter(agendaSaveDTO.getEndDate())) {
             throw new BadRequestException("La fecha de inicio deber ser menor o igual a la de fin.");
@@ -535,14 +530,12 @@ public class AgendaService implements IAgendaService {
             throw new NoContentException("Disponibilidad no encontrada - " + agendaDTO.getId());
         }
 
-        ModelMapper modelMapper = new ModelMapper();
-
         agenda.ifPresent(a -> {
-            a.setLastAppointment(modelMapper.map(agendaDTO.getLastAppointment(), Appointment.class));
+            a.setLastAppointment(MapperHelper.modelMapper().map(agendaDTO.getLastAppointment(), Appointment.class));
             agendaRepository.save(a);
         });
 
-        return modelMapper.map(agenda.get(), AgendaDTO.class);
+        return MapperHelper.modelMapper().map(agenda.get(), AgendaDTO.class);
     }
 
     @Override
@@ -564,14 +557,12 @@ public class AgendaService implements IAgendaService {
             throw new NoContentException("Disponibilidad no encontrada - " + id);
         }
 
-        ModelMapper modelMapper = new ModelMapper();
-
         agenda.ifPresent(a -> {
             a.setActive(false);
             agendaRepository.save(a);
         });
 
-        return modelMapper.map(agenda.get(), AgendaDTO.class);
+        return MapperHelper.modelMapper().map(agenda.get(), AgendaDTO.class);
     }
 
 }

@@ -26,8 +26,8 @@ import com.f8.turnera.domain.services.IOrganizationService;
 import com.f8.turnera.exception.NoContentException;
 import com.f8.turnera.util.Constants;
 import com.f8.turnera.util.EmailValidation;
+import com.f8.turnera.util.MapperHelper;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -49,13 +49,11 @@ public class CustomerService implements ICustomerService {
 
     @Override
     public Page<CustomerDTO> findAllByFilter(String token, CustomerFilterDTO filter) throws Exception {
-        ModelMapper modelMapper = new ModelMapper();
-
         filter.setOrganizationId(Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
 
         Page<Customer> customers = findByCriteria(filter);
 
-        return customers.map(customer -> modelMapper.map(customer, CustomerDTO.class));
+        return customers.map(customer -> MapperHelper.modelMapper().map(customer, CustomerDTO.class));
     }
 
     private Page<Customer> findByCriteria(CustomerFilterDTO filter) {
@@ -148,43 +146,37 @@ public class CustomerService implements ICustomerService {
             throw new NoContentException("Cliente no encontrado - " + id);
         }
 
-        ModelMapper modelMapper = new ModelMapper();
-
-        return modelMapper.map(customer.get(), CustomerDTO.class);
+        return MapperHelper.modelMapper().map(customer.get(), CustomerDTO.class);
     }
 
     @Override
     public CustomerDTO create(String token, CustomerDTO customerDTO) throws Exception {
-        ModelMapper modelMapper = new ModelMapper();
-
         OrganizationDTO organization = organizationService.findById(token);
 
         EmailValidation.validateEmail(customerDTO.getEmail());
 
-        Customer customer = modelMapper.map(customerDTO, Customer.class);
+        Customer customer = MapperHelper.modelMapper().map(customerDTO, Customer.class);
         customer.setCreatedDate(LocalDateTime.now());
         customer.setActive(true);
-        customer.setOrganization(modelMapper.map(organization, Organization.class));
+        customer.setOrganization(MapperHelper.modelMapper().map(organization, Organization.class));
 
         customerRepository.save(customer);
 
-        return modelMapper.map(customer, CustomerDTO.class);
+        return MapperHelper.modelMapper().map(customer, CustomerDTO.class);
     }
 
     @Override
     public CustomerDTO createQuick(CustomerDTO customerDTO, OrganizationDTO organizationDTO) throws Exception {
         EmailValidation.validateEmail(customerDTO.getEmail());
 
-        ModelMapper modelMapper = new ModelMapper();
-
-        Customer customer = modelMapper.map(customerDTO, Customer.class);
+        Customer customer = MapperHelper.modelMapper().map(customerDTO, Customer.class);
         customer.setCreatedDate(LocalDateTime.now());
         customer.setActive(true);
-        customer.setOrganization(modelMapper.map(organizationDTO, Organization.class));
+        customer.setOrganization(MapperHelper.modelMapper().map(organizationDTO, Organization.class));
 
         customerRepository.save(customer);
 
-        return modelMapper.map(customer, CustomerDTO.class);
+        return MapperHelper.modelMapper().map(customer, CustomerDTO.class);
     }
 
     @Override
@@ -196,8 +188,6 @@ public class CustomerService implements ICustomerService {
         }
 
         EmailValidation.validateEmail(customerDTO.getEmail());
-
-        ModelMapper modelMapper = new ModelMapper();
 
         customer.ifPresent(c -> {
             c.setActive(customerDTO.getActive());
@@ -212,7 +202,7 @@ public class CustomerService implements ICustomerService {
             customerRepository.save(c);
         });
 
-        return modelMapper.map(customer.get(), CustomerDTO.class);
+        return MapperHelper.modelMapper().map(customer.get(), CustomerDTO.class);
     }
 
     @Override

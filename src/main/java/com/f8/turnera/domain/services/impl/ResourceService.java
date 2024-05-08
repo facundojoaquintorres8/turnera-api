@@ -26,8 +26,8 @@ import com.f8.turnera.domain.services.IOrganizationService;
 import com.f8.turnera.domain.services.IResourceService;
 import com.f8.turnera.exception.NoContentException;
 import com.f8.turnera.util.Constants;
+import com.f8.turnera.util.MapperHelper;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -49,12 +49,10 @@ public class ResourceService implements IResourceService {
 
     @Override
     public Page<ResourceDTO> findAllByFilter(String token, ResourceFilterDTO filter) throws Exception {
-        ModelMapper modelMapper = new ModelMapper();
-
         filter.setOrganizationId(Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
 
         Page<Resource> resources = findByCriteria(filter);
-        return resources.map(resource -> modelMapper.map(resource, ResourceDTO.class));
+        return resources.map(resource -> MapperHelper.modelMapper().map(resource, ResourceDTO.class));
     }
 
     private Page<Resource> findByCriteria(ResourceFilterDTO filter) {
@@ -142,26 +140,22 @@ public class ResourceService implements IResourceService {
             throw new NoContentException("Recurso no encontrado - " + id);
         }
 
-        ModelMapper modelMapper = new ModelMapper();
-
-        return modelMapper.map(resource.get(), ResourceDTO.class);
+        return MapperHelper.modelMapper().map(resource.get(), ResourceDTO.class);
     }
 
     @Override
     public ResourceDTO create(String token, ResourceDTO resourceDTO) throws Exception {
-        ModelMapper modelMapper = new ModelMapper();
-
         OrganizationDTO organization = organizationService.findById(token);
 
-        Resource resource = modelMapper.map(resourceDTO, Resource.class);
+        Resource resource = MapperHelper.modelMapper().map(resourceDTO, Resource.class);
         resource.setCreatedDate(LocalDateTime.now());
         resource.setActive(true);
-        resource.setOrganization(modelMapper.map(organization, Organization.class));
-        resource.setResourceType(modelMapper.map(resourceDTO.getResourceType(), ResourceType.class));
+        resource.setOrganization(MapperHelper.modelMapper().map(organization, Organization.class));
+        resource.setResourceType(MapperHelper.modelMapper().map(resourceDTO.getResourceType(), ResourceType.class));
 
         resourceRepository.save(resource);
 
-        return modelMapper.map(resource, ResourceDTO.class);
+        return MapperHelper.modelMapper().map(resource, ResourceDTO.class);
     }
 
     @Override
@@ -172,18 +166,16 @@ public class ResourceService implements IResourceService {
             throw new NoContentException("Recurso no encontrado - " + resourceDTO.getId());
         }
 
-        ModelMapper modelMapper = new ModelMapper();
-
         resource.ifPresent(r -> {
             r.setActive(resourceDTO.getActive());
             r.setDescription(resourceDTO.getDescription());
             r.setCode(resourceDTO.getCode());
-            r.setResourceType(modelMapper.map(resourceDTO.getResourceType(), ResourceType.class));
+            r.setResourceType(MapperHelper.modelMapper().map(resourceDTO.getResourceType(), ResourceType.class));
 
             resourceRepository.save(r);
         });
 
-        return modelMapper.map(resource.get(), ResourceDTO.class);
+        return MapperHelper.modelMapper().map(resource.get(), ResourceDTO.class);
     }
 
     @Override

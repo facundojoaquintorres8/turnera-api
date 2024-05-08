@@ -10,8 +10,8 @@ import com.f8.turnera.domain.repositories.IOrganizationRepository;
 import com.f8.turnera.domain.services.IOrganizationService;
 import com.f8.turnera.exception.NoContentException;
 import com.f8.turnera.util.EmailValidation;
+import com.f8.turnera.util.MapperHelper;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,9 +29,7 @@ public class OrganizationService implements IOrganizationService {
             throw new NoContentException("Organización no encontrada - " + organizationId);
         }
 
-        ModelMapper modelMapper = new ModelMapper();
-
-        return modelMapper.map(organization.get(), OrganizationDTO.class);
+        return MapperHelper.modelMapper().map(organization.get(), OrganizationDTO.class);
     }
 
     @Override
@@ -43,8 +41,6 @@ public class OrganizationService implements IOrganizationService {
         }
 
         EmailValidation.validateEmail(organizationDTO.getDefaultEmail());
-
-        ModelMapper modelMapper = new ModelMapper();
 
         organization.ifPresent(o -> {
             o.setBusinessName(organizationDTO.getBusinessName());
@@ -58,7 +54,7 @@ public class OrganizationService implements IOrganizationService {
             organizationRepository.save(o);
         });
         
-        return modelMapper.map(organization.get(), OrganizationDTO.class);
+        return MapperHelper.modelMapper().map(organization.get(), OrganizationDTO.class);
     }
 
 }

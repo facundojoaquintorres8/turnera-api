@@ -28,8 +28,8 @@ import com.f8.turnera.domain.services.IOrganizationService;
 import com.f8.turnera.exception.BadRequestException;
 import com.f8.turnera.exception.NoContentException;
 import com.f8.turnera.util.Constants;
+import com.f8.turnera.util.MapperHelper;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -51,12 +51,10 @@ public class HolidayService implements IHolidayService {
 
     @Override
     public Page<HolidayDTO> findAllByFilter(String token, HolidayFilterDTO filter) throws Exception {
-        ModelMapper modelMapper = new ModelMapper();
-
         filter.setOrganizationId(Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
 
         Page<Holiday> holidays = findByCriteria(filter);
-        return holidays.map(holiday -> modelMapper.map(holiday, HolidayDTO.class));
+        return holidays.map(holiday -> MapperHelper.modelMapper().map(holiday, HolidayDTO.class));
     }
 
     private Page<Holiday> findByCriteria(HolidayFilterDTO filter) {
@@ -139,15 +137,11 @@ public class HolidayService implements IHolidayService {
             throw new NoContentException("Feriado no encontrado - " + id);
         }
 
-        ModelMapper modelMapper = new ModelMapper();
-
-        return modelMapper.map(holiday.get(), HolidayDTO.class);
+        return MapperHelper.modelMapper().map(holiday.get(), HolidayDTO.class);
     }
 
     @Override
     public HolidayDTO create(String token, HolidayDTO holidayDTO) throws Exception {
-        ModelMapper modelMapper = new ModelMapper();
-
         OrganizationDTO organization = organizationService.findById(token);
 
         Optional<Holiday> existingHoliday = holidayRepository.findByDateAndOrganizationId(holidayDTO.getDate(), organization.getId());
@@ -155,14 +149,14 @@ public class HolidayService implements IHolidayService {
             throw new BadRequestException("El feriado ingresado ya está registrado.");
         }
 
-        Holiday holiday = modelMapper.map(holidayDTO, Holiday.class);
+        Holiday holiday = MapperHelper.modelMapper().map(holidayDTO, Holiday.class);
         holiday.setCreatedDate(LocalDateTime.now());
         holiday.setActive(true);
-        holiday.setOrganization(modelMapper.map(organization, Organization.class));
+        holiday.setOrganization(MapperHelper.modelMapper().map(organization, Organization.class));
 
         holidayRepository.save(holiday);
 
-        return modelMapper.map(holiday, HolidayDTO.class);
+        return MapperHelper.modelMapper().map(holiday, HolidayDTO.class);
     }
 
     @Override
@@ -178,8 +172,6 @@ public class HolidayService implements IHolidayService {
             throw new BadRequestException("El feriado ingresado ya está registrado.");
         }
 
-        ModelMapper modelMapper = new ModelMapper();
-
         holiday.ifPresent(r -> {
             r.setActive(holidayDTO.getActive());
             r.setDate(holidayDTO.getDate());
@@ -189,7 +181,7 @@ public class HolidayService implements IHolidayService {
             holidayRepository.save(r);
         });
 
-        return modelMapper.map(holiday.get(), HolidayDTO.class);
+        return MapperHelper.modelMapper().map(holiday.get(), HolidayDTO.class);
     }
 
     @Override

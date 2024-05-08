@@ -32,8 +32,8 @@ import com.f8.turnera.security.domain.repositories.IUserRepository;
 import com.f8.turnera.security.domain.services.IUserService;
 import com.f8.turnera.util.Constants;
 import com.f8.turnera.util.EmailValidation;
+import com.f8.turnera.util.MapperHelper;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -60,13 +60,11 @@ public class UserService implements IUserService {
 
     @Override
     public Page<UserDTO> findAllByFilter(String token, UserFilterDTO filter) throws Exception {
-        ModelMapper modelMapper = new ModelMapper();
-
         filter.setOrganizationId(
                 Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
 
         Page<User> users = findByCriteria(filter);
-        return users.map(user -> modelMapper.map(user, UserDTO.class));
+        return users.map(user -> MapperHelper.modelMapper().map(user, UserDTO.class));
     }
 
     private Page<User> findByCriteria(UserFilterDTO filter) {
@@ -146,15 +144,11 @@ public class UserService implements IUserService {
             throw new NoContentException("Usuario no encontrado - " + id);
         }
 
-        ModelMapper modelMapper = new ModelMapper();
-
-        return modelMapper.map(user.get(), UserDTO.class);
+        return MapperHelper.modelMapper().map(user.get(), UserDTO.class);
     }
 
     @Override
     public UserDTO create(String token, UserDTO userDTO) throws Exception {
-        ModelMapper modelMapper = new ModelMapper();
-
         OrganizationDTO organization = organizationService.findById(token);
 
         Optional<User> existingUser = userRepository.findByUsername(userDTO.getUsername());
@@ -165,17 +159,17 @@ public class UserService implements IUserService {
 
         EmailValidation.validateEmail(userDTO.getUsername());
 
-        User user = modelMapper.map(userDTO, User.class);
+        User user = MapperHelper.modelMapper().map(userDTO, User.class);
         user.setCreatedDate(LocalDateTime.now());
-        user.setOrganization(modelMapper.map(organization, Organization.class));
+        user.setOrganization(MapperHelper.modelMapper().map(organization, Organization.class));
         user.setActivationKey(RandomString.make(20));
-        user.setProfiles(addPermissions(userDTO, modelMapper));
+        user.setProfiles(addPermissions(userDTO));
 
         emailService.sendAccountActivationEmail(user);
 
         userRepository.save(user);
 
-        return modelMapper.map(user, UserDTO.class);
+        return MapperHelper.modelMapper().map(user, UserDTO.class);
     }
 
     @Override
@@ -194,25 +188,23 @@ public class UserService implements IUserService {
 
         EmailValidation.validateEmail(userDTO.getUsername());
 
-        ModelMapper modelMapper = new ModelMapper();
-
         user.ifPresent(u -> {
             u.setUsername(userDTO.getUsername());
             u.setActive(userDTO.getActive());
             u.setFirstName(userDTO.getFirstName());
             u.setLastName(userDTO.getLastName());
-            u.setProfiles(addPermissions(userDTO, modelMapper));
+            u.setProfiles(addPermissions(userDTO));
 
             userRepository.save(u);
         });
 
-        return modelMapper.map(user.get(), UserDTO.class);
+        return MapperHelper.modelMapper().map(user.get(), UserDTO.class);
     }
 
-    private Set<Profile> addPermissions(UserDTO userDTO, ModelMapper modelMapper) {
+    private Set<Profile> addPermissions(UserDTO userDTO) {
         Set<Profile> newProfiles = new HashSet<>();
         for (ProfileDTO profile : userDTO.getProfiles()) {
-            newProfiles.add(modelMapper.map(profile, Profile.class));
+            newProfiles.add(MapperHelper.modelMapper().map(profile, Profile.class));
         }
         return newProfiles;
     }

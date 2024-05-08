@@ -26,8 +26,8 @@ import com.f8.turnera.security.domain.repositories.IProfileRepository;
 import com.f8.turnera.security.domain.repositories.IUserRepository;
 import com.f8.turnera.security.domain.services.IAccountService;
 import com.f8.turnera.util.EmailValidation;
+import com.f8.turnera.util.MapperHelper;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -91,8 +91,7 @@ public class AccountService implements IAccountService {
 
         emailService.sendOrganizationActivationEmail(user);
 
-        ModelMapper modelMapper = new ModelMapper();
-        return modelMapper.map(user, UserDTO.class);
+        return MapperHelper.modelMapper().map(user, UserDTO.class);
     }
 
     @Override
@@ -117,8 +116,7 @@ public class AccountService implements IAccountService {
         userRepository.save(user.get());
         organizationRepository.save(user.get().getOrganization());
         
-        ModelMapper modelMapper = new ModelMapper();
-        return modelMapper.map(user.get(), UserDTO.class);
+        return MapperHelper.modelMapper().map(user.get(), UserDTO.class);
     }
 
     private void addDefaultProfiles(User user) {
@@ -147,8 +145,7 @@ public class AccountService implements IAccountService {
 
         emailService.sendPasswordResetRequestEmail(user.get());
 
-        ModelMapper modelMapper = new ModelMapper();
-        return modelMapper.map(user.get(), UserDTO.class);
+        return MapperHelper.modelMapper().map(user.get(), UserDTO.class);
     }
 
     @Override
@@ -170,8 +167,7 @@ public class AccountService implements IAccountService {
 
         userRepository.save(user.get());
         
-        ModelMapper modelMapper = new ModelMapper();
-        return modelMapper.map(user.get(), UserDTO.class);
+        return MapperHelper.modelMapper().map(user.get(), UserDTO.class);
     }
 
     @Override
@@ -190,8 +186,7 @@ public class AccountService implements IAccountService {
 
         userRepository.save(user.get());
         
-        ModelMapper modelMapper = new ModelMapper();
-        return modelMapper.map(user.get(), UserDTO.class);
+        return MapperHelper.modelMapper().map(user.get(), UserDTO.class);
     }
 
 }
