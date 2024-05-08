@@ -1,4 +1,4 @@
-package com.f8.turnera.domain.services;
+package com.f8.turnera.domain.services.impl;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -15,12 +15,16 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import com.f8.turnera.config.SecurityConstants;
+import com.f8.turnera.config.TokenUtil;
 import com.f8.turnera.domain.dtos.HolidayDTO;
 import com.f8.turnera.domain.dtos.HolidayFilterDTO;
 import com.f8.turnera.domain.dtos.OrganizationDTO;
 import com.f8.turnera.domain.entities.Holiday;
 import com.f8.turnera.domain.entities.Organization;
 import com.f8.turnera.domain.repositories.IHolidayRepository;
+import com.f8.turnera.domain.services.IHolidayService;
+import com.f8.turnera.domain.services.IOrganizationService;
 import com.f8.turnera.util.Constants;
 
 import org.modelmapper.ModelMapper;
@@ -44,8 +48,10 @@ public class HolidayService implements IHolidayService {
     private EntityManager em;
 
     @Override
-    public Page<HolidayDTO> findAllByFilter(HolidayFilterDTO filter) {
+    public Page<HolidayDTO> findAllByFilter(String token, HolidayFilterDTO filter) {
         ModelMapper modelMapper = new ModelMapper();
+
+        filter.setOrganizationId(Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
 
         Page<Holiday> holidays = findByCriteria(filter);
         return holidays.map(holiday -> modelMapper.map(holiday, HolidayDTO.class));
@@ -58,6 +64,7 @@ public class HolidayService implements IHolidayService {
         List<Predicate> predicates = new ArrayList<>();
 
         Root<Holiday> root = cq.from(Holiday.class);
+        predicates.add(cb.equal(root.join("organization", JoinType.LEFT), filter.getOrganizationId()));
         if (filter.getDate() != null) {
             Predicate predicate = cb.equal(root.get("date"), filter.getDate());
             predicates.add(predicate);
@@ -69,10 +76,6 @@ public class HolidayService implements IHolidayService {
         }
         if (filter.getUseInAgenda() != null) {
             Predicate predicate = cb.equal(root.get("useInAgenda"), filter.getUseInAgenda());
-            predicates.add(predicate);
-        }
-        if (filter.getOrganizationId() != null) {
-            Predicate predicate = cb.equal(root.join("organization", JoinType.LEFT), filter.getOrganizationId());
             predicates.add(predicate);
         }
         if (filter.getActive() != null) {
@@ -127,8 +130,9 @@ public class HolidayService implements IHolidayService {
     }
 
     @Override
-    public HolidayDTO findById(Long id) {
-        Optional<Holiday> holiday = holidayRepository.findById(id);
+    public HolidayDTO findById(String token, Long id) {
+        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
+        Optional<Holiday> holiday = holidayRepository.findByIdAndOrganizationId(id, orgId);
         if (!holiday.isPresent()) {
             throw new RuntimeException("Feriado no encontrado - " + id);
         }
@@ -139,12 +143,12 @@ public class HolidayService implements IHolidayService {
     }
 
     @Override
-    public HolidayDTO create(HolidayDTO holidayDTO) {
+    public HolidayDTO create(String token, HolidayDTO holidayDTO) {
         ModelMapper modelMapper = new ModelMapper();
 
-        OrganizationDTO organization = organizationService.findById(holidayDTO.getOrganizationId());
+        OrganizationDTO organization = organizationService.findById(token);
 
-        Optional<Holiday> existingHoliday = holidayRepository.findByDateAndOrganizationId(holidayDTO.getDate(), holidayDTO.getOrganizationId());
+        Optional<Holiday> existingHoliday = holidayRepository.findByDateAndOrganizationId(holidayDTO.getDate(), organization.getId());
         if (existingHoliday.isPresent()) {
             throw new RuntimeException("El feriado ingresado ya está registrado.");
         }
@@ -163,13 +167,14 @@ public class HolidayService implements IHolidayService {
     }
 
     @Override
-    public HolidayDTO update(HolidayDTO holidayDTO) {
-        Optional<Holiday> holiday = holidayRepository.findById(holidayDTO.getId());
+    public HolidayDTO update(String token, HolidayDTO holidayDTO) {
+        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
+        Optional<Holiday> holiday = holidayRepository.findByIdAndOrganizationId(holidayDTO.getId(), orgId);
         if (!holiday.isPresent()) {
             throw new RuntimeException("Feriado no encontrado - " + holidayDTO.getId());
         }
 
-        Optional<Holiday> existingHoliday = holidayRepository.findByDateAndOrganizationId(holidayDTO.getDate(), holidayDTO.getOrganizationId());
+        Optional<Holiday> existingHoliday = holidayRepository.findByDateAndOrganizationId(holidayDTO.getDate(), orgId);
         if (existingHoliday.isPresent() && !existingHoliday.get().getId().equals(holidayDTO.getId())) {
             throw new RuntimeException("El feriado ingresado ya está registrado.");
         }
@@ -193,8 +198,9 @@ public class HolidayService implements IHolidayService {
     }
 
     @Override
-    public void deleteById(Long id) {
-        Optional<Holiday> holiday = holidayRepository.findById(id);
+    public void deleteById(String token, Long id) {
+        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
+        Optional<Holiday> holiday = holidayRepository.findByIdAndOrganizationId(id, orgId);
         if (!holiday.isPresent()) {
             throw new RuntimeException("Feriado no encontrado - " + id);
         }
@@ -207,7 +213,7 @@ public class HolidayService implements IHolidayService {
     }
 
     @Override
-    public List<LocalDate> findAllDatesToAgenda() {
+    public List<LocalDate> findAllDatesToAgenda(String token) {
         HolidayFilterDTO filter = new HolidayFilterDTO();
         filter.setActive(true);
         filter.setUseInAgenda(true);

@@ -1,10 +1,12 @@
-package com.f8.turnera.security.domain.services;
+package com.f8.turnera.security.domain.services.impl;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
+import com.f8.turnera.config.SecurityConstants;
+import com.f8.turnera.config.TokenUtil;
 import com.f8.turnera.domain.entities.Organization;
 import com.f8.turnera.domain.repositories.IOrganizationRepository;
 import com.f8.turnera.domain.services.IEmailService;
@@ -20,6 +22,7 @@ import com.f8.turnera.security.domain.entities.User;
 import com.f8.turnera.security.domain.repositories.IPermissionRepository;
 import com.f8.turnera.security.domain.repositories.IProfileRepository;
 import com.f8.turnera.security.domain.repositories.IUserRepository;
+import com.f8.turnera.security.domain.services.IAccountService;
 import com.f8.turnera.util.EmailValidation;
 
 import org.modelmapper.ModelMapper;
@@ -191,8 +194,9 @@ public class AccountService implements IAccountService {
     }
 
     @Override
-    public UserDTO passwordChange(PasswordChangeDTO passwordChangeDTO) {
-        Optional<User> user = userRepository.findByUsername(passwordChangeDTO.getUsername());
+    public UserDTO passwordChange(String token, PasswordChangeDTO passwordChangeDTO) {
+        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
+        Optional<User> user = userRepository.findByUsernameAndOrganizationId(passwordChangeDTO.getUsername(), orgId);
         if (!user.isPresent()) {
             throw new RuntimeException("Usuario no encontrado.");
         }

@@ -1,4 +1,4 @@
-package com.f8.turnera.domain.services;
+package com.f8.turnera.domain.services.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,6 +11,7 @@ import javax.mail.internet.MimeMessage;
 
 import com.f8.turnera.domain.entities.Appointment;
 import com.f8.turnera.domain.entities.Organization;
+import com.f8.turnera.domain.services.IEmailService;
 import com.f8.turnera.security.domain.entities.User;
 
 import org.springframework.mail.javamail.MimeMessageHelper;

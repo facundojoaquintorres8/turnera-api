@@ -1,5 +1,6 @@
 package com.f8.turnera.security.controllers;
 
+import com.f8.turnera.config.SecurityConstants;
 import com.f8.turnera.security.domain.dtos.UserDTO;
 import com.f8.turnera.security.domain.dtos.UserFilterDTO;
 import com.f8.turnera.security.domain.services.IUserService;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,40 +28,50 @@ public class UserController {
 
     @GetMapping("/users/findAllByFilter")
     @PreAuthorize("hasAuthority('users.read')")
-    public ResponseEntity<Page<UserDTO>> findAllByFilter(UserFilterDTO filter) {
-        Page<UserDTO> result = service.findAllByFilter(filter);
+    public ResponseEntity<Page<UserDTO>> findAllByFilter(
+            @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
+            UserFilterDTO filter) {
+        Page<UserDTO> result = service.findAllByFilter(token, filter);
 
         return ResponseEntity.ok().body(result);
     }
 
     @GetMapping("/users/{id}")
     @PreAuthorize("hasAuthority('users.read')")
-    public ResponseEntity<UserDTO> getUser(@PathVariable Long id) {
-        UserDTO result = service.findById(id);
+    public ResponseEntity<UserDTO> getUser(
+            @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
+            @PathVariable Long id) {
+        UserDTO result = service.findById(token, id);
 
         return ResponseEntity.ok().body(result);
     }
 
     @PostMapping("/users")
     @PreAuthorize("hasAuthority('users.write')")
-    public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO userDTO) {
-        UserDTO result = service.create(userDTO);
+    public ResponseEntity<UserDTO> createUser(
+            @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
+            @RequestBody UserDTO userDTO) {
+        UserDTO result = service.create(token, userDTO);
 
         return ResponseEntity.ok().body(result);
     }
 
     @PutMapping("/users")
     @PreAuthorize("hasAuthority('users.write')")
-    public ResponseEntity<UserDTO> updateUser(@RequestBody UserDTO userDTO) {
-        UserDTO result = service.update(userDTO);
+    public ResponseEntity<UserDTO> updateUser(
+            @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
+            @RequestBody UserDTO userDTO) {
+        UserDTO result = service.update(token, userDTO);
 
         return ResponseEntity.ok().body(result);
     }
 
     @DeleteMapping("users/{id}")
     @PreAuthorize("hasAuthority('users.delete')")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        service.deleteById(id);
+    public ResponseEntity<Void> deleteUser(
+            @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
+            @PathVariable Long id) {
+        service.deleteById(token, id);
 
         return ResponseEntity.ok().build();
     }

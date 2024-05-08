@@ -17,5 +17,5 @@ public interface IAccountService {
 
 	UserDTO passwordReset(PasswordResetDTO passwordResetDTO);
 
-	UserDTO passwordChange(PasswordChangeDTO passwordChangeDTO);    
+	UserDTO passwordChange(String token, PasswordChangeDTO passwordChangeDTO);    
 }

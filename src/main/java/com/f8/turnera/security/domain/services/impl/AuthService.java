@@ -1,10 +1,11 @@
-package com.f8.turnera.security.domain.services;
+package com.f8.turnera.security.domain.services.impl;
 
 import java.util.Date;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.HashMap;
 
 import com.f8.turnera.config.SecurityConstants;
 import com.f8.turnera.security.domain.dtos.LoginDTO;
@@ -14,6 +15,7 @@ import com.f8.turnera.security.domain.entities.Permission;
 import com.f8.turnera.security.domain.entities.Profile;
 import com.f8.turnera.security.domain.entities.User;
 import com.f8.turnera.security.domain.repositories.IUserRepository;
+import com.f8.turnera.security.domain.services.IAuthService;
 import com.f8.turnera.util.EmailValidation;
 
 import org.modelmapper.ModelMapper;
@@ -64,15 +66,18 @@ public class AuthService implements IAuthService {
                 .collect(Collectors.toSet());
         Set<Stream<String>> streamPermissions = setPermissions.stream().map(x -> x.stream().map(Permission::getCode))
                 .collect(Collectors.toSet());
-        Set<String> permissions = streamPermissions.stream().flatMap(Stream::distinct).collect(Collectors.toSet());
-        String authorities = permissions.stream().collect(Collectors.joining(","));
+        Set<String> permissionsSet = streamPermissions.stream().flatMap(Stream::distinct).collect(Collectors.toSet());
 
+        HashMap<String, Object> claims = new HashMap<>();
+		claims.put(SecurityConstants.ORGANIZATION_KEY, user.get().getOrganization().getId());
+		claims.put(SecurityConstants.PERMISSIONS_KEY, permissionsSet.stream().collect(Collectors.joining(",")));
+        
         String token = Jwts.builder()
-                .claim(SecurityConstants.AUTHORITIES_KEY, authorities)
+                .setClaims(claims)
                 .setIssuer("f8")
                 .setSubject(authDTO.getUsername())
                 .setExpiration(new Date(System.currentTimeMillis() + SecurityConstants.EXPIRATION_TIME))
-                .signWith(SignatureAlgorithm.HS512, secretKey).compact();
+                .signWith(SignatureAlgorithm.HS256, secretKey).compact();
         result.setToken(token);
 
         return result;

@@ -4,7 +4,7 @@ import com.f8.turnera.domain.dtos.OrganizationDTO;
 
 public interface IOrganizationService {
 
-    public OrganizationDTO findById(Long id);
+    public OrganizationDTO findById(String token);
 
-    public OrganizationDTO update(OrganizationDTO organizationDTO);
+    public OrganizationDTO update(String token, OrganizationDTO organizationDTO);
 }

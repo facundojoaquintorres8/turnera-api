@@ -8,7 +8,6 @@ import lombok.Data;
 public class UserDTO {
 
     private Long id;
-    private Long organizationId;
     private Boolean active;
     private String firstName;
     private String lastName;

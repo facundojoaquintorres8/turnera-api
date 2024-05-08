@@ -1,8 +1,10 @@
-package com.f8.turnera.domain.services;
+package com.f8.turnera.domain.services.impl;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import com.f8.turnera.config.SecurityConstants;
+import com.f8.turnera.config.TokenUtil;
 import com.f8.turnera.domain.dtos.AgendaDTO;
 import com.f8.turnera.domain.dtos.AppointmentChangeStatusDTO;
 import com.f8.turnera.domain.dtos.AppointmentDTO;
@@ -14,6 +16,11 @@ import com.f8.turnera.domain.entities.Appointment;
 import com.f8.turnera.domain.entities.Customer;
 import com.f8.turnera.domain.entities.Organization;
 import com.f8.turnera.domain.repositories.IAppointmentRepository;
+import com.f8.turnera.domain.services.IAgendaService;
+import com.f8.turnera.domain.services.IAppointmentService;
+import com.f8.turnera.domain.services.ICustomerService;
+import com.f8.turnera.domain.services.IEmailService;
+import com.f8.turnera.domain.services.IOrganizationService;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,9 +45,9 @@ public class AppointmentService implements IAppointmentService {
     private IEmailService emailService;
 
     @Override
-    public AppointmentDTO book(AppointmentSaveDTO appointmentSaveDTO) {
-        OrganizationDTO organization = organizationService.findById(appointmentSaveDTO.getAgenda().getOrganizationId());
-        AgendaDTO agenda = agendaService.findById(appointmentSaveDTO.getAgenda().getId());
+    public AppointmentDTO book(String token, AppointmentSaveDTO appointmentSaveDTO) {
+        OrganizationDTO organization = organizationService.findById(token);
+        AgendaDTO agenda = agendaService.findById(token, appointmentSaveDTO.getAgenda().getId());
 
         ModelMapper modelMapper = new ModelMapper();
 
@@ -61,7 +68,7 @@ public class AppointmentService implements IAppointmentService {
             appointmentRepository.save(appointment);
             AppointmentDTO appointmentDTO = modelMapper.map(appointment, AppointmentDTO.class);
             agenda.setLastAppointment(appointmentDTO);
-            agendaService.update(agenda);
+            agendaService.update(token, agenda);
         } catch (Exception e) {
             throw new RuntimeException("Hubo un problema al guardar los datos. Por favor reintente nuevamente.");
         }
@@ -72,8 +79,9 @@ public class AppointmentService implements IAppointmentService {
     }
 
     @Override
-    public AppointmentDTO absent(AppointmentChangeStatusDTO appointmentChangeStatusDTO) {
-        Optional<Appointment> appointment = appointmentRepository.findById(appointmentChangeStatusDTO.getId());
+    public AppointmentDTO absent(String token, AppointmentChangeStatusDTO appointmentChangeStatusDTO) {
+        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
+        Optional<Appointment> appointment = appointmentRepository.findByIdAndOrganizationId(appointmentChangeStatusDTO.getId(), orgId);
         if (!appointment.isPresent()) {
             throw new RuntimeException("Turno no encontrado - " + appointmentChangeStatusDTO.getId());
         }
@@ -91,8 +99,9 @@ public class AppointmentService implements IAppointmentService {
     }
 
     @Override
-    public AppointmentDTO cancel(AppointmentChangeStatusDTO appointmentChangeStatusDTO) {
-        Optional<Appointment> appointment = appointmentRepository.findById(appointmentChangeStatusDTO.getId());
+    public AppointmentDTO cancel(String token, AppointmentChangeStatusDTO appointmentChangeStatusDTO) {
+        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
+        Optional<Appointment> appointment = appointmentRepository.findByIdAndOrganizationId(appointmentChangeStatusDTO.getId(), orgId);
         if (!appointment.isPresent()) {
             throw new RuntimeException("Turno no encontrado - " + appointmentChangeStatusDTO.getId());
         }
@@ -112,8 +121,9 @@ public class AppointmentService implements IAppointmentService {
     }
 
     @Override
-    public AppointmentDTO attend(AppointmentChangeStatusDTO appointmentChangeStatusDTO) {
-        Optional<Appointment> appointment = appointmentRepository.findById(appointmentChangeStatusDTO.getId());
+    public AppointmentDTO attend(String token, AppointmentChangeStatusDTO appointmentChangeStatusDTO) {
+        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
+        Optional<Appointment> appointment = appointmentRepository.findByIdAndOrganizationId(appointmentChangeStatusDTO.getId(), orgId);
         if (!appointment.isPresent()) {
             throw new RuntimeException("Turno no encontrado - " + appointmentChangeStatusDTO.getId());
         }
@@ -131,8 +141,9 @@ public class AppointmentService implements IAppointmentService {
     }
 
     @Override
-    public AppointmentDTO finalize(AppointmentChangeStatusDTO appointmentChangeStatusDTO) {
-        Optional<Appointment> appointment = appointmentRepository.findById(appointmentChangeStatusDTO.getId());
+    public AppointmentDTO finalize(String token, AppointmentChangeStatusDTO appointmentChangeStatusDTO) {
+        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
+        Optional<Appointment> appointment = appointmentRepository.findByIdAndOrganizationId(appointmentChangeStatusDTO.getId(), orgId);
         if (!appointment.isPresent()) {
             throw new RuntimeException("Turno no encontrado - " + appointmentChangeStatusDTO.getId());
         }

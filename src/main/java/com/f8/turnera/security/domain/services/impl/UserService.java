@@ -1,4 +1,4 @@
-package com.f8.turnera.security.domain.services;
+package com.f8.turnera.security.domain.services.impl;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -15,7 +15,8 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
-import com.f8.turnera.config.TokenProvider;
+import com.f8.turnera.config.SecurityConstants;
+import com.f8.turnera.config.TokenUtil;
 import com.f8.turnera.domain.dtos.OrganizationDTO;
 import com.f8.turnera.domain.entities.Organization;
 import com.f8.turnera.domain.services.IEmailService;
@@ -26,6 +27,7 @@ import com.f8.turnera.security.domain.dtos.UserFilterDTO;
 import com.f8.turnera.security.domain.entities.Profile;
 import com.f8.turnera.security.domain.entities.User;
 import com.f8.turnera.security.domain.repositories.IUserRepository;
+import com.f8.turnera.security.domain.services.IUserService;
 import com.f8.turnera.util.Constants;
 import com.f8.turnera.util.EmailValidation;
 
@@ -55,8 +57,10 @@ public class UserService implements IUserService {
     private EntityManager em;
 
     @Override
-    public Page<UserDTO> findAllByFilter(UserFilterDTO filter) {
+    public Page<UserDTO> findAllByFilter(String token, UserFilterDTO filter) {
         ModelMapper modelMapper = new ModelMapper();
+
+        filter.setOrganizationId(Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
 
         Page<User> users = findByCriteria(filter);
         return users.map(user -> modelMapper.map(user, UserDTO.class));
@@ -69,6 +73,7 @@ public class UserService implements IUserService {
         List<Predicate> predicates = new ArrayList<>();
 
         Root<User> root = cq.from(User.class);
+        predicates.add(cb.equal(root.join("organization", JoinType.LEFT), filter.getOrganizationId()));
         if (filter.getFirstName() != null) {
             Predicate predicate = cb.like(cb.lower(root.get("firstName")),
                     "%" + filter.getFirstName().toLowerCase() + "%");
@@ -82,10 +87,6 @@ public class UserService implements IUserService {
         if (filter.getUsername() != null) {
             Predicate predicate = cb.like(cb.lower(root.get("username")),
                     "%" + filter.getUsername().toLowerCase() + "%");
-            predicates.add(predicate);
-        }
-        if (filter.getOrganizationId() != null) {
-            Predicate predicate = cb.equal(root.join("organization", JoinType.LEFT), filter.getOrganizationId());
             predicates.add(predicate);
         }
         if (filter.getActive() != null) {
@@ -135,8 +136,9 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public UserDTO findById(Long id) {
-        Optional<User> user = userRepository.findById(id);
+    public UserDTO findById(String token, Long id) {
+        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
+        Optional<User> user = userRepository.findByIdAndOrganizationId(id, orgId);
         if (!user.isPresent()) {
             throw new RuntimeException("Usuario no encontrado - " + id);
         }
@@ -147,10 +149,10 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public UserDTO create(UserDTO userDTO) {
+    public UserDTO create(String token, UserDTO userDTO) {
         ModelMapper modelMapper = new ModelMapper();
 
-        OrganizationDTO organization = organizationService.findById(userDTO.getOrganizationId());
+        OrganizationDTO organization = organizationService.findById(token);
 
         Optional<User> existingUser = userRepository.findByUsername(userDTO.getUsername());
         if (existingUser.isPresent()) {
@@ -178,8 +180,9 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public UserDTO update(UserDTO userDTO) {
-        Optional<User> user = userRepository.findById(userDTO.getId());
+    public UserDTO update(String token, UserDTO userDTO) {
+        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
+        Optional<User> user = userRepository.findByIdAndOrganizationId(userDTO.getId(), orgId);
         if (!user.isPresent()) {
             throw new RuntimeException("Usuario no encontrado - " + userDTO.getId());
         }
@@ -221,13 +224,14 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public void deleteById(Long id) {
-        Optional<User> user = userRepository.findById(id);
+    public void deleteById(String token, Long id) {
+        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
+        Optional<User> user = userRepository.findByIdAndOrganizationId(id, orgId);
         if (!user.isPresent()) {
             throw new RuntimeException("Usuario no encontrado - " + id);
         }
 
-        if (TokenProvider.getUsernameWithoutToken().equals(user.get().getUsername())) {
+        if (TokenUtil.getUsernameWithoutToken().equals(user.get().getUsername())) {
             throw new RuntimeException("No puede eliminar su propio Usuario.");
         }
 

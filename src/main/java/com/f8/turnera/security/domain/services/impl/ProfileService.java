@@ -1,4 +1,4 @@
-package com.f8.turnera.security.domain.services;
+package com.f8.turnera.security.domain.services.impl;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -15,6 +15,8 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import com.f8.turnera.config.SecurityConstants;
+import com.f8.turnera.config.TokenUtil;
 import com.f8.turnera.domain.dtos.OrganizationDTO;
 import com.f8.turnera.domain.entities.Organization;
 import com.f8.turnera.domain.services.IOrganizationService;
@@ -25,6 +27,8 @@ import com.f8.turnera.security.domain.entities.Permission;
 import com.f8.turnera.security.domain.entities.Profile;
 import com.f8.turnera.security.domain.entities.User;
 import com.f8.turnera.security.domain.repositories.IProfileRepository;
+import com.f8.turnera.security.domain.services.IPermissionService;
+import com.f8.turnera.security.domain.services.IProfileService;
 import com.f8.turnera.util.Constants;
 
 import org.modelmapper.ModelMapper;
@@ -52,8 +56,10 @@ public class ProfileService implements IProfileService {
     private EntityManager em;
 
     @Override
-    public Page<ProfileDTO> findAllByFilter(ProfileFilterDTO filter) {
+    public Page<ProfileDTO> findAllByFilter(String token, ProfileFilterDTO filter) {
         ModelMapper modelMapper = new ModelMapper();
+
+        filter.setOrganizationId(Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
 
         Page<Profile> profiles = findByCriteria(filter);
         return profiles.map(profile -> modelMapper.map(profile, ProfileDTO.class));
@@ -66,13 +72,10 @@ public class ProfileService implements IProfileService {
         List<Predicate> predicates = new ArrayList<>();
 
         Root<Profile> root = cq.from(Profile.class);
+        predicates.add(cb.equal(root.join("organization", JoinType.LEFT), filter.getOrganizationId()));
         if (filter.getDescription() != null) {
             Predicate predicate = cb.like(cb.lower(root.get("description")),
                     "%" + filter.getDescription().toLowerCase() + "%");
-            predicates.add(predicate);
-        }
-        if (filter.getOrganizationId() != null) {
-            Predicate predicate = cb.equal(root.join("organization", JoinType.LEFT), filter.getOrganizationId());
             predicates.add(predicate);
         }
         if (filter.getActive() != null) {
@@ -110,8 +113,9 @@ public class ProfileService implements IProfileService {
     }
 
     @Override
-    public ProfileDTO findById(Long id) {
-        Optional<Profile> profile = profileRepository.findById(id);
+    public ProfileDTO findById(String token, Long id) {
+        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
+        Optional<Profile> profile = profileRepository.findByIdAndOrganizationId(id, orgId);
         if (!profile.isPresent()) {
             throw new RuntimeException("Perfil no encontrado - " + id);
         }
@@ -122,10 +126,10 @@ public class ProfileService implements IProfileService {
     }
 
     @Override
-    public ProfileDTO create(ProfileDTO profileDTO) {
+    public ProfileDTO create(String token, ProfileDTO profileDTO) {
         ModelMapper modelMapper = new ModelMapper();
 
-        OrganizationDTO organization = organizationService.findById(profileDTO.getOrganizationId());
+        OrganizationDTO organization = organizationService.findById(token);
 
         Profile profile = modelMapper.map(profileDTO, Profile.class);
         profile.setCreatedDate(LocalDateTime.now());
@@ -142,8 +146,9 @@ public class ProfileService implements IProfileService {
     }
 
     @Override
-    public ProfileDTO update(ProfileDTO profileDTO) {
-        Optional<Profile> profile = profileRepository.findById(profileDTO.getId());
+    public ProfileDTO update(String token, ProfileDTO profileDTO) {
+        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
+        Optional<Profile> profile = profileRepository.findByIdAndOrganizationId(profileDTO.getId(), orgId);
         if (!profile.isPresent()) {
             throw new RuntimeException("Perfil no encontrado - " + profileDTO.getId());
         }
@@ -185,8 +190,9 @@ public class ProfileService implements IProfileService {
     }
 
     @Override
-    public void deleteById(Long id) {
-        Optional<Profile> profile = profileRepository.findById(id);
+    public void deleteById(String token, Long id) {
+        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
+        Optional<Profile> profile = profileRepository.findByIdAndOrganizationId(id, orgId);
         if (!profile.isPresent()) {
             throw new RuntimeException("Perfil no encontrado - " + id);
         }

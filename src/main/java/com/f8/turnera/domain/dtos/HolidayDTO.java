@@ -8,7 +8,6 @@ import lombok.Data;
 public class HolidayDTO {
 
     private Long id;
-    private Long organizationId;
     private Boolean active;
     private LocalDate date;
     private String description;

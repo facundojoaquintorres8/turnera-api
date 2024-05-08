@@ -1,5 +1,6 @@
 package com.f8.turnera.controllers;
 
+import com.f8.turnera.config.SecurityConstants;
 import com.f8.turnera.domain.dtos.ResourceDTO;
 import com.f8.turnera.domain.dtos.ResourceFilterDTO;
 import com.f8.turnera.domain.services.IResourceService;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,40 +28,50 @@ public class ResourceController {
 
     @GetMapping("/resources/findAllByFilter")
     @PreAuthorize("hasAuthority('resources.read')")
-    public ResponseEntity<Page<ResourceDTO>> findAllByFilter(ResourceFilterDTO filter) {
-        Page<ResourceDTO> result = service.findAllByFilter(filter);
+    public ResponseEntity<Page<ResourceDTO>> findAllByFilter(
+            @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
+            ResourceFilterDTO filter) {
+        Page<ResourceDTO> result = service.findAllByFilter(token, filter);
 
         return ResponseEntity.ok().body(result);
     }
 
     @GetMapping("/resources/{id}")
     @PreAuthorize("hasAuthority('resources.read')")
-    public ResponseEntity<ResourceDTO> getResource(@PathVariable Long id) {
-        ResourceDTO result = service.findById(id);
+    public ResponseEntity<ResourceDTO> getResource(
+            @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
+            @PathVariable Long id) {
+        ResourceDTO result = service.findById(token, id);
 
         return ResponseEntity.ok().body(result);
     }
 
     @PostMapping("/resources")
     @PreAuthorize("hasAuthority('resources.write')")
-    public ResponseEntity<ResourceDTO> createResource(@RequestBody ResourceDTO resourceDTO) {
-        ResourceDTO result = service.create(resourceDTO);
+    public ResponseEntity<ResourceDTO> createResource(
+            @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
+            @RequestBody ResourceDTO resourceDTO) {
+        ResourceDTO result = service.create(token, resourceDTO);
 
         return ResponseEntity.ok().body(result);
     }
 
     @PutMapping("/resources")
     @PreAuthorize("hasAuthority('resources.write')")
-    public ResponseEntity<ResourceDTO> updateResource(@RequestBody ResourceDTO resourceDTO) {
-        ResourceDTO result = service.update(resourceDTO);
+    public ResponseEntity<ResourceDTO> updateResource(
+            @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
+            @RequestBody ResourceDTO resourceDTO) {
+        ResourceDTO result = service.update(token, resourceDTO);
 
         return ResponseEntity.ok().body(result);
     }
 
     @DeleteMapping("resources/{id}")
     @PreAuthorize("hasAuthority('resources.delete')")
-    public ResponseEntity<Void> deleteResource(@PathVariable Long id) {
-        service.deleteById(id);
+    public ResponseEntity<Void> deleteResource(
+            @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
+            @PathVariable Long id) {
+        service.deleteById(token, id);
 
         return ResponseEntity.ok().build();
     }

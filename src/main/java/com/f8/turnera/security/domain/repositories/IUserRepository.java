@@ -9,6 +9,8 @@ import com.f8.turnera.security.domain.entities.User;
 
 @Repository
 public interface IUserRepository extends JpaRepository<User, Long> {
+    Optional<User> findByIdAndOrganizationId(Long id, Long orgId);
+    Optional<User> findByUsernameAndOrganizationId(String username, Long orgId);
     Optional<User> findByUsername(String username);
     Optional<User> findByActivationKey(String activationKey);
     Optional<User> findByResetKey(String resetKey);

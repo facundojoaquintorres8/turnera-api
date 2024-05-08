@@ -1,5 +1,6 @@
 package com.f8.turnera.security.controllers;
 
+import com.f8.turnera.config.SecurityConstants;
 import com.f8.turnera.security.domain.dtos.ActivateDTO;
 import com.f8.turnera.security.domain.dtos.PasswordChangeDTO;
 import com.f8.turnera.security.domain.dtos.PasswordResetDTO;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -47,8 +49,10 @@ public class AccountController {
     }
 
     @PostMapping("/account/password-change")
-    public ResponseEntity<UserDTO> passwordChange(@RequestBody PasswordChangeDTO passwordChangeDTO) {
-        UserDTO result = service.passwordChange(passwordChangeDTO);
+    public ResponseEntity<UserDTO> passwordChange(
+            @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
+            @RequestBody PasswordChangeDTO passwordChangeDTO) {
+        UserDTO result = service.passwordChange(token, passwordChangeDTO);
         return ResponseEntity.ok().body(result);
     }
 }

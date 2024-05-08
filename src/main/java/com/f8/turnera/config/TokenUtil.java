@@ -1,6 +1,12 @@
 package com.f8.turnera.config;
 
-import io.jsonwebtoken.*;
+import java.security.Key;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.stream.Collectors;
+
+import javax.crypto.spec.SecretKeySpec;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -11,17 +17,18 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.f8.turnera.security.domain.entities.User;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.stream.Collectors;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.JwtParser;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 
-public class TokenProvider {
+public class TokenUtil {
 
 	@Value("${jwt.secret.key}")
     private static String secretKey;
 
-	private TokenProvider() {
+	private TokenUtil() {
 	}
 
 	public static String generateToken(Authentication authentication) {
@@ -29,7 +36,7 @@ public class TokenProvider {
 				.collect(Collectors.joining(","));
 
 		return Jwts.builder().setSubject(((User) authentication.getPrincipal()).getUsername())
-				.claim(SecurityConstants.AUTHORITIES_KEY, authorities)
+				.claim(SecurityConstants.PERMISSIONS_KEY, authorities)
 				.signWith(SignatureAlgorithm.HS256, secretKey).setIssuer("f8")
 				.setExpiration(new Date(System.currentTimeMillis() + SecurityConstants.EXPIRATION_TIME * 1000))
 				.compact();
@@ -44,7 +51,7 @@ public class TokenProvider {
 		final Claims claims = claimsJws.getBody();
 
 		final Collection<SimpleGrantedAuthority> authorities = Arrays
-				.stream(claims.get(SecurityConstants.AUTHORITIES_KEY).toString().split(","))
+				.stream(claims.get(SecurityConstants.PERMISSIONS_KEY).toString().split(","))
 				.map(SimpleGrantedAuthority::new).collect(Collectors.toList());
 
 		org.springframework.security.core.userdetails.User principal = new org.springframework.security.core.userdetails.User(
@@ -64,6 +71,16 @@ public class TokenProvider {
 	public static String getUsernameWithoutToken() {
 		org.springframework.security.core.userdetails.User user = (org.springframework.security.core.userdetails.User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 		return user.getUsername();
+	}
+
+	public static Object getClaimByToken(String token, String claimKey) {
+		token = token.replace(SecurityConstants.TOKEN_PREFIX, "");
+
+		final byte[] apiKeySecretBytes = secretKey.getBytes();
+		final Key signingKey = new SecretKeySpec(apiKeySecretBytes, SignatureAlgorithm.HS256.getJcaName());
+		Claims claims = Jwts.parser().setSigningKey(signingKey).parseClaimsJws(token).getBody();
+
+		return claims.get(claimKey);
 	}
 
 }

@@ -8,15 +8,15 @@ import com.f8.turnera.domain.dtos.OrganizationDTO;
 
 public interface ICustomerService {
 
-    public Page<CustomerDTO> findAllByFilter(CustomerFilterDTO filter);
+    public Page<CustomerDTO> findAllByFilter(String token, CustomerFilterDTO filter);
 
-    public CustomerDTO findById(Long id);
+    public CustomerDTO findById(String token, Long id);
 
-    public CustomerDTO create(CustomerDTO customerDTO);
+    public CustomerDTO create(String token, CustomerDTO customerDTO);
 
     public CustomerDTO createQuick(CustomerDTO customerDTO, OrganizationDTO organizationDTO);
 
-    public CustomerDTO update(CustomerDTO customerDTO);
+    public CustomerDTO update(String token, CustomerDTO customerDTO);
 
-    public void deleteById(Long id);
+    public void deleteById(String token, Long id);
 }

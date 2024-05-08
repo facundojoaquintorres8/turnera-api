@@ -6,7 +6,6 @@ import lombok.Data;
 public class ResourceDTO {
 
     private Long id;
-    private Long organizationId;
     private Boolean active;
     private String description;
     private String code;

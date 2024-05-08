@@ -7,13 +7,13 @@ import com.f8.turnera.security.domain.dtos.UserFilterDTO;
 
 public interface IUserService {
 
-    public Page<UserDTO> findAllByFilter(UserFilterDTO filter);
+    public Page<UserDTO> findAllByFilter(String token, UserFilterDTO filter);
 
-    public UserDTO findById(Long id);
+    public UserDTO findById(String token, Long id);
 
-    public UserDTO create(UserDTO userDTO);
+    public UserDTO create(String token, UserDTO userDTO);
 
-    public UserDTO update(UserDTO userDTO);
+    public UserDTO update(String token, UserDTO userDTO);
 
-    public void deleteById(Long id);
+    public void deleteById(String token, Long id);
 }

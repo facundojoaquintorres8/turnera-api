@@ -1,4 +1,4 @@
-package com.f8.turnera.domain.services;
+package com.f8.turnera.domain.services.impl;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -13,6 +13,8 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import com.f8.turnera.config.SecurityConstants;
+import com.f8.turnera.config.TokenUtil;
 import com.f8.turnera.domain.dtos.OrganizationDTO;
 import com.f8.turnera.domain.dtos.ResourceDTO;
 import com.f8.turnera.domain.dtos.ResourceFilterDTO;
@@ -20,6 +22,9 @@ import com.f8.turnera.domain.entities.Organization;
 import com.f8.turnera.domain.entities.Resource;
 import com.f8.turnera.domain.entities.ResourceType;
 import com.f8.turnera.domain.repositories.IResourceRepository;
+import com.f8.turnera.domain.services.IOrganizationService;
+import com.f8.turnera.domain.services.IResourceService;
+import com.f8.turnera.exception.NoContentException;
 import com.f8.turnera.util.Constants;
 
 import org.modelmapper.ModelMapper;
@@ -44,8 +49,10 @@ public class ResourceService implements IResourceService {
     private EntityManager em;
 
     @Override
-    public Page<ResourceDTO> findAllByFilter(ResourceFilterDTO filter) {
+    public Page<ResourceDTO> findAllByFilter(String token, ResourceFilterDTO filter) {
         ModelMapper modelMapper = new ModelMapper();
+
+        filter.setOrganizationId(Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
 
         Page<Resource> resources = findByCriteria(filter);
         return resources.map(resource -> modelMapper.map(resource, ResourceDTO.class));
@@ -58,6 +65,7 @@ public class ResourceService implements IResourceService {
         List<Predicate> predicates = new ArrayList<>();
 
         Root<Resource> root = cq.from(Resource.class);
+        predicates.add(cb.equal(root.join("organization", JoinType.LEFT), filter.getOrganizationId()));
         if (filter.getDescription() != null) {
             Predicate predicate = cb.like(cb.lower(root.get("description")),
                     "%" + filter.getDescription().toLowerCase() + "%");
@@ -70,10 +78,6 @@ public class ResourceService implements IResourceService {
         if (filter.getResourceTypeDescription() != null) {
             Predicate predicate = cb.like(cb.lower(root.join("resourceType", JoinType.LEFT).get("description")),
                     "%" + filter.getResourceTypeDescription().toLowerCase() + "%");
-            predicates.add(predicate);
-        }
-        if (filter.getOrganizationId() != null) {
-            Predicate predicate = cb.equal(root.join("organization", JoinType.LEFT), filter.getOrganizationId());
             predicates.add(predicate);
         }
         if (filter.getResourceTypeId() != null) {
@@ -132,10 +136,11 @@ public class ResourceService implements IResourceService {
     }
 
     @Override
-    public ResourceDTO findById(Long id) {
-        Optional<Resource> resource = resourceRepository.findById(id);
+    public ResourceDTO findById(String token, Long id) {
+        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
+        Optional<Resource> resource = resourceRepository.findByIdAndOrganizationId(id, orgId);
         if (!resource.isPresent()) {
-            throw new RuntimeException("Recurso no encontrado - " + id);
+            throw new NoContentException("Recurso no encontrado - " + id);
         }
 
         ModelMapper modelMapper = new ModelMapper();
@@ -144,10 +149,10 @@ public class ResourceService implements IResourceService {
     }
 
     @Override
-    public ResourceDTO create(ResourceDTO resourceDTO) {
+    public ResourceDTO create(String token, ResourceDTO resourceDTO) {
         ModelMapper modelMapper = new ModelMapper();
 
-        OrganizationDTO organization = organizationService.findById(resourceDTO.getOrganizationId());
+        OrganizationDTO organization = organizationService.findById(token);
 
         Resource resource = modelMapper.map(resourceDTO, Resource.class);
         resource.setCreatedDate(LocalDateTime.now());
@@ -164,8 +169,9 @@ public class ResourceService implements IResourceService {
     }
 
     @Override
-    public ResourceDTO update(ResourceDTO resourceDTO) {
-        Optional<Resource> resource = resourceRepository.findById(resourceDTO.getId());
+    public ResourceDTO update(String token, ResourceDTO resourceDTO) {
+        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
+        Optional<Resource> resource = resourceRepository.findByIdAndOrganizationId(resourceDTO.getId(), orgId);
         if (!resource.isPresent()) {
             throw new RuntimeException("Recurso no encontrado - " + resourceDTO.getId());
         }
@@ -189,8 +195,9 @@ public class ResourceService implements IResourceService {
     }
 
     @Override
-    public void deleteById(Long id) {
-        Optional<Resource> resource = resourceRepository.findById(id);
+    public void deleteById(String token, Long id) {
+        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
+        Optional<Resource> resource = resourceRepository.findByIdAndOrganizationId(id, orgId);
         if (!resource.isPresent()) {
             throw new RuntimeException("Recurso no encontrado - " + id);
         }

@@ -7,7 +7,6 @@ public class CustomerDTO {
 
     private Long id;
     private Boolean active;
-    private Long organizationId;
     private String businessName;
     private String brandName;
     private String cuit;

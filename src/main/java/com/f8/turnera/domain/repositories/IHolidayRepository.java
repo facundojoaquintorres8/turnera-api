@@ -10,5 +10,6 @@ import com.f8.turnera.domain.entities.Holiday;
 
 @Repository
 public interface IHolidayRepository extends JpaRepository<Holiday, Long> {
+    Optional<Holiday> findByIdAndOrganizationId(Long id, Long orgId);
     Optional<Holiday> findByDateAndOrganizationId(LocalDate date, Long organizationId);
 }

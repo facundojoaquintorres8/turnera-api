@@ -4,12 +4,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import com.f8.turnera.domain.dtos.ResponseDTO;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.ConstraintViolationException;
@@ -36,8 +37,7 @@ public class ErrorHandler {
 
                 log.error(errorMessage.toString());
                 // return error info object with standard json
-                ResponseDTO response = new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "Campos inválidos.",
-                                request.getRequestURI());
+                ResponseDTO response = new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "Campos inválidos.");
                 return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
 
@@ -49,13 +49,11 @@ public class ErrorHandler {
 
                 // convert errors to standard string
                 StringBuilder errorMessage = new StringBuilder();
-                errorMessage.append("Mensaje: ").append(e.getMessage()).append(" StackTrace: ")
-                                .append(errors.toString());
+                errorMessage.append("Message: ").append(e.getMessage());
 
                 log.error(errorMessage.toString());
                 // return error info object with standard json
-                ResponseDTO response = new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "Campos inválidos.",
-                                request.getRequestURI());
+                ResponseDTO response = new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "Campos inválidos.");
                 return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
 
@@ -64,16 +62,14 @@ public class ErrorHandler {
                 StringWriter errors = new StringWriter();
                 e.printStackTrace(new PrintWriter(errors));
 
-                // convert errors to standard string
                 StringBuilder errorMessage = new StringBuilder();
-                errorMessage.append("Mensaje: ").append(e.getMessage()).append(" StackTrace: ")
+                errorMessage.append("Message: ").append(e.getMessage()).append(" StackTrace: ")
                                 .append(errors.toString());
 
                 log.error(errorMessage.toString());
-                // return error info object with standard json
+
                 ResponseDTO response = new ResponseDTO(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                                "No se pudo realizar la operación. Intente más tarde.",
-                                request.getRequestURI());
+                                "No se pudo realizar la operación. Intente más tarde.");
                 return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
@@ -82,15 +78,13 @@ public class ErrorHandler {
                 StringWriter errors = new StringWriter();
                 e.printStackTrace(new PrintWriter(errors));
 
-                // convert errors to standard string
                 StringBuilder errorMessage = new StringBuilder();
-                errorMessage.append("Mensaje: ").append(e.getMessage()).append(" StackTrace: ")
+                errorMessage.append("Message: ").append(e.getMessage()).append(" StackTrace: ")
                                 .append(errors.toString());
 
                 log.error(errorMessage.toString());
-                // return error info object with standard json
-                ResponseDTO response = new ResponseDTO(HttpStatus.FORBIDDEN.value(), "Acceso no permitido.",
-                                request.getRequestURI());
+
+                ResponseDTO response = new ResponseDTO(HttpStatus.FORBIDDEN.value(), "Acceso no permitido.");
                 return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
         }
 }

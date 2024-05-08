@@ -1,4 +1,4 @@
-package com.f8.turnera.security.domain.services;
+package com.f8.turnera.security.domain.services.impl;
 
 import java.util.List;
 import java.util.Optional;
@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import com.f8.turnera.security.domain.dtos.PermissionDTO;
 import com.f8.turnera.security.domain.entities.Permission;
 import com.f8.turnera.security.domain.repositories.IPermissionRepository;
+import com.f8.turnera.security.domain.services.IPermissionService;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;

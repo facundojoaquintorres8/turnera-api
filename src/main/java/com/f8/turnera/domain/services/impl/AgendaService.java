@@ -1,4 +1,4 @@
-package com.f8.turnera.domain.services;
+package com.f8.turnera.domain.services.impl;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -19,6 +19,8 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import com.f8.turnera.config.SecurityConstants;
+import com.f8.turnera.config.TokenUtil;
 import com.f8.turnera.domain.dtos.AgendaDTO;
 import com.f8.turnera.domain.dtos.AgendaSaveDTO;
 import com.f8.turnera.domain.dtos.AppointmentFilterDTO;
@@ -31,6 +33,10 @@ import com.f8.turnera.domain.entities.Appointment;
 import com.f8.turnera.domain.entities.Organization;
 import com.f8.turnera.domain.entities.Resource;
 import com.f8.turnera.domain.repositories.IAgendaRepository;
+import com.f8.turnera.domain.services.IAgendaService;
+import com.f8.turnera.domain.services.IHolidayService;
+import com.f8.turnera.domain.services.IOrganizationService;
+import com.f8.turnera.domain.services.IResourceService;
 import com.f8.turnera.util.Constants;
 
 import org.modelmapper.ModelMapper;
@@ -61,8 +67,10 @@ public class AgendaService implements IAgendaService {
     private EntityManager em;
 
     @Override
-    public Page<AgendaDTO> findAllByFilter(AppointmentFilterDTO filter) {
+    public Page<AgendaDTO> findAllByFilter(String token, AppointmentFilterDTO filter) {
         ModelMapper modelMapper = new ModelMapper();
+
+        filter.setOrganizationId(Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
 
         Page<Agenda> agendas = findByCriteria(filter);
         return agendas.map(agenda -> modelMapper.map(agenda, AgendaDTO.class));
@@ -75,6 +83,7 @@ public class AgendaService implements IAgendaService {
         List<Predicate> predicates = new ArrayList<>();
 
         Root<Agenda> root = cq.from(Agenda.class);
+        predicates.add(cb.equal(root.join("organization", JoinType.LEFT), filter.getOrganizationId()));
         if (filter.getResourceId() != null) {
             Predicate predicate = cb.equal(root.join("resource", JoinType.LEFT), filter.getResourceId());
             predicates.add(predicate);
@@ -82,10 +91,6 @@ public class AgendaService implements IAgendaService {
         if (filter.getResourceDescription() != null) {
             Predicate predicate = cb.like(cb.lower(root.join("resource", JoinType.LEFT).get("description")),
                     "%" + filter.getResourceDescription().toLowerCase() + "%");
-            predicates.add(predicate);
-        }
-        if (filter.getOrganizationId() != null) {
-            Predicate predicate = cb.equal(root.join("organization", JoinType.LEFT), filter.getOrganizationId());
             predicates.add(predicate);
         }
         if (filter.getResourceTypeId() != null) {
@@ -182,8 +187,9 @@ public class AgendaService implements IAgendaService {
     }
 
     @Override
-    public AgendaDTO findById(Long id) {
-        Optional<Agenda> agenda = agendaRepository.findById(id);
+    public AgendaDTO findById(String token, Long id) {
+        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
+        Optional<Agenda> agenda = agendaRepository.findByIdAndOrganizationId(id, orgId);
         if (!agenda.isPresent()) {
             throw new RuntimeException("Disponibilidad no encontrada - " + id);
         }
@@ -194,12 +200,12 @@ public class AgendaService implements IAgendaService {
     }
 
     @Override
-    public Boolean create(AgendaSaveDTO agendaSaveDTO) {
+    public Boolean create(String token, AgendaSaveDTO agendaSaveDTO) {
         ModelMapper modelMapper = new ModelMapper();
         // validations
-        OrganizationDTO organizationDTO = organizationService.findById(agendaSaveDTO.getOrganizationId());
+        OrganizationDTO organizationDTO = organizationService.findById(token);
         Organization organization = modelMapper.map(organizationDTO, Organization.class);
-        ResourceDTO resourceDTO = resourceService.findById(agendaSaveDTO.getResource().getId());
+        ResourceDTO resourceDTO = resourceService.findById(token, agendaSaveDTO.getResource().getId());
         Resource resource = modelMapper.map(resourceDTO, Resource.class);
 
         if (agendaSaveDTO.getStartDate().isAfter(agendaSaveDTO.getEndDate())) {
@@ -241,7 +247,7 @@ public class AgendaService implements IAgendaService {
         final List<LocalDate> holidayDates = new ArrayList<LocalDate>();
         if (agendaSaveDTO.getOmitHolidays()) {
             // TODO: podría agregar fechas para filtra más
-            holidayDates.addAll(holidayService.findAllDatesToAgenda());
+            holidayDates.addAll(holidayService.findAllDatesToAgenda(token));
         }
 
         // to validate after generating agendas
@@ -507,8 +513,9 @@ public class AgendaService implements IAgendaService {
     }
 
     @Override
-    public AgendaDTO update(AgendaDTO agendaDTO) {
-        Optional<Agenda> agenda = agendaRepository.findById(agendaDTO.getId());
+    public AgendaDTO update(String token, AgendaDTO agendaDTO) {
+        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
+        Optional<Agenda> agenda = agendaRepository.findByIdAndOrganizationId(agendaDTO.getId(), orgId);
         if (!agenda.isPresent()) {
             throw new RuntimeException("Disponibilidad no encontrada - " + agendaDTO.getId());
         }
@@ -527,8 +534,9 @@ public class AgendaService implements IAgendaService {
     }
 
     @Override
-    public void deleteById(Long id) {
-        Optional<Agenda> agenda = agendaRepository.findById(id);
+    public void deleteById(String token, Long id) {
+        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
+        Optional<Agenda> agenda = agendaRepository.findByIdAndOrganizationId(id, orgId);
         if (!agenda.isPresent()) {
             throw new RuntimeException("Disponibilidad no encontrada - " + id);
         }
@@ -543,8 +551,9 @@ public class AgendaService implements IAgendaService {
     }
 
     @Override
-    public AgendaDTO desactivate(Long id) {
-        Optional<Agenda> agenda = agendaRepository.findById(id);
+    public AgendaDTO desactivate(String token, Long id) {
+        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
+        Optional<Agenda> agenda = agendaRepository.findByIdAndOrganizationId(id, orgId);
         if (!agenda.isPresent()) {
             throw new RuntimeException("Disponibilidad no encontrada - " + id);
         }

@@ -1,5 +1,6 @@
 package com.f8.turnera.security.controllers;
 
+import com.f8.turnera.config.SecurityConstants;
 import com.f8.turnera.security.domain.dtos.ProfileDTO;
 import com.f8.turnera.security.domain.dtos.ProfileFilterDTO;
 import com.f8.turnera.security.domain.services.IProfileService;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,40 +28,50 @@ public class ProfileController {
 
     @GetMapping("/profiles/findAllByFilter")
     @PreAuthorize("hasAuthority('profiles.read')")
-    public ResponseEntity<Page<ProfileDTO>> findAllByFilter(ProfileFilterDTO filter) {
-        Page<ProfileDTO> result = service.findAllByFilter(filter);
+    public ResponseEntity<Page<ProfileDTO>> findAllByFilter(
+            @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
+            ProfileFilterDTO filter) {
+        Page<ProfileDTO> result = service.findAllByFilter(token, filter);
 
         return ResponseEntity.ok().body(result);
     }
 
     @GetMapping("/profiles/{id}")
     @PreAuthorize("hasAuthority('profiles.read')")
-    public ResponseEntity<ProfileDTO> getProfile(@PathVariable Long id) {
-        ProfileDTO result = service.findById(id);
+    public ResponseEntity<ProfileDTO> getProfile(
+            @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
+            @PathVariable Long id) {
+        ProfileDTO result = service.findById(token, id);
 
         return ResponseEntity.ok().body(result);
     }
 
     @PostMapping("/profiles")
     @PreAuthorize("hasAuthority('profiles.write')")
-    public ResponseEntity<ProfileDTO> createProfile(@RequestBody ProfileDTO profileDTO) {
-        ProfileDTO result = service.create(profileDTO);
+    public ResponseEntity<ProfileDTO> createProfile(
+            @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
+            @RequestBody ProfileDTO profileDTO) {
+        ProfileDTO result = service.create(token, profileDTO);
 
         return ResponseEntity.ok().body(result);
     }
 
     @PutMapping("/profiles")
     @PreAuthorize("hasAuthority('profiles.write')")
-    public ResponseEntity<ProfileDTO> updateProfile(@RequestBody ProfileDTO profileDTO) {
-        ProfileDTO result = service.update(profileDTO);
+    public ResponseEntity<ProfileDTO> updateProfile(
+            @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
+            @RequestBody ProfileDTO profileDTO) {
+        ProfileDTO result = service.update(token, profileDTO);
 
         return ResponseEntity.ok().body(result);
     }
 
     @DeleteMapping("profiles/{id}")
     @PreAuthorize("hasAuthority('profiles.delete')")
-    public ResponseEntity<Void> deleteProfile(@PathVariable Long id) {
-        service.deleteById(id);
+    public ResponseEntity<Void> deleteProfile(
+            @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
+            @PathVariable Long id) {
+        service.deleteById(token, id);
 
         return ResponseEntity.ok().build();
     }

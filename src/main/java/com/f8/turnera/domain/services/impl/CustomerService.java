@@ -1,4 +1,4 @@
-package com.f8.turnera.domain.services;
+package com.f8.turnera.domain.services.impl;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -13,12 +13,16 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import com.f8.turnera.config.SecurityConstants;
+import com.f8.turnera.config.TokenUtil;
 import com.f8.turnera.domain.dtos.CustomerDTO;
 import com.f8.turnera.domain.dtos.CustomerFilterDTO;
 import com.f8.turnera.domain.dtos.OrganizationDTO;
 import com.f8.turnera.domain.entities.Customer;
 import com.f8.turnera.domain.entities.Organization;
 import com.f8.turnera.domain.repositories.ICustomerRepository;
+import com.f8.turnera.domain.services.ICustomerService;
+import com.f8.turnera.domain.services.IOrganizationService;
 import com.f8.turnera.util.Constants;
 import com.f8.turnera.util.EmailValidation;
 
@@ -44,8 +48,10 @@ public class CustomerService implements ICustomerService {
     private EntityManager em;
 
     @Override
-    public Page<CustomerDTO> findAllByFilter(CustomerFilterDTO filter) {
+    public Page<CustomerDTO> findAllByFilter(String token, CustomerFilterDTO filter) {
         ModelMapper modelMapper = new ModelMapper();
+
+        filter.setOrganizationId(Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
 
         Page<Customer> customers = findByCriteria(filter);
 
@@ -59,6 +65,7 @@ public class CustomerService implements ICustomerService {
         List<Predicate> predicates = new ArrayList<>();
 
         Root<Customer> root = cq.from(Customer.class);
+        predicates.add(cb.equal(root.join("organization", JoinType.LEFT), filter.getOrganizationId()));
         if (filter.getBusinessName() != null) {
             Predicate predicate = cb.like(cb.lower(root.get("businessName")),
                     "%" + filter.getBusinessName().toLowerCase() + "%");
@@ -75,10 +82,6 @@ public class CustomerService implements ICustomerService {
         }
         if (filter.getPhone1() != null) {
             Predicate predicate = cb.like(cb.lower(root.get("phone1")), "%" + filter.getPhone1().toLowerCase() + "%");
-            predicates.add(predicate);
-        }
-        if (filter.getOrganizationId() != null) {
-            Predicate predicate = cb.equal(root.join("organization", JoinType.LEFT), filter.getOrganizationId());
             predicates.add(predicate);
         }
         if (filter.getActive() != null) {
@@ -138,8 +141,9 @@ public class CustomerService implements ICustomerService {
     }
 
     @Override
-    public CustomerDTO findById(Long id) {
-        Optional<Customer> customer = customerRepository.findById(id);
+    public CustomerDTO findById(String token, Long id) {
+        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
+        Optional<Customer> customer = customerRepository.findByIdAndOrganizationId(id, orgId);
         if (!customer.isPresent()) {
             throw new RuntimeException("Cliente no encontrado - " + id);
         }
@@ -150,10 +154,10 @@ public class CustomerService implements ICustomerService {
     }
 
     @Override
-    public CustomerDTO create(CustomerDTO customerDTO) {
+    public CustomerDTO create(String token, CustomerDTO customerDTO) {
         ModelMapper modelMapper = new ModelMapper();
 
-        OrganizationDTO organization = organizationService.findById(customerDTO.getOrganizationId());
+        OrganizationDTO organization = organizationService.findById(token);
 
         if (!EmailValidation.validateEmail(customerDTO.getEmail())) {
             throw new RuntimeException("El Correo Electrónico es inválido.");
@@ -194,8 +198,9 @@ public class CustomerService implements ICustomerService {
     }
 
     @Override
-    public CustomerDTO update(CustomerDTO customerDTO) {
-        Optional<Customer> customer = customerRepository.findById(customerDTO.getId());
+    public CustomerDTO update(String token, CustomerDTO customerDTO) {
+        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
+        Optional<Customer> customer = customerRepository.findByIdAndOrganizationId(customerDTO.getId(), orgId);
         if (!customer.isPresent()) {
             throw new RuntimeException("Cliente no encontrado - " + customerDTO.getId());
         }
@@ -227,8 +232,9 @@ public class CustomerService implements ICustomerService {
     }
 
     @Override
-    public void deleteById(Long id) {
-        Optional<Customer> customer = customerRepository.findById(id);
+    public void deleteById(String token, Long id) {
+        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
+        Optional<Customer> customer = customerRepository.findByIdAndOrganizationId(id, orgId);
         if (!customer.isPresent()) {
             throw new RuntimeException("Cliente no encontrado - " + id);
         }

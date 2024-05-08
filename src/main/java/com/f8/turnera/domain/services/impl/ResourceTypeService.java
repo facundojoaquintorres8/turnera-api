@@ -1,4 +1,4 @@
-package com.f8.turnera.domain.services;
+package com.f8.turnera.domain.services.impl;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -13,12 +13,16 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import com.f8.turnera.config.SecurityConstants;
+import com.f8.turnera.config.TokenUtil;
 import com.f8.turnera.domain.dtos.OrganizationDTO;
 import com.f8.turnera.domain.dtos.ResourceTypeDTO;
 import com.f8.turnera.domain.dtos.ResourceTypeFilterDTO;
 import com.f8.turnera.domain.entities.Organization;
 import com.f8.turnera.domain.entities.ResourceType;
 import com.f8.turnera.domain.repositories.IResourceTypeRepository;
+import com.f8.turnera.domain.services.IOrganizationService;
+import com.f8.turnera.domain.services.IResourceTypeService;
 import com.f8.turnera.util.Constants;
 
 import org.modelmapper.ModelMapper;
@@ -43,8 +47,10 @@ public class ResourceTypeService implements IResourceTypeService {
     private EntityManager em;
 
     @Override
-    public Page<ResourceTypeDTO> findAllByFilter(ResourceTypeFilterDTO filter) {
+    public Page<ResourceTypeDTO> findAllByFilter(String token, ResourceTypeFilterDTO filter) {
         ModelMapper modelMapper = new ModelMapper();
+
+        filter.setOrganizationId(Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
 
         Page<ResourceType> resourcesTypes = findByCriteria(filter);
         return resourcesTypes.map(resourceType -> modelMapper.map(resourceType, ResourceTypeDTO.class));
@@ -57,13 +63,10 @@ public class ResourceTypeService implements IResourceTypeService {
         List<Predicate> predicates = new ArrayList<>();
 
         Root<ResourceType> root = cq.from(ResourceType.class);
+        predicates.add(cb.equal(root.join("organization", JoinType.LEFT), filter.getOrganizationId()));
         if (filter.getDescription() != null) {
             Predicate predicate = cb.like(cb.lower(root.get("description")),
                     "%" + filter.getDescription().toLowerCase() + "%");
-            predicates.add(predicate);
-        }
-        if (filter.getOrganizationId() != null) {
-            Predicate predicate = cb.equal(root.join("organization", JoinType.LEFT), filter.getOrganizationId());
             predicates.add(predicate);
         }
         if (filter.getActive() != null) {
@@ -102,8 +105,9 @@ public class ResourceTypeService implements IResourceTypeService {
     }
 
     @Override
-    public ResourceTypeDTO findById(Long id) {
-        Optional<ResourceType> resourceType = resourceTypeRepository.findById(id);
+    public ResourceTypeDTO findById(String token, Long id) {
+        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
+        Optional<ResourceType> resourceType = resourceTypeRepository.findByIdAndOrganizationId(id, orgId);
         if (!resourceType.isPresent()) {
             throw new RuntimeException("Tipo de Recurso no encontrado - " + id);
         }
@@ -114,10 +118,10 @@ public class ResourceTypeService implements IResourceTypeService {
     }
 
     @Override
-    public ResourceTypeDTO create(ResourceTypeDTO resourceTypeDTO) {
+    public ResourceTypeDTO create(String token, ResourceTypeDTO resourceTypeDTO) {
         ModelMapper modelMapper = new ModelMapper();
 
-        OrganizationDTO organization = organizationService.findById(resourceTypeDTO.getOrganizationId());
+        OrganizationDTO organization = organizationService.findById(token);
 
         ResourceType resourceType = modelMapper.map(resourceTypeDTO, ResourceType.class);
         resourceType.setCreatedDate(LocalDateTime.now());
@@ -133,8 +137,9 @@ public class ResourceTypeService implements IResourceTypeService {
     }
 
     @Override
-    public ResourceTypeDTO update(ResourceTypeDTO resourceTypeDTO) {
-        Optional<ResourceType> resourceType = resourceTypeRepository.findById(resourceTypeDTO.getId());
+    public ResourceTypeDTO update(String token, ResourceTypeDTO resourceTypeDTO) {
+        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
+        Optional<ResourceType> resourceType = resourceTypeRepository.findByIdAndOrganizationId(resourceTypeDTO.getId(), orgId);
         if (!resourceType.isPresent()) {
             throw new RuntimeException("Tipo de Recurso no encontrado - " + resourceTypeDTO.getId());
         }
@@ -162,8 +167,9 @@ public class ResourceTypeService implements IResourceTypeService {
     }
 
     @Override
-    public void deleteById(Long id) {
-        Optional<ResourceType> resourceType = resourceTypeRepository.findById(id);
+    public void deleteById(String token, Long id) {
+        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
+        Optional<ResourceType> resourceType = resourceTypeRepository.findByIdAndOrganizationId(id, orgId);
         if (!resourceType.isPresent()) {
             throw new RuntimeException("Tipo de Recurso no encontrado - " + id);
         }

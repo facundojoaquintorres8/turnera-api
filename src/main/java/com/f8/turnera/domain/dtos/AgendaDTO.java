@@ -8,7 +8,6 @@ import lombok.Data;
 public class AgendaDTO {
 
     private Long id;
-    private Long organizationId;
     private Boolean active;
     private ResourceDTO resource;
     private ZonedDateTime startDate;
