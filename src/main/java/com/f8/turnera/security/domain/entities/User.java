@@ -22,10 +22,12 @@ import com.f8.turnera.domain.entities.Organization;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Entity
 @Table(name = "users")
 @Data
+@EqualsAndHashCode(exclude = "profiles")
 public class User {
 
     @Id

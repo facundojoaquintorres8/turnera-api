@@ -1,11 +1,20 @@
 package com.f8.turnera.security.domain.services.impl;
 
+import java.security.Key;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.HashMap;
+
+import javax.crypto.spec.SecretKeySpec;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
 
 import com.f8.turnera.config.SecurityConstants;
 import com.f8.turnera.exception.BadRequestException;
@@ -20,12 +29,6 @@ import com.f8.turnera.security.domain.repositories.IUserRepository;
 import com.f8.turnera.security.domain.services.IAuthService;
 import com.f8.turnera.util.EmailValidation;
 import com.f8.turnera.util.MapperHelper;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -44,7 +47,6 @@ public class AuthService implements IAuthService {
 
     @Override
     public ResponseDTO login(LoginDTO authDTO) throws Exception {
-
         SessionUserDTO result = new SessionUserDTO();
 
         Optional<User> user = userRepository.findByUsername(authDTO.getUsername());
@@ -72,12 +74,13 @@ public class AuthService implements IAuthService {
 		claims.put(SecurityConstants.ORGANIZATION_KEY, user.get().getOrganization().getId());
 		claims.put(SecurityConstants.PERMISSIONS_KEY, permissionsSet.stream().collect(Collectors.joining(",")));
         
+        final Key signingKey = new SecretKeySpec(secretKey.getBytes(), SignatureAlgorithm.HS256.getJcaName());
         String token = Jwts.builder()
                 .setClaims(claims)
                 .setIssuer("f8")
                 .setSubject(authDTO.getUsername())
                 .setExpiration(new Date(System.currentTimeMillis() + SecurityConstants.EXPIRATION_TIME))
-                .signWith(SignatureAlgorithm.HS256, secretKey).compact();
+                .signWith(SignatureAlgorithm.HS256, signingKey).compact();
         result.setToken(token);
 
         return new ResponseDTO(HttpStatus.OK.value(), result);
