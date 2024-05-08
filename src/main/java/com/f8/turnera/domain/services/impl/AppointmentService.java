@@ -11,6 +11,7 @@ import com.f8.turnera.domain.dtos.AppointmentDTO;
 import com.f8.turnera.domain.dtos.AppointmentSaveDTO;
 import com.f8.turnera.domain.dtos.AppointmentStatusEnum;
 import com.f8.turnera.domain.dtos.OrganizationDTO;
+import com.f8.turnera.domain.dtos.ResponseDTO;
 import com.f8.turnera.domain.entities.Agenda;
 import com.f8.turnera.domain.entities.Appointment;
 import com.f8.turnera.domain.entities.Customer;
@@ -25,6 +26,7 @@ import com.f8.turnera.exception.NoContentException;
 import com.f8.turnera.util.MapperHelper;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -46,9 +48,9 @@ public class AppointmentService implements IAppointmentService {
     private IEmailService emailService;
 
     @Override
-    public AppointmentDTO book(String token, AppointmentSaveDTO appointmentSaveDTO) throws Exception {
-        OrganizationDTO organization = organizationService.findById(token);
-        AgendaDTO agenda = agendaService.findById(token, appointmentSaveDTO.getAgenda().getId());
+    public ResponseDTO book(String token, AppointmentSaveDTO appointmentSaveDTO) throws Exception {
+        OrganizationDTO organization = (OrganizationDTO) organizationService.findById(token).getData();
+        AgendaDTO agenda = (AgendaDTO) agendaService.findById(token, appointmentSaveDTO.getAgenda().getId()).getData();
 
         Customer customer = null;
         if (appointmentSaveDTO.getCustomer().getId() != null) {
@@ -70,11 +72,11 @@ public class AppointmentService implements IAppointmentService {
 
         emailService.sendBookedAppointmentEmail(appointment);
 
-        return MapperHelper.modelMapper().map(appointment, AppointmentDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(), MapperHelper.modelMapper().map(appointment, AppointmentDTO.class));
     }
 
     @Override
-    public AppointmentDTO absent(String token, AppointmentChangeStatusDTO appointmentChangeStatusDTO) throws Exception {
+    public ResponseDTO absent(String token, AppointmentChangeStatusDTO appointmentChangeStatusDTO) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Appointment> appointment = appointmentRepository.findByIdAndOrganizationId(appointmentChangeStatusDTO.getId(), orgId);
         if (!appointment.isPresent()) {
@@ -85,11 +87,11 @@ public class AppointmentService implements IAppointmentService {
 
         appointmentRepository.save(appointment.get());
 
-        return MapperHelper.modelMapper().map(appointment.get(), AppointmentDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(), MapperHelper.modelMapper().map(appointment.get(), AppointmentDTO.class));
     }
 
     @Override
-    public AppointmentDTO cancel(String token, AppointmentChangeStatusDTO appointmentChangeStatusDTO) throws Exception {
+    public ResponseDTO cancel(String token, AppointmentChangeStatusDTO appointmentChangeStatusDTO) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Appointment> appointment = appointmentRepository.findByIdAndOrganizationId(appointmentChangeStatusDTO.getId(), orgId);
         if (!appointment.isPresent()) {
@@ -102,11 +104,11 @@ public class AppointmentService implements IAppointmentService {
 
         appointmentRepository.save(appointment.get());
 
-        return MapperHelper.modelMapper().map(appointment.get(), AppointmentDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(), MapperHelper.modelMapper().map(appointment.get(), AppointmentDTO.class));
     }
 
     @Override
-    public AppointmentDTO attend(String token, AppointmentChangeStatusDTO appointmentChangeStatusDTO) throws Exception {
+    public ResponseDTO attend(String token, AppointmentChangeStatusDTO appointmentChangeStatusDTO) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Appointment> appointment = appointmentRepository.findByIdAndOrganizationId(appointmentChangeStatusDTO.getId(), orgId);
         if (!appointment.isPresent()) {
@@ -117,11 +119,11 @@ public class AppointmentService implements IAppointmentService {
 
         appointmentRepository.save(appointment.get());
 
-        return MapperHelper.modelMapper().map(appointment.get(), AppointmentDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(), MapperHelper.modelMapper().map(appointment.get(), AppointmentDTO.class));
     }
 
     @Override
-    public AppointmentDTO finalize(String token, AppointmentChangeStatusDTO appointmentChangeStatusDTO) throws Exception {
+    public ResponseDTO finalize(String token, AppointmentChangeStatusDTO appointmentChangeStatusDTO) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Appointment> appointment = appointmentRepository.findByIdAndOrganizationId(appointmentChangeStatusDTO.getId(), orgId);
         if (!appointment.isPresent()) {
@@ -134,6 +136,6 @@ public class AppointmentService implements IAppointmentService {
 
         appointmentRepository.save(appointment.get());
 
-        return MapperHelper.modelMapper().map(appointment.get(), AppointmentDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(), MapperHelper.modelMapper().map(appointment.get(), AppointmentDTO.class));
     }
 }

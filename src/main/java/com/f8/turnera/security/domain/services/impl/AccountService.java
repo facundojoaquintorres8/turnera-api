@@ -17,6 +17,7 @@ import com.f8.turnera.security.domain.dtos.PasswordChangeDTO;
 import com.f8.turnera.security.domain.dtos.PasswordResetDTO;
 import com.f8.turnera.security.domain.dtos.PasswordResetRequestDTO;
 import com.f8.turnera.security.domain.dtos.RegisterDTO;
+import com.f8.turnera.security.domain.dtos.ResponseDTO;
 import com.f8.turnera.security.domain.dtos.UserDTO;
 import com.f8.turnera.security.domain.entities.Permission;
 import com.f8.turnera.security.domain.entities.Profile;
@@ -29,6 +30,7 @@ import com.f8.turnera.util.EmailValidation;
 import com.f8.turnera.util.MapperHelper;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -56,7 +58,7 @@ public class AccountService implements IAccountService {
     private IEmailService emailService;
 
     @Override
-    public UserDTO register(RegisterDTO registerDTO) throws Exception {
+    public ResponseDTO register(RegisterDTO registerDTO) throws Exception {
         // TODO: hacer transactional por si falla
         Optional<User> existingUser = userRepository.findByUsername(registerDTO.getUsername());
         if (existingUser.isPresent()) {
@@ -91,11 +93,11 @@ public class AccountService implements IAccountService {
 
         emailService.sendOrganizationActivationEmail(user);
 
-        return MapperHelper.modelMapper().map(user, UserDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(), MapperHelper.modelMapper().map(user, UserDTO.class));
     }
 
     @Override
-    public UserDTO activate(ActivateDTO activateDTO) throws Exception {
+    public ResponseDTO activate(ActivateDTO activateDTO) throws Exception {
         Optional<User> user = userRepository.findByActivationKey(activateDTO.getActivationKey());
         if (!user.isPresent()) {
             throw new BadRequestException("La clave de activación no está asociada a ningún Usuario.");
@@ -116,7 +118,7 @@ public class AccountService implements IAccountService {
         userRepository.save(user.get());
         organizationRepository.save(user.get().getOrganization());
         
-        return MapperHelper.modelMapper().map(user.get(), UserDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(), MapperHelper.modelMapper().map(user.get(), UserDTO.class));
     }
 
     private void addDefaultProfiles(User user) {
@@ -128,7 +130,7 @@ public class AccountService implements IAccountService {
     }
 
     @Override
-    public UserDTO passwordResetRequest(PasswordResetRequestDTO passwordResetRequestDTO) throws Exception {
+    public ResponseDTO passwordResetRequest(PasswordResetRequestDTO passwordResetRequestDTO) throws Exception {
         Optional<User> user = userRepository.findByUsername(passwordResetRequestDTO.getUsername());
         if (!user.isPresent()) {
             throw new NoContentException("Usuario no encontrado.");
@@ -145,11 +147,11 @@ public class AccountService implements IAccountService {
 
         emailService.sendPasswordResetRequestEmail(user.get());
 
-        return MapperHelper.modelMapper().map(user.get(), UserDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(), MapperHelper.modelMapper().map(user.get(), UserDTO.class));
     }
 
     @Override
-    public UserDTO passwordReset(PasswordResetDTO passwordResetDTO) throws Exception {
+    public ResponseDTO passwordReset(PasswordResetDTO passwordResetDTO) throws Exception {
         Optional<User> user = userRepository.findByResetKey(passwordResetDTO.getResetKey());
         if (!user.isPresent()) {
             throw new BadRequestException("La Clave de Reseteo no está asociada a ningún Usuario.");
@@ -167,11 +169,11 @@ public class AccountService implements IAccountService {
 
         userRepository.save(user.get());
         
-        return MapperHelper.modelMapper().map(user.get(), UserDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(), MapperHelper.modelMapper().map(user.get(), UserDTO.class));
     }
 
     @Override
-    public UserDTO passwordChange(String token, PasswordChangeDTO passwordChangeDTO) throws Exception {
+    public ResponseDTO passwordChange(String token, PasswordChangeDTO passwordChangeDTO) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<User> user = userRepository.findByUsernameAndOrganizationId(passwordChangeDTO.getUsername(), orgId);
         if (!user.isPresent()) {
@@ -186,7 +188,7 @@ public class AccountService implements IAccountService {
 
         userRepository.save(user.get());
         
-        return MapperHelper.modelMapper().map(user.get(), UserDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(), MapperHelper.modelMapper().map(user.get(), UserDTO.class));
     }
 
 }

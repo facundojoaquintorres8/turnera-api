@@ -1,13 +1,13 @@
 package com.f8.turnera.controllers;
 
 import com.f8.turnera.config.SecurityConstants;
-import com.f8.turnera.domain.dtos.AgendaDTO;
 import com.f8.turnera.domain.dtos.AgendaSaveDTO;
 import com.f8.turnera.domain.dtos.AppointmentFilterDTO;
+import com.f8.turnera.domain.dtos.ResponseDTO;
 import com.f8.turnera.domain.services.IAgendaService;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -25,49 +25,38 @@ import org.springframework.web.bind.annotation.RestController;
 public class AgendaController {
 
     @Autowired
-    private IAgendaService agendaService;
+    private IAgendaService service;
 
     @GetMapping("/agendas/findAllByFilter")
     @PreAuthorize("hasAuthority('agendas.read')")
-    public ResponseEntity<Page<AgendaDTO>> findAllByFilter(
+    public ResponseEntity<ResponseDTO> findAllByFilter(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            AppointmentFilterDTO filter) throws Exception {
-        Page<AgendaDTO> result = agendaService.findAllByFilter(token, filter);
-        return ResponseEntity.ok().body(result);
+            AppointmentFilterDTO request) throws Exception {
+        return new ResponseEntity<>(service.findAllByFilter(token, request), HttpStatus.OK);
     }
 
     @PostMapping("/agendas")
     @PreAuthorize("hasAuthority('agendas.write')")
-    public ResponseEntity<Boolean> createAgenda(
+    public ResponseEntity<ResponseDTO> createAgenda(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @RequestBody AgendaSaveDTO agendaDTO) throws Exception {
-        Boolean result = agendaService.create(token, agendaDTO);
-
-        if (!result) {
-            return ResponseEntity.noContent().build();
-        }
-
-        return ResponseEntity.ok().body(result);
+            @RequestBody AgendaSaveDTO request) throws Exception {
+        return new ResponseEntity<>(service.create(token, request), HttpStatus.OK);
     }
 
     @DeleteMapping("agendas/{id}")
     @PreAuthorize("hasAuthority('agendas.delete')")
-    public ResponseEntity<Void> deleteAgenda(
+    public ResponseEntity<ResponseDTO> deleteAgenda(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
             @PathVariable Long id) throws Exception {
-        agendaService.deleteById(token, id);
-
-        return ResponseEntity.ok().build();
+        return new ResponseEntity<>(service.deleteById(token, id), HttpStatus.OK);
     }
 
     @PutMapping("agendas/{id}/desactivate")
     @PreAuthorize("hasAuthority('agendas.read')")
-    public ResponseEntity<AgendaDTO> desactivateAgenda(
+    public ResponseEntity<ResponseDTO> desactivateAgenda(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
             @PathVariable Long id) throws Exception {
-        AgendaDTO result = agendaService.desactivate(token, id);
-
-        return ResponseEntity.ok().body(result);
+        return new ResponseEntity<>(service.desactivate(token, id), HttpStatus.OK);
     }
 
 }

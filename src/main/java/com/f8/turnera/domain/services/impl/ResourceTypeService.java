@@ -18,6 +18,7 @@ import com.f8.turnera.config.TokenUtil;
 import com.f8.turnera.domain.dtos.OrganizationDTO;
 import com.f8.turnera.domain.dtos.ResourceTypeDTO;
 import com.f8.turnera.domain.dtos.ResourceTypeFilterDTO;
+import com.f8.turnera.domain.dtos.ResponseDTO;
 import com.f8.turnera.domain.entities.Organization;
 import com.f8.turnera.domain.entities.ResourceType;
 import com.f8.turnera.domain.repositories.IResourceTypeRepository;
@@ -32,6 +33,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -47,11 +49,12 @@ public class ResourceTypeService implements IResourceTypeService {
     private EntityManager em;
 
     @Override
-    public Page<ResourceTypeDTO> findAllByFilter(String token, ResourceTypeFilterDTO filter) throws Exception {
+    public ResponseDTO findAllByFilter(String token, ResourceTypeFilterDTO filter) throws Exception {
         filter.setOrganizationId(Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
 
         Page<ResourceType> resourcesTypes = findByCriteria(filter);
-        return resourcesTypes.map(resourceType -> MapperHelper.modelMapper().map(resourceType, ResourceTypeDTO.class));
+        return new ResponseDTO(HttpStatus.OK.value(), resourcesTypes
+                .map(resourceType -> MapperHelper.modelMapper().map(resourceType, ResourceTypeDTO.class)));
     }
 
     private Page<ResourceType> findByCriteria(ResourceTypeFilterDTO filter) {
@@ -103,19 +106,19 @@ public class ResourceTypeService implements IResourceTypeService {
     }
 
     @Override
-    public ResourceTypeDTO findById(String token, Long id) throws Exception {
+    public ResponseDTO findById(String token, Long id) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<ResourceType> resourceType = resourceTypeRepository.findByIdAndOrganizationId(id, orgId);
         if (!resourceType.isPresent()) {
             throw new NoContentException("Tipo de Recurso no encontrado - " + id);
         }
 
-        return MapperHelper.modelMapper().map(resourceType.get(), ResourceTypeDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(), MapperHelper.modelMapper().map(resourceType.get(), ResourceTypeDTO.class));
     }
 
     @Override
-    public ResourceTypeDTO create(String token, ResourceTypeDTO resourceTypeDTO) throws Exception {
-        OrganizationDTO organization = organizationService.findById(token);
+    public ResponseDTO create(String token, ResourceTypeDTO resourceTypeDTO) throws Exception {
+        OrganizationDTO organization = (OrganizationDTO) organizationService.findById(token).getData();
 
         ResourceType resourceType = MapperHelper.modelMapper().map(resourceTypeDTO, ResourceType.class);
         resourceType.setCreatedDate(LocalDateTime.now());
@@ -124,11 +127,11 @@ public class ResourceTypeService implements IResourceTypeService {
 
         resourceTypeRepository.save(resourceType);
 
-        return MapperHelper.modelMapper().map(resourceType, ResourceTypeDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(), MapperHelper.modelMapper().map(resourceType, ResourceTypeDTO.class));
     }
 
     @Override
-    public ResourceTypeDTO update(String token, ResourceTypeDTO resourceTypeDTO) throws Exception {
+    public ResponseDTO update(String token, ResourceTypeDTO resourceTypeDTO) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<ResourceType> resourceType = resourceTypeRepository.findByIdAndOrganizationId(resourceTypeDTO.getId(), orgId);
         if (!resourceType.isPresent()) {
@@ -148,11 +151,11 @@ public class ResourceTypeService implements IResourceTypeService {
             resourceTypeRepository.save(rt);
         });
 
-        return MapperHelper.modelMapper().map(resourceType.get(), ResourceTypeDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(), MapperHelper.modelMapper().map(resourceType.get(), ResourceTypeDTO.class));
     }
 
     @Override
-    public void deleteById(String token, Long id) throws Exception {
+    public ResponseDTO deleteById(String token, Long id) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<ResourceType> resourceType = resourceTypeRepository.findByIdAndOrganizationId(id, orgId);
         if (!resourceType.isPresent()) {
@@ -160,5 +163,7 @@ public class ResourceTypeService implements IResourceTypeService {
         }
 
         resourceTypeRepository.delete(resourceType.get());
+
+        return new ResponseDTO(HttpStatus.OK.value(), "Borrado exitoso!");
     }
 }

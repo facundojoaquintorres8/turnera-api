@@ -1,11 +1,11 @@
 package com.f8.turnera.security.controllers;
 
-import java.util.List;
-
-import com.f8.turnera.security.domain.dtos.PermissionDTO;
+import com.f8.turnera.security.domain.dtos.ResponseDTO;
 import com.f8.turnera.security.domain.services.IPermissionService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,7 +20,7 @@ public class PermissionController {
 
     @GetMapping("/permissions")
     @PreAuthorize("hasAuthority('profiles.write')")
-    public List<PermissionDTO> findAll() throws Exception {
-        return service.findAll();
+    public ResponseEntity<ResponseDTO> findAll() throws Exception {
+        return new ResponseEntity<>(service.findAll(), HttpStatus.OK);
     }
 }

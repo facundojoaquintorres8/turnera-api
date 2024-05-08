@@ -5,6 +5,7 @@ import java.util.Optional;
 import com.f8.turnera.config.SecurityConstants;
 import com.f8.turnera.config.TokenUtil;
 import com.f8.turnera.domain.dtos.OrganizationDTO;
+import com.f8.turnera.domain.dtos.ResponseDTO;
 import com.f8.turnera.domain.entities.Organization;
 import com.f8.turnera.domain.repositories.IOrganizationRepository;
 import com.f8.turnera.domain.services.IOrganizationService;
@@ -13,6 +14,7 @@ import com.f8.turnera.util.EmailValidation;
 import com.f8.turnera.util.MapperHelper;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -22,19 +24,22 @@ public class OrganizationService implements IOrganizationService {
     private IOrganizationRepository organizationRepository;
 
     @Override
-    public OrganizationDTO findById(String token) throws Exception {
-        Long organizationId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
+    public ResponseDTO findById(String token) throws Exception {
+        Long organizationId = Long
+                .parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Organization> organization = organizationRepository.findById(organizationId);
         if (!organization.isPresent()) {
             throw new NoContentException("Organización no encontrada - " + organizationId);
         }
 
-        return MapperHelper.modelMapper().map(organization.get(), OrganizationDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(),
+                MapperHelper.modelMapper().map(organization.get(), OrganizationDTO.class));
     }
 
     @Override
-    public OrganizationDTO update(String token, OrganizationDTO organizationDTO) throws Exception {
-        Long organizationId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
+    public ResponseDTO update(String token, OrganizationDTO organizationDTO) throws Exception {
+        Long organizationId = Long
+                .parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Organization> organization = organizationRepository.findById(organizationId);
         if (!organization.isPresent()) {
             throw new NoContentException("Organización no encontrada - " + organizationId);
@@ -53,8 +58,9 @@ public class OrganizationService implements IOrganizationService {
 
             organizationRepository.save(o);
         });
-        
-        return MapperHelper.modelMapper().map(organization.get(), OrganizationDTO.class);
+
+        return new ResponseDTO(HttpStatus.OK.value(),
+                MapperHelper.modelMapper().map(organization.get(), OrganizationDTO.class));
     }
 
 }

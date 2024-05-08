@@ -13,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.f8.turnera.config.TokenUtil;
 import com.f8.turnera.domain.dtos.ResourceDTO;
+import com.f8.turnera.domain.dtos.ResponseDTO;
 import com.f8.turnera.domain.entities.Resource;
 import com.f8.turnera.domain.repositories.IResourceRepository;
 import com.f8.turnera.domain.services.IOrganizationService;
@@ -71,11 +72,11 @@ public class ResourceServiceTest {
                     .thenReturn(resourceOptionalMock);
 
             // execute action
-            ResourceDTO response = resourceService.findById("fake_token", 123L);
+            ResponseDTO response = resourceService.findById("fake_token", 123L);
 
             // asserts
             assertNotNull(response);
-            assertEquals(123, response.getId());
+            assertEquals(123, ((ResourceDTO) response.getData()).getId());
 
             verify(resourceRepositoryMock, times(1)).findByIdAndOrganizationId(anyLong(), anyLong());
         }

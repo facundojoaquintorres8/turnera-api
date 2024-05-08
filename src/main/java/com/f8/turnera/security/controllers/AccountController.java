@@ -6,10 +6,11 @@ import com.f8.turnera.security.domain.dtos.PasswordChangeDTO;
 import com.f8.turnera.security.domain.dtos.PasswordResetDTO;
 import com.f8.turnera.security.domain.dtos.PasswordResetRequestDTO;
 import com.f8.turnera.security.domain.dtos.RegisterDTO;
-import com.f8.turnera.security.domain.dtos.UserDTO;
+import com.f8.turnera.security.domain.dtos.ResponseDTO;
 import com.f8.turnera.security.domain.services.IAccountService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,34 +26,30 @@ public class AccountController {
     private IAccountService service;
 
     @PostMapping("/account/register")
-    public ResponseEntity<UserDTO> register(@RequestBody RegisterDTO registerDTO) throws Exception {
-        UserDTO result = service.register(registerDTO);
-        return ResponseEntity.ok().body(result);
+    public ResponseEntity<ResponseDTO> register(@RequestBody RegisterDTO request) throws Exception {
+        return new ResponseEntity<>(service.register(request), HttpStatus.OK);
     }
 
     @PostMapping("/account/activate")
-    public ResponseEntity<UserDTO> activate(@RequestBody ActivateDTO activateDTO) throws Exception {
-        UserDTO result = service.activate(activateDTO);
-        return ResponseEntity.ok().body(result);
+    public ResponseEntity<ResponseDTO> activate(@RequestBody ActivateDTO request) throws Exception {
+        return new ResponseEntity<>(service.activate(request), HttpStatus.OK);
     }
 
     @PostMapping("/account/password-reset/request")
-    public ResponseEntity<UserDTO> passwordResetRequest(@RequestBody PasswordResetRequestDTO passwordResetRequestDTO) throws Exception {
-        UserDTO result = service.passwordResetRequest(passwordResetRequestDTO);
-        return ResponseEntity.ok().body(result);
+    public ResponseEntity<ResponseDTO> passwordResetRequest(@RequestBody PasswordResetRequestDTO request)
+            throws Exception {
+        return new ResponseEntity<>(service.passwordResetRequest(request), HttpStatus.OK);
     }
 
     @PostMapping("/account/password-reset")
-    public ResponseEntity<UserDTO> passwordReset(@RequestBody PasswordResetDTO passwordResetDTO) throws Exception {
-        UserDTO result = service.passwordReset(passwordResetDTO);
-        return ResponseEntity.ok().body(result);
+    public ResponseEntity<ResponseDTO> passwordReset(@RequestBody PasswordResetDTO request) throws Exception {
+        return new ResponseEntity<>(service.passwordReset(request), HttpStatus.OK);
     }
 
     @PostMapping("/account/password-change")
-    public ResponseEntity<UserDTO> passwordChange(
+    public ResponseEntity<ResponseDTO> passwordChange(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @RequestBody PasswordChangeDTO passwordChangeDTO) throws Exception {
-        UserDTO result = service.passwordChange(token, passwordChangeDTO);
-        return ResponseEntity.ok().body(result);
+            @RequestBody PasswordChangeDTO request) throws Exception {
+        return new ResponseEntity<>(service.passwordChange(token, request), HttpStatus.OK);
     }
 }

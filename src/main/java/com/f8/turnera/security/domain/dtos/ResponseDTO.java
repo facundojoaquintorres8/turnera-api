@@ -1,4 +1,4 @@
-package com.f8.turnera.domain.dtos;
+package com.f8.turnera.security.domain.dtos;
 
 import lombok.Data;
 

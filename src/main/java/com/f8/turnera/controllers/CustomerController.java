@@ -3,10 +3,11 @@ package com.f8.turnera.controllers;
 import com.f8.turnera.config.SecurityConstants;
 import com.f8.turnera.domain.dtos.CustomerDTO;
 import com.f8.turnera.domain.dtos.CustomerFilterDTO;
+import com.f8.turnera.domain.dtos.ResponseDTO;
 import com.f8.turnera.domain.services.ICustomerService;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -28,51 +29,41 @@ public class CustomerController {
 
     @GetMapping("/customers/findAllByFilter")
     @PreAuthorize("hasAuthority('customers.read')")
-    public ResponseEntity<Page<CustomerDTO>> findAllByFilter(
+    public ResponseEntity<ResponseDTO> findAllByFilter(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            CustomerFilterDTO filter) throws Exception {
-        Page<CustomerDTO> result = service.findAllByFilter(token, filter);
-
-        return ResponseEntity.ok().body(result);
+            CustomerFilterDTO request) throws Exception {
+        return new ResponseEntity<>(service.findAllByFilter(token, request), HttpStatus.OK);
     }
 
     @GetMapping("/customers/{id}")
     @PreAuthorize("hasAuthority('customers.read')")
-    public ResponseEntity<CustomerDTO> getCustomer(
+    public ResponseEntity<ResponseDTO> getCustomer(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
             @PathVariable Long id) throws Exception {
-        CustomerDTO result = service.findById(token, id);
-
-        return ResponseEntity.ok().body(result);
+        return new ResponseEntity<>(service.findById(token, id), HttpStatus.OK);
     }
 
     @PostMapping("/customers")
     @PreAuthorize("hasAuthority('customers.write')")
-    public ResponseEntity<CustomerDTO> createCustomer(
+    public ResponseEntity<ResponseDTO> createCustomer(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @RequestBody CustomerDTO customerDTO) throws Exception {
-        CustomerDTO result = service.create(token, customerDTO);
-
-        return ResponseEntity.ok().body(result);
+            @RequestBody CustomerDTO request) throws Exception {
+        return new ResponseEntity<>(service.create(token, request), HttpStatus.OK);
     }
 
     @PutMapping("/customers")
     @PreAuthorize("hasAuthority('customers.write')")
-    public ResponseEntity<CustomerDTO> updateCustomer(
+    public ResponseEntity<ResponseDTO> updateCustomer(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @RequestBody CustomerDTO customerDTO) throws Exception {
-        CustomerDTO result = service.update(token, customerDTO);
-
-        return ResponseEntity.ok().body(result);
+            @RequestBody CustomerDTO request) throws Exception {
+        return new ResponseEntity<>(service.update(token, request), HttpStatus.OK);
     }
 
     @DeleteMapping("customers/{id}")
     @PreAuthorize("hasAuthority('customers.delete')")
-    public ResponseEntity<Void> deleteCustomer(
+    public ResponseEntity<ResponseDTO> deleteCustomer(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
             @PathVariable Long id) throws Exception {
-        service.deleteById(token, id);
-
-        return ResponseEntity.ok().build();
+        return new ResponseEntity<>(service.deleteById(token, id), HttpStatus.OK);
     }
 }

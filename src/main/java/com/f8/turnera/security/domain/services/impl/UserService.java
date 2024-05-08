@@ -24,6 +24,7 @@ import com.f8.turnera.domain.services.IOrganizationService;
 import com.f8.turnera.exception.BadRequestException;
 import com.f8.turnera.exception.NoContentException;
 import com.f8.turnera.security.domain.dtos.ProfileDTO;
+import com.f8.turnera.security.domain.dtos.ResponseDTO;
 import com.f8.turnera.security.domain.dtos.UserDTO;
 import com.f8.turnera.security.domain.dtos.UserFilterDTO;
 import com.f8.turnera.security.domain.entities.Profile;
@@ -39,6 +40,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import net.bytebuddy.utility.RandomString;
@@ -59,12 +61,12 @@ public class UserService implements IUserService {
     private EntityManager em;
 
     @Override
-    public Page<UserDTO> findAllByFilter(String token, UserFilterDTO filter) throws Exception {
+    public ResponseDTO findAllByFilter(String token, UserFilterDTO filter) throws Exception {
         filter.setOrganizationId(
                 Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
 
         Page<User> users = findByCriteria(filter);
-        return users.map(user -> MapperHelper.modelMapper().map(user, UserDTO.class));
+        return new ResponseDTO(HttpStatus.OK.value(), users.map(user -> MapperHelper.modelMapper().map(user, UserDTO.class)));
     }
 
     private Page<User> findByCriteria(UserFilterDTO filter) {
@@ -137,19 +139,19 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public UserDTO findById(String token, Long id) throws Exception {
+    public ResponseDTO findById(String token, Long id) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<User> user = userRepository.findByIdAndOrganizationId(id, orgId);
         if (!user.isPresent()) {
             throw new NoContentException("Usuario no encontrado - " + id);
         }
 
-        return MapperHelper.modelMapper().map(user.get(), UserDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(), MapperHelper.modelMapper().map(user.get(), UserDTO.class));
     }
 
     @Override
-    public UserDTO create(String token, UserDTO userDTO) throws Exception {
-        OrganizationDTO organization = organizationService.findById(token);
+    public ResponseDTO create(String token, UserDTO userDTO) throws Exception {
+        OrganizationDTO organization = (OrganizationDTO) organizationService.findById(token).getData();
 
         Optional<User> existingUser = userRepository.findByUsername(userDTO.getUsername());
         if (existingUser.isPresent()) {
@@ -169,11 +171,11 @@ public class UserService implements IUserService {
 
         userRepository.save(user);
 
-        return MapperHelper.modelMapper().map(user, UserDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(), MapperHelper.modelMapper().map(user, UserDTO.class));
     }
 
     @Override
-    public UserDTO update(String token, UserDTO userDTO) throws Exception {
+    public ResponseDTO update(String token, UserDTO userDTO) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<User> user = userRepository.findByIdAndOrganizationId(userDTO.getId(), orgId);
         if (!user.isPresent()) {
@@ -198,7 +200,7 @@ public class UserService implements IUserService {
             userRepository.save(u);
         });
 
-        return MapperHelper.modelMapper().map(user.get(), UserDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(), MapperHelper.modelMapper().map(user.get(), UserDTO.class));
     }
 
     private Set<Profile> addPermissions(UserDTO userDTO) {
@@ -210,7 +212,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public void deleteById(String token, Long id) throws Exception {
+    public ResponseDTO deleteById(String token, Long id) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<User> user = userRepository.findByIdAndOrganizationId(id, orgId);
         if (!user.isPresent()) {
@@ -222,5 +224,7 @@ public class UserService implements IUserService {
         }
 
         userRepository.delete(user.get());
+
+        return new ResponseDTO(HttpStatus.OK.value(), "Borrado exitoso!");
     }
 }

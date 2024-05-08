@@ -10,6 +10,7 @@ import java.util.HashMap;
 import com.f8.turnera.config.SecurityConstants;
 import com.f8.turnera.exception.BadRequestException;
 import com.f8.turnera.security.domain.dtos.LoginDTO;
+import com.f8.turnera.security.domain.dtos.ResponseDTO;
 import com.f8.turnera.security.domain.dtos.SessionUserDTO;
 import com.f8.turnera.security.domain.dtos.UserDTO;
 import com.f8.turnera.security.domain.entities.Permission;
@@ -22,6 +23,7 @@ import com.f8.turnera.util.MapperHelper;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -41,7 +43,7 @@ public class AuthService implements IAuthService {
     private String secretKey;
 
     @Override
-    public SessionUserDTO login(LoginDTO authDTO) throws Exception {
+    public ResponseDTO login(LoginDTO authDTO) throws Exception {
 
         SessionUserDTO result = new SessionUserDTO();
 
@@ -78,7 +80,7 @@ public class AuthService implements IAuthService {
                 .signWith(SignatureAlgorithm.HS256, secretKey).compact();
         result.setToken(token);
 
-        return result;
+        return new ResponseDTO(HttpStatus.OK.value(), result);
     }
 
 }

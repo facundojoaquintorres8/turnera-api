@@ -25,6 +25,7 @@ import com.f8.turnera.exception.NoContentException;
 import com.f8.turnera.security.domain.dtos.PermissionDTO;
 import com.f8.turnera.security.domain.dtos.ProfileDTO;
 import com.f8.turnera.security.domain.dtos.ProfileFilterDTO;
+import com.f8.turnera.security.domain.dtos.ResponseDTO;
 import com.f8.turnera.security.domain.entities.Permission;
 import com.f8.turnera.security.domain.entities.Profile;
 import com.f8.turnera.security.domain.entities.User;
@@ -39,6 +40,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -57,11 +59,11 @@ public class ProfileService implements IProfileService {
     private EntityManager em;
 
     @Override
-    public Page<ProfileDTO> findAllByFilter(String token, ProfileFilterDTO filter) throws Exception {
+    public ResponseDTO findAllByFilter(String token, ProfileFilterDTO filter) throws Exception {
         filter.setOrganizationId(Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
 
         Page<Profile> profiles = findByCriteria(filter);
-        return profiles.map(profile -> MapperHelper.modelMapper().map(profile, ProfileDTO.class));
+        return new ResponseDTO(HttpStatus.OK.value(), profiles.map(profile -> MapperHelper.modelMapper().map(profile, ProfileDTO.class)));
     }
 
     private Page<Profile> findByCriteria(ProfileFilterDTO filter) {
@@ -112,19 +114,19 @@ public class ProfileService implements IProfileService {
     }
 
     @Override
-    public ProfileDTO findById(String token, Long id) throws Exception {
+    public ResponseDTO findById(String token, Long id) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Profile> profile = profileRepository.findByIdAndOrganizationId(id, orgId);
         if (!profile.isPresent()) {
             throw new NoContentException("Perfil no encontrado - " + id);
         }
 
-        return MapperHelper.modelMapper().map(profile.get(), ProfileDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(), MapperHelper.modelMapper().map(profile.get(), ProfileDTO.class));
     }
 
     @Override
-    public ProfileDTO create(String token, ProfileDTO profileDTO) throws Exception {
-        OrganizationDTO organization = organizationService.findById(token);
+    public ResponseDTO create(String token, ProfileDTO profileDTO) throws Exception {
+        OrganizationDTO organization = (OrganizationDTO) organizationService.findById(token).getData();
 
         Profile profile = MapperHelper.modelMapper().map(profileDTO, Profile.class);
         profile.setCreatedDate(LocalDateTime.now());
@@ -134,11 +136,11 @@ public class ProfileService implements IProfileService {
 
         profileRepository.save(profile);
 
-        return MapperHelper.modelMapper().map(profile, ProfileDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(), MapperHelper.modelMapper().map(profile, ProfileDTO.class));
     }
 
     @Override
-    public ProfileDTO update(String token, ProfileDTO profileDTO) throws Exception {
+    public ResponseDTO update(String token, ProfileDTO profileDTO) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Profile> profile = profileRepository.findByIdAndOrganizationId(profileDTO.getId(), orgId);
         if (!profile.isPresent()) {
@@ -161,7 +163,7 @@ public class ProfileService implements IProfileService {
             profileRepository.save(p);
         });
 
-        return MapperHelper.modelMapper().map(profile.get(), ProfileDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(), MapperHelper.modelMapper().map(profile.get(), ProfileDTO.class));
     }
 
     private Set<Permission> addPermissions(ProfileDTO profileDTO) throws Exception {
@@ -178,7 +180,7 @@ public class ProfileService implements IProfileService {
     }
 
     @Override
-    public void deleteById(String token, Long id) throws Exception {
+    public ResponseDTO deleteById(String token, Long id) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Profile> profile = profileRepository.findByIdAndOrganizationId(id, orgId);
         if (!profile.isPresent()) {
@@ -186,5 +188,7 @@ public class ProfileService implements IProfileService {
         }
 
         profileRepository.delete(profile.get());
+
+        return new ResponseDTO(HttpStatus.OK.value(), "Borrado exitoso!");
     }
 }

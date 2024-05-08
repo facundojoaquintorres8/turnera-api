@@ -1,10 +1,10 @@
 package com.f8.turnera.security.domain.services;
 
 import com.f8.turnera.security.domain.dtos.LoginDTO;
-import com.f8.turnera.security.domain.dtos.SessionUserDTO;
+import com.f8.turnera.security.domain.dtos.ResponseDTO;
 
 public interface IAuthService {
 
-    SessionUserDTO login(LoginDTO authDTO) throws Exception;
+    ResponseDTO login(LoginDTO authDTO) throws Exception;
 
 }

@@ -25,9 +25,8 @@ import com.f8.turnera.domain.dtos.AgendaDTO;
 import com.f8.turnera.domain.dtos.AgendaSaveDTO;
 import com.f8.turnera.domain.dtos.AppointmentFilterDTO;
 import com.f8.turnera.domain.dtos.AppointmentStatusEnum;
-import com.f8.turnera.domain.dtos.OrganizationDTO;
 import com.f8.turnera.domain.dtos.RepeatTypeEnum;
-import com.f8.turnera.domain.dtos.ResourceDTO;
+import com.f8.turnera.domain.dtos.ResponseDTO;
 import com.f8.turnera.domain.entities.Agenda;
 import com.f8.turnera.domain.entities.Appointment;
 import com.f8.turnera.domain.entities.Organization;
@@ -47,6 +46,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -68,12 +68,13 @@ public class AgendaService implements IAgendaService {
     private EntityManager em;
 
     @Override
-    public Page<AgendaDTO> findAllByFilter(String token, AppointmentFilterDTO filter) throws Exception {
+    public ResponseDTO findAllByFilter(String token, AppointmentFilterDTO filter) throws Exception {
         filter.setOrganizationId(
                 Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
 
         Page<Agenda> agendas = findByCriteria(filter);
-        return agendas.map(agenda -> MapperHelper.modelMapper().map(agenda, AgendaDTO.class));
+        return new ResponseDTO(HttpStatus.OK.value(),
+                agendas.map(agenda -> MapperHelper.modelMapper().map(agenda, AgendaDTO.class)));
     }
 
     private Page<Agenda> findByCriteria(AppointmentFilterDTO filter) {
@@ -187,23 +188,23 @@ public class AgendaService implements IAgendaService {
     }
 
     @Override
-    public AgendaDTO findById(String token, Long id) throws Exception {
+    public ResponseDTO findById(String token, Long id) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Agenda> agenda = agendaRepository.findByIdAndOrganizationId(id, orgId);
         if (!agenda.isPresent()) {
             throw new NoContentException("Disponibilidad no encontrada - " + id);
         }
 
-        return MapperHelper.modelMapper().map(agenda.get(), AgendaDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(), MapperHelper.modelMapper().map(agenda.get(), AgendaDTO.class));
     }
 
     @Override
-    public Boolean create(String token, AgendaSaveDTO agendaSaveDTO) throws Exception {
+    public ResponseDTO create(String token, AgendaSaveDTO agendaSaveDTO) throws Exception {
         // validations
-        OrganizationDTO organizationDTO = organizationService.findById(token);
-        Organization organization = MapperHelper.modelMapper().map(organizationDTO, Organization.class);
-        ResourceDTO resourceDTO = resourceService.findById(token, agendaSaveDTO.getResource().getId());
-        Resource resource = MapperHelper.modelMapper().map(resourceDTO, Resource.class);
+        Organization organization = MapperHelper.modelMapper().map(organizationService.findById(token).getData(),
+                Organization.class);
+        Resource resource = MapperHelper.modelMapper()
+                .map(resourceService.findById(token, agendaSaveDTO.getResource().getId()).getData(), Resource.class);
 
         if (agendaSaveDTO.getStartDate().isAfter(agendaSaveDTO.getEndDate())) {
             throw new BadRequestException("La fecha de inicio deber ser menor o igual a la de fin.");
@@ -396,7 +397,10 @@ public class AgendaService implements IAgendaService {
 
         agendaRepository.saveAll(agendas);
 
-        return !agendas.isEmpty();
+        if (agendas.isEmpty()) {
+            throw new NoContentException("No se generaron Disponibilidades");
+        }
+        return new ResponseDTO(HttpStatus.OK.value(), "Se generaron " + agendas.size() + " Disponibilidades");
     }
 
     private List<Agenda> createAgendasWeekly(AgendaSaveDTO agendaSaveDTO,
@@ -523,7 +527,7 @@ public class AgendaService implements IAgendaService {
     }
 
     @Override
-    public AgendaDTO update(String token, AgendaDTO agendaDTO) throws Exception {
+    public ResponseDTO update(String token, AgendaDTO agendaDTO) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Agenda> agenda = agendaRepository.findByIdAndOrganizationId(agendaDTO.getId(), orgId);
         if (!agenda.isPresent()) {
@@ -535,11 +539,11 @@ public class AgendaService implements IAgendaService {
             agendaRepository.save(a);
         });
 
-        return MapperHelper.modelMapper().map(agenda.get(), AgendaDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(), MapperHelper.modelMapper().map(agenda.get(), AgendaDTO.class));
     }
 
     @Override
-    public void deleteById(String token, Long id) throws Exception {
+    public ResponseDTO deleteById(String token, Long id) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Agenda> agenda = agendaRepository.findByIdAndOrganizationId(id, orgId);
         if (!agenda.isPresent()) {
@@ -547,10 +551,12 @@ public class AgendaService implements IAgendaService {
         }
 
         agendaRepository.delete(agenda.get());
+
+        return new ResponseDTO(HttpStatus.OK.value(), "Borrado exitoso!");
     }
 
     @Override
-    public AgendaDTO desactivate(String token, Long id) throws Exception {
+    public ResponseDTO desactivate(String token, Long id) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Agenda> agenda = agendaRepository.findByIdAndOrganizationId(id, orgId);
         if (!agenda.isPresent()) {
@@ -562,7 +568,7 @@ public class AgendaService implements IAgendaService {
             agendaRepository.save(a);
         });
 
-        return MapperHelper.modelMapper().map(agenda.get(), AgendaDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(), MapperHelper.modelMapper().map(agenda.get(), AgendaDTO.class));
     }
 
 }

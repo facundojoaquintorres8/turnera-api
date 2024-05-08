@@ -18,6 +18,7 @@ import com.f8.turnera.config.TokenUtil;
 import com.f8.turnera.domain.dtos.CustomerDTO;
 import com.f8.turnera.domain.dtos.CustomerFilterDTO;
 import com.f8.turnera.domain.dtos.OrganizationDTO;
+import com.f8.turnera.domain.dtos.ResponseDTO;
 import com.f8.turnera.domain.entities.Customer;
 import com.f8.turnera.domain.entities.Organization;
 import com.f8.turnera.domain.repositories.ICustomerRepository;
@@ -33,6 +34,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -48,12 +50,14 @@ public class CustomerService implements ICustomerService {
     private EntityManager em;
 
     @Override
-    public Page<CustomerDTO> findAllByFilter(String token, CustomerFilterDTO filter) throws Exception {
-        filter.setOrganizationId(Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
+    public ResponseDTO findAllByFilter(String token, CustomerFilterDTO filter) throws Exception {
+        filter.setOrganizationId(
+                Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
 
         Page<Customer> customers = findByCriteria(filter);
 
-        return customers.map(customer -> MapperHelper.modelMapper().map(customer, CustomerDTO.class));
+        return new ResponseDTO(HttpStatus.OK.value(),
+                customers.map(customer -> MapperHelper.modelMapper().map(customer, CustomerDTO.class)));
     }
 
     private Page<Customer> findByCriteria(CustomerFilterDTO filter) {
@@ -93,41 +97,42 @@ public class CustomerService implements ICustomerService {
         if (filter.getSort() != null) {
             if (filter.getSort().get(0).equals("ASC")) {
                 switch (filter.getSort().get(1)) {
-                case "businessName":
-                    result.sort(Comparator.comparing(Customer::getBusinessName, String::compareToIgnoreCase));
-                    break;
-                case "brandName":
-                    result.sort(Comparator.comparing(Customer::getBrandName,
-                            Comparator.nullsFirst(String::compareToIgnoreCase)));
-                    break;
-                case "email":
-                    result.sort(Comparator.comparing(Customer::getEmail, String::compareToIgnoreCase));
-                    break;
-                case "phone1":
-                    result.sort(Comparator.comparing(Customer::getPhone1, String::compareToIgnoreCase));
-                    break;
-                default:
-                    break;
+                    case "businessName":
+                        result.sort(Comparator.comparing(Customer::getBusinessName, String::compareToIgnoreCase));
+                        break;
+                    case "brandName":
+                        result.sort(Comparator.comparing(Customer::getBrandName,
+                                Comparator.nullsFirst(String::compareToIgnoreCase)));
+                        break;
+                    case "email":
+                        result.sort(Comparator.comparing(Customer::getEmail, String::compareToIgnoreCase));
+                        break;
+                    case "phone1":
+                        result.sort(Comparator.comparing(Customer::getPhone1, String::compareToIgnoreCase));
+                        break;
+                    default:
+                        break;
                 }
             } else if (filter.getSort().get(0).equals("DESC")) {
                 switch (filter.getSort().get(1)) {
-                case "businessName":
-                    result.sort(
-                            Comparator.comparing(Customer::getBusinessName, String::compareToIgnoreCase).reversed());
-                    break;
-                case "brandName":
-                    result.sort(Comparator
-                            .comparing(Customer::getBrandName, Comparator.nullsFirst(String::compareToIgnoreCase))
-                            .reversed());
-                    break;
-                case "email":
-                    result.sort(Comparator.comparing(Customer::getEmail, String::compareToIgnoreCase).reversed());
-                    break;
-                case "phone1":
-                    result.sort(Comparator.comparing(Customer::getPhone1, String::compareToIgnoreCase).reversed());
-                    break;
-                default:
-                    break;
+                    case "businessName":
+                        result.sort(
+                                Comparator.comparing(Customer::getBusinessName, String::compareToIgnoreCase)
+                                        .reversed());
+                        break;
+                    case "brandName":
+                        result.sort(Comparator
+                                .comparing(Customer::getBrandName, Comparator.nullsFirst(String::compareToIgnoreCase))
+                                .reversed());
+                        break;
+                    case "email":
+                        result.sort(Comparator.comparing(Customer::getEmail, String::compareToIgnoreCase).reversed());
+                        break;
+                    case "phone1":
+                        result.sort(Comparator.comparing(Customer::getPhone1, String::compareToIgnoreCase).reversed());
+                        break;
+                    default:
+                        break;
                 }
             }
         }
@@ -139,19 +144,20 @@ public class CustomerService implements ICustomerService {
     }
 
     @Override
-    public CustomerDTO findById(String token, Long id) throws Exception {
+    public ResponseDTO findById(String token, Long id) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Customer> customer = customerRepository.findByIdAndOrganizationId(id, orgId);
         if (!customer.isPresent()) {
             throw new NoContentException("Cliente no encontrado - " + id);
         }
 
-        return MapperHelper.modelMapper().map(customer.get(), CustomerDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(),
+                MapperHelper.modelMapper().map(customer.get(), CustomerDTO.class));
     }
 
     @Override
-    public CustomerDTO create(String token, CustomerDTO customerDTO) throws Exception {
-        OrganizationDTO organization = organizationService.findById(token);
+    public ResponseDTO create(String token, CustomerDTO customerDTO) throws Exception {
+        OrganizationDTO organization = (OrganizationDTO) organizationService.findById(token).getData();
 
         EmailValidation.validateEmail(customerDTO.getEmail());
 
@@ -162,11 +168,11 @@ public class CustomerService implements ICustomerService {
 
         customerRepository.save(customer);
 
-        return MapperHelper.modelMapper().map(customer, CustomerDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(), MapperHelper.modelMapper().map(customer, CustomerDTO.class));
     }
 
     @Override
-    public CustomerDTO createQuick(CustomerDTO customerDTO, OrganizationDTO organizationDTO) throws Exception {
+    public ResponseDTO createQuick(CustomerDTO customerDTO, OrganizationDTO organizationDTO) throws Exception {
         EmailValidation.validateEmail(customerDTO.getEmail());
 
         Customer customer = MapperHelper.modelMapper().map(customerDTO, Customer.class);
@@ -176,11 +182,11 @@ public class CustomerService implements ICustomerService {
 
         customerRepository.save(customer);
 
-        return MapperHelper.modelMapper().map(customer, CustomerDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(), MapperHelper.modelMapper().map(customer, CustomerDTO.class));
     }
 
     @Override
-    public CustomerDTO update(String token, CustomerDTO customerDTO) throws Exception {
+    public ResponseDTO update(String token, CustomerDTO customerDTO) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Customer> customer = customerRepository.findByIdAndOrganizationId(customerDTO.getId(), orgId);
         if (!customer.isPresent()) {
@@ -202,11 +208,12 @@ public class CustomerService implements ICustomerService {
             customerRepository.save(c);
         });
 
-        return MapperHelper.modelMapper().map(customer.get(), CustomerDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(),
+                MapperHelper.modelMapper().map(customer.get(), CustomerDTO.class));
     }
 
     @Override
-    public void deleteById(String token, Long id) throws Exception {
+    public ResponseDTO deleteById(String token, Long id) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Customer> customer = customerRepository.findByIdAndOrganizationId(id, orgId);
         if (!customer.isPresent()) {
@@ -214,5 +221,7 @@ public class CustomerService implements ICustomerService {
         }
 
         customerRepository.delete(customer.get());
+
+        return new ResponseDTO(HttpStatus.OK.value(), "Borrado exitoso!");
     }
 }

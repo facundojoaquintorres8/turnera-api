@@ -18,6 +18,7 @@ import com.f8.turnera.config.TokenUtil;
 import com.f8.turnera.domain.dtos.OrganizationDTO;
 import com.f8.turnera.domain.dtos.ResourceDTO;
 import com.f8.turnera.domain.dtos.ResourceFilterDTO;
+import com.f8.turnera.domain.dtos.ResponseDTO;
 import com.f8.turnera.domain.entities.Organization;
 import com.f8.turnera.domain.entities.Resource;
 import com.f8.turnera.domain.entities.ResourceType;
@@ -33,6 +34,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -48,11 +50,12 @@ public class ResourceService implements IResourceService {
     private EntityManager em;
 
     @Override
-    public Page<ResourceDTO> findAllByFilter(String token, ResourceFilterDTO filter) throws Exception {
+    public ResponseDTO findAllByFilter(String token, ResourceFilterDTO filter) throws Exception {
         filter.setOrganizationId(Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
 
         Page<Resource> resources = findByCriteria(filter);
-        return resources.map(resource -> MapperHelper.modelMapper().map(resource, ResourceDTO.class));
+        return new ResponseDTO(HttpStatus.OK.value(),
+                resources.map(resource -> MapperHelper.modelMapper().map(resource, ResourceDTO.class)));
     }
 
     private Page<Resource> findByCriteria(ResourceFilterDTO filter) {
@@ -133,19 +136,19 @@ public class ResourceService implements IResourceService {
     }
 
     @Override
-    public ResourceDTO findById(String token, Long id) throws Exception {
+    public ResponseDTO findById(String token, Long id) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Resource> resource = resourceRepository.findByIdAndOrganizationId(id, orgId);
         if (!resource.isPresent()) {
             throw new NoContentException("Recurso no encontrado - " + id);
         }
 
-        return MapperHelper.modelMapper().map(resource.get(), ResourceDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(), MapperHelper.modelMapper().map(resource.get(), ResourceDTO.class));
     }
 
     @Override
-    public ResourceDTO create(String token, ResourceDTO resourceDTO) throws Exception {
-        OrganizationDTO organization = organizationService.findById(token);
+    public ResponseDTO create(String token, ResourceDTO resourceDTO) throws Exception {
+        OrganizationDTO organization = (OrganizationDTO) organizationService.findById(token).getData();
 
         Resource resource = MapperHelper.modelMapper().map(resourceDTO, Resource.class);
         resource.setCreatedDate(LocalDateTime.now());
@@ -155,11 +158,11 @@ public class ResourceService implements IResourceService {
 
         resourceRepository.save(resource);
 
-        return MapperHelper.modelMapper().map(resource, ResourceDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(), MapperHelper.modelMapper().map(resource, ResourceDTO.class));
     }
 
     @Override
-    public ResourceDTO update(String token, ResourceDTO resourceDTO) throws Exception {
+    public ResponseDTO update(String token, ResourceDTO resourceDTO) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Resource> resource = resourceRepository.findByIdAndOrganizationId(resourceDTO.getId(), orgId);
         if (!resource.isPresent()) {
@@ -175,11 +178,11 @@ public class ResourceService implements IResourceService {
             resourceRepository.save(r);
         });
 
-        return MapperHelper.modelMapper().map(resource.get(), ResourceDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(), MapperHelper.modelMapper().map(resource.get(), ResourceDTO.class));
     }
 
     @Override
-    public void deleteById(String token, Long id) throws Exception {
+    public ResponseDTO deleteById(String token, Long id) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Resource> resource = resourceRepository.findByIdAndOrganizationId(id, orgId);
         if (!resource.isPresent()) {
@@ -187,5 +190,7 @@ public class ResourceService implements IResourceService {
         }
 
         resourceRepository.delete(resource.get());
+
+        return new ResponseDTO(HttpStatus.OK.value(), "Borrado exitoso!");
     }
 }

@@ -3,10 +3,11 @@ package com.f8.turnera.controllers;
 import com.f8.turnera.config.SecurityConstants;
 import com.f8.turnera.domain.dtos.ResourceTypeDTO;
 import com.f8.turnera.domain.dtos.ResourceTypeFilterDTO;
+import com.f8.turnera.domain.dtos.ResponseDTO;
 import com.f8.turnera.domain.services.IResourceTypeService;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -28,52 +29,42 @@ public class ResourceTypeController {
 
     @GetMapping("/resources-types/findAllByFilter")
     @PreAuthorize("hasAuthority('resourcesTypes.read')")
-    public ResponseEntity<Page<ResourceTypeDTO>> findAllByFilter(
+    public ResponseEntity<ResponseDTO> findAllByFilter(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            ResourceTypeFilterDTO filter) throws Exception {
-        Page<ResourceTypeDTO> result = service.findAllByFilter(token, filter);
-
-        return ResponseEntity.ok().body(result);
+            ResourceTypeFilterDTO request) throws Exception {
+        return new ResponseEntity<>(service.findAllByFilter(token, request), HttpStatus.OK);
     }
 
     @GetMapping("/resources-types/{id}")
     @PreAuthorize("hasAuthority('resourcesTypes.read')")
-    public ResponseEntity<ResourceTypeDTO> getResourceType(
+    public ResponseEntity<ResponseDTO> getResourceType(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
             @PathVariable Long id) throws Exception {
-        ResourceTypeDTO result = service.findById(token, id);
-
-        return ResponseEntity.ok().body(result);
+        return new ResponseEntity<>(service.findById(token, id), HttpStatus.OK);
     }
 
     @PostMapping("/resources-types")
     @PreAuthorize("hasAuthority('resourcesTypes.write')")
-    public ResponseEntity<ResourceTypeDTO> createResourceType(
+    public ResponseEntity<ResponseDTO> createResourceType(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @RequestBody ResourceTypeDTO resourceTypeDTO) throws Exception {
-        ResourceTypeDTO result = service.create(token, resourceTypeDTO);
-
-        return ResponseEntity.ok().body(result);
+            @RequestBody ResourceTypeDTO request) throws Exception {
+        return new ResponseEntity<>(service.create(token, request), HttpStatus.OK);
     }
 
     @PutMapping("/resources-types")
     @PreAuthorize("hasAuthority('resourcesTypes.write')")
-    public ResponseEntity<ResourceTypeDTO> updateResourceType(
+    public ResponseEntity<ResponseDTO> updateResourceType(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
-            @RequestBody ResourceTypeDTO resourceTypeDTO) throws Exception {
-        ResourceTypeDTO result = service.update(token, resourceTypeDTO);
-
-        return ResponseEntity.ok().body(result);
+            @RequestBody ResourceTypeDTO request) throws Exception {
+        return new ResponseEntity<>(service.update(token, request), HttpStatus.OK);
     }
 
     @DeleteMapping("resources-types/{id}")
     @PreAuthorize("hasAuthority('resourcesTypes.delete')")
-    public ResponseEntity<Void> deleteResourceType(
+    public ResponseEntity<ResponseDTO> deleteResourceType(
             @RequestHeader(name = SecurityConstants.HEADER_TOKEN) String token,
             @PathVariable Long id) throws Exception {
-        service.deleteById(token, id);
-
-        return ResponseEntity.ok().build();
+        return new ResponseEntity<>(service.deleteById(token, id), HttpStatus.OK);
     }
 
 }

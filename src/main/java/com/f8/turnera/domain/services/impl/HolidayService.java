@@ -20,6 +20,7 @@ import com.f8.turnera.config.TokenUtil;
 import com.f8.turnera.domain.dtos.HolidayDTO;
 import com.f8.turnera.domain.dtos.HolidayFilterDTO;
 import com.f8.turnera.domain.dtos.OrganizationDTO;
+import com.f8.turnera.domain.dtos.ResponseDTO;
 import com.f8.turnera.domain.entities.Holiday;
 import com.f8.turnera.domain.entities.Organization;
 import com.f8.turnera.domain.repositories.IHolidayRepository;
@@ -35,6 +36,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -50,11 +52,13 @@ public class HolidayService implements IHolidayService {
     private EntityManager em;
 
     @Override
-    public Page<HolidayDTO> findAllByFilter(String token, HolidayFilterDTO filter) throws Exception {
-        filter.setOrganizationId(Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
+    public ResponseDTO findAllByFilter(String token, HolidayFilterDTO filter) throws Exception {
+        filter.setOrganizationId(
+                Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
 
         Page<Holiday> holidays = findByCriteria(filter);
-        return holidays.map(holiday -> MapperHelper.modelMapper().map(holiday, HolidayDTO.class));
+        return new ResponseDTO(HttpStatus.OK.value(),
+                holidays.map(holiday -> MapperHelper.modelMapper().map(holiday, HolidayDTO.class)));
     }
 
     private Page<Holiday> findByCriteria(HolidayFilterDTO filter) {
@@ -130,21 +134,22 @@ public class HolidayService implements IHolidayService {
     }
 
     @Override
-    public HolidayDTO findById(String token, Long id) throws Exception {
+    public ResponseDTO findById(String token, Long id) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Holiday> holiday = holidayRepository.findByIdAndOrganizationId(id, orgId);
         if (!holiday.isPresent()) {
             throw new NoContentException("Feriado no encontrado - " + id);
         }
 
-        return MapperHelper.modelMapper().map(holiday.get(), HolidayDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(), MapperHelper.modelMapper().map(holiday.get(), HolidayDTO.class));
     }
 
     @Override
-    public HolidayDTO create(String token, HolidayDTO holidayDTO) throws Exception {
-        OrganizationDTO organization = organizationService.findById(token);
+    public ResponseDTO create(String token, HolidayDTO holidayDTO) throws Exception {
+        OrganizationDTO organization = (OrganizationDTO) organizationService.findById(token).getData();
 
-        Optional<Holiday> existingHoliday = holidayRepository.findByDateAndOrganizationId(holidayDTO.getDate(), organization.getId());
+        Optional<Holiday> existingHoliday = holidayRepository.findByDateAndOrganizationId(holidayDTO.getDate(),
+                organization.getId());
         if (existingHoliday.isPresent()) {
             throw new BadRequestException("El feriado ingresado ya está registrado.");
         }
@@ -156,11 +161,11 @@ public class HolidayService implements IHolidayService {
 
         holidayRepository.save(holiday);
 
-        return MapperHelper.modelMapper().map(holiday, HolidayDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(), MapperHelper.modelMapper().map(holiday, HolidayDTO.class));
     }
 
     @Override
-    public HolidayDTO update(String token, HolidayDTO holidayDTO) throws Exception {
+    public ResponseDTO update(String token, HolidayDTO holidayDTO) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Holiday> holiday = holidayRepository.findByIdAndOrganizationId(holidayDTO.getId(), orgId);
         if (!holiday.isPresent()) {
@@ -181,11 +186,11 @@ public class HolidayService implements IHolidayService {
             holidayRepository.save(r);
         });
 
-        return MapperHelper.modelMapper().map(holiday.get(), HolidayDTO.class);
+        return new ResponseDTO(HttpStatus.OK.value(), MapperHelper.modelMapper().map(holiday.get(), HolidayDTO.class));
     }
 
     @Override
-    public void deleteById(String token, Long id) throws Exception {
+    public ResponseDTO deleteById(String token, Long id) throws Exception {
         Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
         Optional<Holiday> holiday = holidayRepository.findByIdAndOrganizationId(id, orgId);
         if (!holiday.isPresent()) {
@@ -193,6 +198,8 @@ public class HolidayService implements IHolidayService {
         }
 
         holidayRepository.delete(holiday.get());
+
+        return new ResponseDTO(HttpStatus.OK.value(), "Borrado exitoso!");
     }
 
     @Override
