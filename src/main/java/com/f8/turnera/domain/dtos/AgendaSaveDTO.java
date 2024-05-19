@@ -16,8 +16,6 @@ public class AgendaSaveDTO {
     @NotNull
     private LocalDate startDate;
     @NotNull
-    private LocalDate endDate;
-    @NotNull
     private LocalTime startHour;
     @NotNull
     private LocalTime endHour;

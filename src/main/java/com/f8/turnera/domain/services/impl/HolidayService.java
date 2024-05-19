@@ -205,6 +205,7 @@ public class HolidayService implements IHolidayService {
     @Override
     public List<LocalDate> findAllDatesToAgenda(String token) throws Exception {
         HolidayFilterDTO filter = new HolidayFilterDTO();
+        filter.setOrganizationId(Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
         filter.setActive(true);
         filter.setUseInAgenda(true);
         filter.setIgnorePaginated(true);

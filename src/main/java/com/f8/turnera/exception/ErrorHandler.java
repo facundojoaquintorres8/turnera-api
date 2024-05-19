@@ -1,6 +1,13 @@
 package com.f8.turnera.exception;
 
-import lombok.extern.slf4j.Slf4j;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.time.zone.ZoneRulesException;
+import java.util.List;
+
+import javax.mail.MessagingException;
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.ConstraintViolationException;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -13,13 +20,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import com.f8.turnera.domain.dtos.ResponseDTO;
 
-import javax.mail.MessagingException;
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.ConstraintViolationException;
-
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @ControllerAdvice
@@ -152,6 +153,20 @@ public class ErrorHandler {
                                 "No se pudo realizar la operación. Intente más tarde.");
                 return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
+        
+        @ExceptionHandler(NoContentCustomException.class)
+        public ResponseEntity<ResponseDTO> noContentCustomException(HttpServletRequest request, NoContentCustomException e) {
+                StringWriter errors = new StringWriter();
+                e.printStackTrace(new PrintWriter(errors));
+
+                StringBuilder errorMessage = new StringBuilder();
+                errorMessage.append("Message: ").append(e.getMessage());
+
+                log.error(errorMessage.toString());
+
+                ResponseDTO response = new ResponseDTO(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
 
         @ExceptionHandler(BadRequestException.class)
         public ResponseEntity<ResponseDTO> badRequestException(HttpServletRequest request, BadRequestException e) {
@@ -166,4 +181,19 @@ public class ErrorHandler {
                 ResponseDTO response = new ResponseDTO(HttpStatus.BAD_REQUEST.value(), e.getMessage());
                 return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
+
+        @ExceptionHandler(ZoneRulesException.class)
+        public ResponseEntity<ResponseDTO> zoneRulesException(HttpServletRequest request, ZoneRulesException e) {
+                StringWriter errors = new StringWriter();
+                e.printStackTrace(new PrintWriter(errors));
+
+                StringBuilder errorMessage = new StringBuilder();
+                errorMessage.append("Message: ").append(e.getMessage());
+
+                log.error(errorMessage.toString());
+
+                ResponseDTO response = new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "La zona horaria de su equipo no es válida. Por favor modifique esta.");
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+
 }
