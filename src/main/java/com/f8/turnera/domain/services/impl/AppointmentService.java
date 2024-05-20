@@ -48,25 +48,23 @@ public class AppointmentService implements IAppointmentService {
 
     @Override
     public ResponseDTO book(String token, AppointmentSaveDTO appointmentSaveDTO) throws Exception {
-        OrganizationDTO organization = (OrganizationDTO) organizationService.findById(token).getData();
+        OrganizationDTO organizationDTO = (OrganizationDTO) organizationService.findById(token).getData();
+        Organization organization = MapperHelper.modelMapper().map(organizationDTO, Organization.class);
         AgendaDTO agenda = (AgendaDTO) agendaService.findById(token, appointmentSaveDTO.getAgenda().getId()).getData();
 
         Customer customer = null;
         if (appointmentSaveDTO.getCustomer().getId() != null) {
             customer = MapperHelper.modelMapper().map(appointmentSaveDTO.getCustomer(), Customer.class);
         } else {
-            customer = MapperHelper.modelMapper().map(
-                    customerService.createQuick(appointmentSaveDTO.getCustomer(), organization), Customer.class);
+            customer = customerService.createQuick(appointmentSaveDTO.getCustomer(), organization);
         }
 
-        Appointment appointment = new Appointment(LocalDateTime.now(),
-                MapperHelper.modelMapper().map(organization, Organization.class),
+        Appointment appointment = new Appointment(LocalDateTime.now(), organization,
                 MapperHelper.modelMapper().map(agenda, Agenda.class), customer);
         appointment.addStatus(AppointmentStatusEnum.BOOKED, null);
 
         appointmentRepository.save(appointment);
-        AppointmentDTO appointmentDTO = MapperHelper.modelMapper().map(appointment, AppointmentDTO.class);
-        agenda.setLastAppointment(appointmentDTO);
+        agenda.setLastAppointment(MapperHelper.modelMapper().map(appointment, AppointmentDTO.class));
         agendaService.setLastAppointment(token, agenda);
 
         emailService.sendBookedAppointmentEmail(appointment);

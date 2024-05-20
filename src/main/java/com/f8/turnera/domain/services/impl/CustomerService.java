@@ -169,17 +169,17 @@ public class CustomerService implements ICustomerService {
     }
 
     @Override
-    public ResponseDTO createQuick(CustomerDTO customerDTO, OrganizationDTO organizationDTO) throws Exception {
+    public Customer createQuick(CustomerDTO customerDTO, Organization organization) throws Exception {
         EmailValidation.validateEmail(customerDTO.getEmail());
 
         Customer customer = MapperHelper.modelMapper().map(customerDTO, Customer.class);
         customer.setCreatedDate(LocalDateTime.now());
         customer.setActive(true);
-        customer.setOrganization(MapperHelper.modelMapper().map(organizationDTO, Organization.class));
+        customer.setOrganization(organization);
 
         customerRepository.save(customer);
 
-        return new ResponseDTO(HttpStatus.OK.value(), MapperHelper.modelMapper().map(customer, CustomerDTO.class));
+        return customer;
     }
 
     @Override
