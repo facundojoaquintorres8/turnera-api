@@ -14,7 +14,7 @@ public interface IAgendaService {
 
     ResponseDTO create(String token, AgendaSaveDTO agendaDTO) throws Exception;
 
-    ResponseDTO update(String token, AgendaDTO agendaDTO) throws Exception;
+    ResponseDTO setLastAppointment(String token, AgendaDTO agendaDTO) throws Exception;
 
     ResponseDTO deleteById(String token, Long id) throws Exception;
 

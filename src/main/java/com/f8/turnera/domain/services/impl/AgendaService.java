@@ -452,7 +452,7 @@ public class AgendaService implements IAgendaService {
     }
 
     @Override
-    public ResponseDTO update(String token, AgendaDTO agendaDTO) throws Exception {
+    public ResponseDTO setLastAppointment(String token, AgendaDTO agendaDTO) throws Exception {
         Optional<Agenda> agenda = agendaRepository.findByIdAndOrganizationId(agendaDTO.getId(), OrganizationHelper.getOrganizationId(token));
         if (!agenda.isPresent()) {
             throw new NoContentException("Disponibilidad no encontrada - " + agendaDTO.getId());

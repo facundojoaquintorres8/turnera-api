@@ -67,7 +67,7 @@ public class AppointmentService implements IAppointmentService {
         appointmentRepository.save(appointment);
         AppointmentDTO appointmentDTO = MapperHelper.modelMapper().map(appointment, AppointmentDTO.class);
         agenda.setLastAppointment(appointmentDTO);
-        agendaService.update(token, agenda);
+        agendaService.setLastAppointment(token, agenda);
 
         emailService.sendBookedAppointmentEmail(appointment);
 
