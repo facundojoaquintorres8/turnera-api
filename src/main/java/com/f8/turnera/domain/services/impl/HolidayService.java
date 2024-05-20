@@ -200,14 +200,9 @@ public class HolidayService implements IHolidayService {
     }
 
     @Override
-    public List<LocalDate> findAllDatesToAgenda(String token) throws Exception {
-        HolidayFilterDTO filter = new HolidayFilterDTO();
-        filter.setOrganizationId(OrganizationHelper.getOrganizationId(token));
-        filter.setActive(true);
-        filter.setUseInAgenda(true);
-        filter.setIgnorePaginated(true);
-
-        Page<Holiday> holidays = findByCriteria(filter);
+    public List<LocalDate> findByDateBetweenToAgenda(String token, LocalDate start, LocalDate end) throws Exception {
+        List<Holiday> holidays = holidayRepository.findByOrganizationIdAndActiveTrueAndUseInAgendaTrueAndDateBetween(
+                OrganizationHelper.getOrganizationId(token), start, end);
 
         if (!holidays.isEmpty()) {
             return holidays.stream().map(Holiday::getDate).collect(Collectors.toList());

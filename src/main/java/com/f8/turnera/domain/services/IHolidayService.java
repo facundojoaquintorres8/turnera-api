@@ -19,6 +19,6 @@ public interface IHolidayService {
 
     ResponseDTO deleteById(String token, Long id) throws Exception;
 
-    List<LocalDate> findAllDatesToAgenda(String token) throws Exception;
+    List<LocalDate> findByDateBetweenToAgenda(String token, LocalDate start, LocalDate end) throws Exception;
 
 }

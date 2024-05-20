@@ -205,7 +205,6 @@ public class AgendaService implements IAgendaService {
 
         Boolean isSegmented = BooleanUtils.isTrue(agendaSaveDTO.getSegmented());
 
-        // TODO: mover a método privado de validaciones
         // Validations start 
         if (isSegmented && agendaSaveDTO.getDuration() != null
                 && agendaSaveDTO.getDuration() < 5) {
@@ -314,9 +313,8 @@ public class AgendaService implements IAgendaService {
 
         // filter holidays
         if (BooleanUtils.isTrue(agendaSaveDTO.getOmitHolidays())) {
-            List<LocalDate> holidayDates = new ArrayList<LocalDate>();
-            // TODO: agregar fechas de inicio y fin para filtrar mejor
-            holidayDates.addAll(holidayService.findAllDatesToAgenda(token));
+            LocalDate end = BooleanUtils.isTrue(agendaSaveDTO.getRepeat()) ? agendaSaveDTO.getFinalize() : agendaSaveDTO.getStartDate();
+            List<LocalDate> holidayDates = holidayService.findByDateBetweenToAgenda(token, agendaSaveDTO.getStartDate(), end);
             agendas = agendas.stream().filter(
                     x -> !holidayDates.contains(x.getStartDate().toLocalDate())).collect(Collectors.toList());
         }
