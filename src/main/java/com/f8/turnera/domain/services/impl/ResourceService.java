@@ -13,8 +13,6 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
-import com.f8.turnera.config.SecurityConstants;
-import com.f8.turnera.config.TokenUtil;
 import com.f8.turnera.domain.dtos.OrganizationDTO;
 import com.f8.turnera.domain.dtos.ResourceDTO;
 import com.f8.turnera.domain.dtos.ResourceFilterDTO;
@@ -28,6 +26,7 @@ import com.f8.turnera.domain.services.IResourceService;
 import com.f8.turnera.exception.NoContentException;
 import com.f8.turnera.util.Constants;
 import com.f8.turnera.util.MapperHelper;
+import com.f8.turnera.util.OrganizationHelper;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -51,7 +50,7 @@ public class ResourceService implements IResourceService {
 
     @Override
     public ResponseDTO findAllByFilter(String token, ResourceFilterDTO filter) throws Exception {
-        filter.setOrganizationId(Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
+        filter.setOrganizationId(OrganizationHelper.getOrganizationId(token));
 
         Page<Resource> resources = findByCriteria(filter);
         return new ResponseDTO(HttpStatus.OK.value(),
@@ -137,8 +136,7 @@ public class ResourceService implements IResourceService {
 
     @Override
     public ResponseDTO findById(String token, Long id) throws Exception {
-        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
-        Optional<Resource> resource = resourceRepository.findByIdAndOrganizationId(id, orgId);
+        Optional<Resource> resource = resourceRepository.findByIdAndOrganizationId(id, OrganizationHelper.getOrganizationId(token));
         if (!resource.isPresent()) {
             throw new NoContentException("Recurso no encontrado - " + id);
         }
@@ -163,8 +161,7 @@ public class ResourceService implements IResourceService {
 
     @Override
     public ResponseDTO update(String token, ResourceDTO resourceDTO) throws Exception {
-        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
-        Optional<Resource> resource = resourceRepository.findByIdAndOrganizationId(resourceDTO.getId(), orgId);
+        Optional<Resource> resource = resourceRepository.findByIdAndOrganizationId(resourceDTO.getId(), OrganizationHelper.getOrganizationId(token));
         if (!resource.isPresent()) {
             throw new NoContentException("Recurso no encontrado - " + resourceDTO.getId());
         }
@@ -183,8 +180,7 @@ public class ResourceService implements IResourceService {
 
     @Override
     public ResponseDTO deleteById(String token, Long id) throws Exception {
-        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
-        Optional<Resource> resource = resourceRepository.findByIdAndOrganizationId(id, orgId);
+        Optional<Resource> resource = resourceRepository.findByIdAndOrganizationId(id, OrganizationHelper.getOrganizationId(token));
         if (!resource.isPresent()) {
             throw new NoContentException("Recurso no encontrado - " + id);
         }

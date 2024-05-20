@@ -2,8 +2,6 @@ package com.f8.turnera.domain.services.impl;
 
 import java.util.Optional;
 
-import com.f8.turnera.config.SecurityConstants;
-import com.f8.turnera.config.TokenUtil;
 import com.f8.turnera.domain.dtos.OrganizationDTO;
 import com.f8.turnera.domain.dtos.ResponseDTO;
 import com.f8.turnera.domain.entities.Organization;
@@ -12,6 +10,7 @@ import com.f8.turnera.domain.services.IOrganizationService;
 import com.f8.turnera.exception.NoContentException;
 import com.f8.turnera.util.EmailValidation;
 import com.f8.turnera.util.MapperHelper;
+import com.f8.turnera.util.OrganizationHelper;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,11 +24,10 @@ public class OrganizationService implements IOrganizationService {
 
     @Override
     public ResponseDTO findById(String token) throws Exception {
-        Long organizationId = Long
-                .parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
-        Optional<Organization> organization = organizationRepository.findById(organizationId);
+        Long id = OrganizationHelper.getOrganizationId(token);
+        Optional<Organization> organization = organizationRepository.findById(id);
         if (!organization.isPresent()) {
-            throw new NoContentException("Organización no encontrada - " + organizationId);
+            throw new NoContentException("Organización no encontrada - " + id);
         }
 
         return new ResponseDTO(HttpStatus.OK.value(),
@@ -38,11 +36,10 @@ public class OrganizationService implements IOrganizationService {
 
     @Override
     public ResponseDTO update(String token, OrganizationDTO organizationDTO) throws Exception {
-        Long organizationId = Long
-                .parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
-        Optional<Organization> organization = organizationRepository.findById(organizationId);
+        Long id = OrganizationHelper.getOrganizationId(token);
+        Optional<Organization> organization = organizationRepository.findById(id);
         if (!organization.isPresent()) {
-            throw new NoContentException("Organización no encontrada - " + organizationId);
+            throw new NoContentException("Organización no encontrada - " + id);
         }
 
         EmailValidation.validateEmail(organizationDTO.getDefaultEmail());

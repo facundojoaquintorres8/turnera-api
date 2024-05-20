@@ -3,8 +3,6 @@ package com.f8.turnera.domain.services.impl;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import com.f8.turnera.config.SecurityConstants;
-import com.f8.turnera.config.TokenUtil;
 import com.f8.turnera.domain.dtos.AgendaDTO;
 import com.f8.turnera.domain.dtos.AppointmentChangeStatusDTO;
 import com.f8.turnera.domain.dtos.AppointmentDTO;
@@ -24,6 +22,7 @@ import com.f8.turnera.domain.services.IEmailService;
 import com.f8.turnera.domain.services.IOrganizationService;
 import com.f8.turnera.exception.NoContentException;
 import com.f8.turnera.util.MapperHelper;
+import com.f8.turnera.util.OrganizationHelper;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -77,8 +76,7 @@ public class AppointmentService implements IAppointmentService {
 
     @Override
     public ResponseDTO absent(String token, AppointmentChangeStatusDTO appointmentChangeStatusDTO) throws Exception {
-        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
-        Optional<Appointment> appointment = appointmentRepository.findByIdAndOrganizationId(appointmentChangeStatusDTO.getId(), orgId);
+        Optional<Appointment> appointment = appointmentRepository.findByIdAndOrganizationId(appointmentChangeStatusDTO.getId(), OrganizationHelper.getOrganizationId(token));
         if (!appointment.isPresent()) {
             throw new NoContentException("Turno no encontrado - " + appointmentChangeStatusDTO.getId());
         }
@@ -92,8 +90,7 @@ public class AppointmentService implements IAppointmentService {
 
     @Override
     public ResponseDTO cancel(String token, AppointmentChangeStatusDTO appointmentChangeStatusDTO) throws Exception {
-        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
-        Optional<Appointment> appointment = appointmentRepository.findByIdAndOrganizationId(appointmentChangeStatusDTO.getId(), orgId);
+        Optional<Appointment> appointment = appointmentRepository.findByIdAndOrganizationId(appointmentChangeStatusDTO.getId(), OrganizationHelper.getOrganizationId(token));
         if (!appointment.isPresent()) {
             throw new NoContentException("Turno no encontrado - " + appointmentChangeStatusDTO.getId());
         }
@@ -109,8 +106,7 @@ public class AppointmentService implements IAppointmentService {
 
     @Override
     public ResponseDTO attend(String token, AppointmentChangeStatusDTO appointmentChangeStatusDTO) throws Exception {
-        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
-        Optional<Appointment> appointment = appointmentRepository.findByIdAndOrganizationId(appointmentChangeStatusDTO.getId(), orgId);
+        Optional<Appointment> appointment = appointmentRepository.findByIdAndOrganizationId(appointmentChangeStatusDTO.getId(), OrganizationHelper.getOrganizationId(token));
         if (!appointment.isPresent()) {
             throw new NoContentException("Turno no encontrado - " + appointmentChangeStatusDTO.getId());
         }
@@ -124,8 +120,7 @@ public class AppointmentService implements IAppointmentService {
 
     @Override
     public ResponseDTO finalize(String token, AppointmentChangeStatusDTO appointmentChangeStatusDTO) throws Exception {
-        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
-        Optional<Appointment> appointment = appointmentRepository.findByIdAndOrganizationId(appointmentChangeStatusDTO.getId(), orgId);
+        Optional<Appointment> appointment = appointmentRepository.findByIdAndOrganizationId(appointmentChangeStatusDTO.getId(), OrganizationHelper.getOrganizationId(token));
         if (!appointment.isPresent()) {
             throw new NoContentException("Turno no encontrado - " + appointmentChangeStatusDTO.getId());
         }

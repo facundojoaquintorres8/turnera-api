@@ -15,7 +15,6 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
-import com.f8.turnera.config.SecurityConstants;
 import com.f8.turnera.config.TokenUtil;
 import com.f8.turnera.domain.dtos.OrganizationDTO;
 import com.f8.turnera.domain.entities.Organization;
@@ -34,6 +33,7 @@ import com.f8.turnera.security.domain.services.IUserService;
 import com.f8.turnera.util.Constants;
 import com.f8.turnera.util.EmailValidation;
 import com.f8.turnera.util.MapperHelper;
+import com.f8.turnera.util.OrganizationHelper;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -63,7 +63,7 @@ public class UserService implements IUserService {
     @Override
     public ResponseDTO findAllByFilter(String token, UserFilterDTO filter) throws Exception {
         filter.setOrganizationId(
-                Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
+                OrganizationHelper.getOrganizationId(token));
 
         Page<User> users = findByCriteria(filter);
         return new ResponseDTO(HttpStatus.OK.value(), users.map(user -> MapperHelper.modelMapper().map(user, UserDTO.class)));
@@ -140,8 +140,7 @@ public class UserService implements IUserService {
 
     @Override
     public ResponseDTO findById(String token, Long id) throws Exception {
-        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
-        Optional<User> user = userRepository.findByIdAndOrganizationId(id, orgId);
+        Optional<User> user = userRepository.findByIdAndOrganizationId(id, OrganizationHelper.getOrganizationId(token));
         if (!user.isPresent()) {
             throw new NoContentException("Usuario no encontrado - " + id);
         }
@@ -176,8 +175,7 @@ public class UserService implements IUserService {
 
     @Override
     public ResponseDTO update(String token, UserDTO userDTO) throws Exception {
-        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
-        Optional<User> user = userRepository.findByIdAndOrganizationId(userDTO.getId(), orgId);
+        Optional<User> user = userRepository.findByIdAndOrganizationId(userDTO.getId(), OrganizationHelper.getOrganizationId(token));
         if (!user.isPresent()) {
             throw new NoContentException("Usuario no encontrado - " + userDTO.getId());
         }
@@ -213,8 +211,7 @@ public class UserService implements IUserService {
 
     @Override
     public ResponseDTO deleteById(String token, Long id) throws Exception {
-        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
-        Optional<User> user = userRepository.findByIdAndOrganizationId(id, orgId);
+        Optional<User> user = userRepository.findByIdAndOrganizationId(id, OrganizationHelper.getOrganizationId(token));
         if (!user.isPresent()) {
             throw new NoContentException("Usuario no encontrado - " + id);
         }

@@ -13,8 +13,6 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
-import com.f8.turnera.config.SecurityConstants;
-import com.f8.turnera.config.TokenUtil;
 import com.f8.turnera.domain.dtos.CustomerDTO;
 import com.f8.turnera.domain.dtos.CustomerFilterDTO;
 import com.f8.turnera.domain.dtos.OrganizationDTO;
@@ -28,6 +26,7 @@ import com.f8.turnera.exception.NoContentException;
 import com.f8.turnera.util.Constants;
 import com.f8.turnera.util.EmailValidation;
 import com.f8.turnera.util.MapperHelper;
+import com.f8.turnera.util.OrganizationHelper;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -51,8 +50,7 @@ public class CustomerService implements ICustomerService {
 
     @Override
     public ResponseDTO findAllByFilter(String token, CustomerFilterDTO filter) throws Exception {
-        filter.setOrganizationId(
-                Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
+        filter.setOrganizationId(OrganizationHelper.getOrganizationId(token));
 
         Page<Customer> customers = findByCriteria(filter);
 
@@ -145,8 +143,7 @@ public class CustomerService implements ICustomerService {
 
     @Override
     public ResponseDTO findById(String token, Long id) throws Exception {
-        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
-        Optional<Customer> customer = customerRepository.findByIdAndOrganizationId(id, orgId);
+        Optional<Customer> customer = customerRepository.findByIdAndOrganizationId(id, OrganizationHelper.getOrganizationId(token));
         if (!customer.isPresent()) {
             throw new NoContentException("Cliente no encontrado - " + id);
         }
@@ -187,8 +184,7 @@ public class CustomerService implements ICustomerService {
 
     @Override
     public ResponseDTO update(String token, CustomerDTO customerDTO) throws Exception {
-        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
-        Optional<Customer> customer = customerRepository.findByIdAndOrganizationId(customerDTO.getId(), orgId);
+        Optional<Customer> customer = customerRepository.findByIdAndOrganizationId(customerDTO.getId(), OrganizationHelper.getOrganizationId(token));
         if (!customer.isPresent()) {
             throw new NoContentException("Cliente no encontrado - " + customerDTO.getId());
         }
@@ -214,8 +210,7 @@ public class CustomerService implements ICustomerService {
 
     @Override
     public ResponseDTO deleteById(String token, Long id) throws Exception {
-        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
-        Optional<Customer> customer = customerRepository.findByIdAndOrganizationId(id, orgId);
+        Optional<Customer> customer = customerRepository.findByIdAndOrganizationId(id, OrganizationHelper.getOrganizationId(token));
         if (!customer.isPresent()) {
             throw new NoContentException("Cliente no encontrado - " + id);
         }

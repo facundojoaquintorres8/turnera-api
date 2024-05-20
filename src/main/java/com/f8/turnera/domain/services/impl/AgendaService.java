@@ -27,8 +27,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import com.f8.turnera.config.SecurityConstants;
-import com.f8.turnera.config.TokenUtil;
 import com.f8.turnera.domain.dtos.AgendaDTO;
 import com.f8.turnera.domain.dtos.AgendaSaveDTO;
 import com.f8.turnera.domain.dtos.AppointmentFilterDTO;
@@ -49,6 +47,7 @@ import com.f8.turnera.exception.NoContentCustomException;
 import com.f8.turnera.exception.NoContentException;
 import com.f8.turnera.util.Constants;
 import com.f8.turnera.util.MapperHelper;
+import com.f8.turnera.util.OrganizationHelper;
 
 @Service
 public class AgendaService implements IAgendaService {
@@ -70,8 +69,7 @@ public class AgendaService implements IAgendaService {
 
     @Override
     public ResponseDTO findAllByFilter(String token, AppointmentFilterDTO filter) throws Exception {
-        filter.setOrganizationId(
-                Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
+        filter.setOrganizationId(OrganizationHelper.getOrganizationId(token));
 
         Page<Agenda> agendas = findByCriteria(filter);
         return new ResponseDTO(HttpStatus.OK.value(),
@@ -190,8 +188,7 @@ public class AgendaService implements IAgendaService {
 
     @Override
     public ResponseDTO findById(String token, Long id) throws Exception {
-        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
-        Optional<Agenda> agenda = agendaRepository.findByIdAndOrganizationId(id, orgId);
+        Optional<Agenda> agenda = agendaRepository.findByIdAndOrganizationId(id, OrganizationHelper.getOrganizationId(token));
         if (!agenda.isPresent()) {
             throw new NoContentException("Disponibilidad no encontrada - " + id);
         }
@@ -456,8 +453,7 @@ public class AgendaService implements IAgendaService {
 
     @Override
     public ResponseDTO update(String token, AgendaDTO agendaDTO) throws Exception {
-        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
-        Optional<Agenda> agenda = agendaRepository.findByIdAndOrganizationId(agendaDTO.getId(), orgId);
+        Optional<Agenda> agenda = agendaRepository.findByIdAndOrganizationId(agendaDTO.getId(), OrganizationHelper.getOrganizationId(token));
         if (!agenda.isPresent()) {
             throw new NoContentException("Disponibilidad no encontrada - " + agendaDTO.getId());
         }
@@ -472,8 +468,7 @@ public class AgendaService implements IAgendaService {
 
     @Override
     public ResponseDTO deleteById(String token, Long id) throws Exception {
-        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
-        Optional<Agenda> agenda = agendaRepository.findByIdAndOrganizationId(id, orgId);
+        Optional<Agenda> agenda = agendaRepository.findByIdAndOrganizationId(id, OrganizationHelper.getOrganizationId(token));
         if (!agenda.isPresent()) {
             throw new NoContentException("Disponibilidad no encontrada - " + id);
         }
@@ -485,8 +480,7 @@ public class AgendaService implements IAgendaService {
 
     @Override
     public ResponseDTO desactivate(String token, Long id) throws Exception {
-        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
-        Optional<Agenda> agenda = agendaRepository.findByIdAndOrganizationId(id, orgId);
+        Optional<Agenda> agenda = agendaRepository.findByIdAndOrganizationId(id, OrganizationHelper.getOrganizationId(token));
         if (!agenda.isPresent()) {
             throw new NoContentException("Disponibilidad no encontrada - " + id);
         }

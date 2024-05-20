@@ -15,8 +15,6 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
-import com.f8.turnera.config.SecurityConstants;
-import com.f8.turnera.config.TokenUtil;
 import com.f8.turnera.domain.dtos.HolidayDTO;
 import com.f8.turnera.domain.dtos.HolidayFilterDTO;
 import com.f8.turnera.domain.dtos.OrganizationDTO;
@@ -30,6 +28,7 @@ import com.f8.turnera.exception.BadRequestException;
 import com.f8.turnera.exception.NoContentException;
 import com.f8.turnera.util.Constants;
 import com.f8.turnera.util.MapperHelper;
+import com.f8.turnera.util.OrganizationHelper;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -54,7 +53,7 @@ public class HolidayService implements IHolidayService {
     @Override
     public ResponseDTO findAllByFilter(String token, HolidayFilterDTO filter) throws Exception {
         filter.setOrganizationId(
-                Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
+                OrganizationHelper.getOrganizationId(token));
 
         Page<Holiday> holidays = findByCriteria(filter);
         return new ResponseDTO(HttpStatus.OK.value(),
@@ -135,8 +134,7 @@ public class HolidayService implements IHolidayService {
 
     @Override
     public ResponseDTO findById(String token, Long id) throws Exception {
-        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
-        Optional<Holiday> holiday = holidayRepository.findByIdAndOrganizationId(id, orgId);
+        Optional<Holiday> holiday = holidayRepository.findByIdAndOrganizationId(id, OrganizationHelper.getOrganizationId(token));
         if (!holiday.isPresent()) {
             throw new NoContentException("Feriado no encontrado - " + id);
         }
@@ -166,7 +164,7 @@ public class HolidayService implements IHolidayService {
 
     @Override
     public ResponseDTO update(String token, HolidayDTO holidayDTO) throws Exception {
-        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
+        Long orgId = OrganizationHelper.getOrganizationId(token);
         Optional<Holiday> holiday = holidayRepository.findByIdAndOrganizationId(holidayDTO.getId(), orgId);
         if (!holiday.isPresent()) {
             throw new NoContentException("Feriado no encontrado - " + holidayDTO.getId());
@@ -191,8 +189,7 @@ public class HolidayService implements IHolidayService {
 
     @Override
     public ResponseDTO deleteById(String token, Long id) throws Exception {
-        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
-        Optional<Holiday> holiday = holidayRepository.findByIdAndOrganizationId(id, orgId);
+        Optional<Holiday> holiday = holidayRepository.findByIdAndOrganizationId(id, OrganizationHelper.getOrganizationId(token));
         if (!holiday.isPresent()) {
             throw new NoContentException("Feriado no encontrado - " + id);
         }
@@ -205,7 +202,7 @@ public class HolidayService implements IHolidayService {
     @Override
     public List<LocalDate> findAllDatesToAgenda(String token) throws Exception {
         HolidayFilterDTO filter = new HolidayFilterDTO();
-        filter.setOrganizationId(Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
+        filter.setOrganizationId(OrganizationHelper.getOrganizationId(token));
         filter.setActive(true);
         filter.setUseInAgenda(true);
         filter.setIgnorePaginated(true);

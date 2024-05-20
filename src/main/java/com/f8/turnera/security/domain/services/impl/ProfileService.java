@@ -15,8 +15,6 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
-import com.f8.turnera.config.SecurityConstants;
-import com.f8.turnera.config.TokenUtil;
 import com.f8.turnera.domain.dtos.OrganizationDTO;
 import com.f8.turnera.domain.entities.Organization;
 import com.f8.turnera.domain.services.IOrganizationService;
@@ -34,6 +32,7 @@ import com.f8.turnera.security.domain.services.IPermissionService;
 import com.f8.turnera.security.domain.services.IProfileService;
 import com.f8.turnera.util.Constants;
 import com.f8.turnera.util.MapperHelper;
+import com.f8.turnera.util.OrganizationHelper;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -60,7 +59,7 @@ public class ProfileService implements IProfileService {
 
     @Override
     public ResponseDTO findAllByFilter(String token, ProfileFilterDTO filter) throws Exception {
-        filter.setOrganizationId(Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString()));
+        filter.setOrganizationId(OrganizationHelper.getOrganizationId(token));
 
         Page<Profile> profiles = findByCriteria(filter);
         return new ResponseDTO(HttpStatus.OK.value(), profiles.map(profile -> MapperHelper.modelMapper().map(profile, ProfileDTO.class)));
@@ -115,8 +114,7 @@ public class ProfileService implements IProfileService {
 
     @Override
     public ResponseDTO findById(String token, Long id) throws Exception {
-        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
-        Optional<Profile> profile = profileRepository.findByIdAndOrganizationId(id, orgId);
+        Optional<Profile> profile = profileRepository.findByIdAndOrganizationId(id, OrganizationHelper.getOrganizationId(token));
         if (!profile.isPresent()) {
             throw new NoContentException("Perfil no encontrado - " + id);
         }
@@ -141,8 +139,7 @@ public class ProfileService implements IProfileService {
 
     @Override
     public ResponseDTO update(String token, ProfileDTO profileDTO) throws Exception {
-        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
-        Optional<Profile> profile = profileRepository.findByIdAndOrganizationId(profileDTO.getId(), orgId);
+        Optional<Profile> profile = profileRepository.findByIdAndOrganizationId(profileDTO.getId(), OrganizationHelper.getOrganizationId(token));
         if (!profile.isPresent()) {
             throw new NoContentException("Perfil no encontrado - " + profileDTO.getId());
         }
@@ -181,8 +178,7 @@ public class ProfileService implements IProfileService {
 
     @Override
     public ResponseDTO deleteById(String token, Long id) throws Exception {
-        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
-        Optional<Profile> profile = profileRepository.findByIdAndOrganizationId(id, orgId);
+        Optional<Profile> profile = profileRepository.findByIdAndOrganizationId(id, OrganizationHelper.getOrganizationId(token));
         if (!profile.isPresent()) {
             throw new NoContentException("Perfil no encontrado - " + id);
         }

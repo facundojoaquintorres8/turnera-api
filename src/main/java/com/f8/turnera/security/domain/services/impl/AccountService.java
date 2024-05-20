@@ -5,8 +5,6 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-import com.f8.turnera.config.SecurityConstants;
-import com.f8.turnera.config.TokenUtil;
 import com.f8.turnera.domain.entities.Organization;
 import com.f8.turnera.domain.repositories.IOrganizationRepository;
 import com.f8.turnera.domain.services.IEmailService;
@@ -28,6 +26,7 @@ import com.f8.turnera.security.domain.repositories.IUserRepository;
 import com.f8.turnera.security.domain.services.IAccountService;
 import com.f8.turnera.util.EmailValidation;
 import com.f8.turnera.util.MapperHelper;
+import com.f8.turnera.util.OrganizationHelper;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -174,8 +173,7 @@ public class AccountService implements IAccountService {
 
     @Override
     public ResponseDTO passwordChange(String token, PasswordChangeDTO passwordChangeDTO) throws Exception {
-        Long orgId = Long.parseLong(TokenUtil.getClaimByToken(token, SecurityConstants.ORGANIZATION_KEY).toString());
-        Optional<User> user = userRepository.findByUsernameAndOrganizationId(passwordChangeDTO.getUsername(), orgId);
+        Optional<User> user = userRepository.findByUsernameAndOrganizationId(passwordChangeDTO.getUsername(), OrganizationHelper.getOrganizationId(token));
         if (!user.isPresent()) {
             throw new NoContentException("Usuario no encontrado.");
         }
